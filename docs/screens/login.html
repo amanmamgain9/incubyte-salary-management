@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in · ACME</title>
+    <link rel="stylesheet" href="styles.css?v=11" />
+    <script src="data.js" defer></script>
+    <script src="app.js?v=11" defer></script>
+  </head>
+  <body class="login-page" data-page="login">
+    <main class="login-main" id="main">
+      <div class="login-box">
+        <a
+          class="brand login-brand"
+          href="index.html"
+          aria-label="ACME screen library"
+        >
+          <span class="brand-mark" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+            >
+              <path d="M5 18V11M12 18V5M19 18V8" />
+            </svg>
+          </span>
+          <span>acme<small>People &amp; pay</small></span>
+        </a>
+        <h1>Sign in</h1>
+        <form id="login-form">
+          <div id="login-error" class="notice error" role="alert" hidden>
+            Incorrect email or password.
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="username"
+              value="hr@example.com"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="password-field">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+              />
+              <button
+                id="show-password"
+                type="button"
+                class="password-toggle"
+                aria-label="Show or hide password"
+              >
+                Show
+              </button>
+            </div>
+          </div>
+          <button class="button full" type="submit">Sign in</button>
+        </form>
+        <section class="demo-access" aria-labelledby="demo-title">
+          <h3 id="demo-title">Demo account</h3>
+          <dl>
+            <dt>Email</dt>
+            <dd>hr@example.com</dd>
+            <dt>Password</dt>
+            <dd>DemoSalary2026!</dd>
+          </dl>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

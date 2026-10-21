@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Edit employee · ACME</title>
+    <link rel="stylesheet" href="styles.css?v=11" />
+    <script src="data.js" defer></script>
+    <script src="app.js?v=11" defer></script>
+  </head>
+  <body data-page="employee-edit">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation"></aside>
+    <div class="shell">
+      <main class="content" id="main">
+        <a class="back-link" id="form-back" href="employee.html"
+          >← Employee profile</a
+        >
+        <div class="page-heading">
+          <div>
+            <h1>Edit employee</h1>
+          </div>
+        </div>
+        <div class="form-layout">
+          <form class="card" id="employee-form">
+            <div class="form-section">
+              <h2>Employee details</h2>
+              <div
+                id="form-error"
+                class="notice error"
+                role="alert"
+                hidden
+              ></div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="id">Employee ID</label
+                  ><input
+                    id="id"
+                    name="id"
+                    required
+                    placeholder="e.g. EMP10001"
+                    readonly
+                  /><span class="hint">Fixed ID; cannot be reused.</span>
+                </div>
+                <div class="field">
+                  <label for="name">Full name</label
+                  ><input
+                    id="name"
+                    name="name"
+                    required
+                    autocomplete="name"
+                    placeholder="Full name"
+                  />
+                </div>
+                <div class="field">
+                  <label for="department">Department</label
+                  ><select
+                    id="department"
+                    name="department"
+                    data-options="departments"
+                    data-value=""
+                    data-form-select
+                  ></select>
+                </div>
+                <div class="field">
+                  <label for="country">Work country</label
+                  ><select
+                    id="country"
+                    name="country"
+                    data-options="countries"
+                    data-value="US"
+                    data-form-select
+                  ></select
+                  ><span class="hint">Salary currency stays unchanged.</span>
+                </div>
+                <div class="field">
+                  <label for="joined">Joining date</label
+                  ><input id="joined" name="joined" type="date" required />
+                </div>
+                <div class="field">
+                  <label for="left">Last working day · optional</label
+                  ><input id="left" name="left" type="date" /><span class="hint"
+                    >Blank while employed.</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="form-footer">
+              <div>
+                <a id="form-cancel" class="button ghost" href="employee.html"
+                  >Cancel</a
+                ><button class="button" type="submit">Save changes</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>

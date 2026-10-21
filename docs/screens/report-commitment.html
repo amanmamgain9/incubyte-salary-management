@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Salary commitment · ACME</title>
+    <link rel="stylesheet" href="styles.css?v=11" />
+    <script src="data.js" defer></script>
+    <script src="app.js?v=11" defer></script>
+  </head>
+  <body data-page="report-commitment">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation"></aside>
+    <div class="shell">
+      <main class="content" id="main">
+        <div class="page-heading">
+          <div>
+            <h1>Salary commitment</h1>
+          </div>
+        </div>
+        <div class="filter-panel">
+          <form class="filters" id="report-filters">
+            <div class="field">
+              <label for="country">Country</label
+              ><select
+                id="country"
+                name="country"
+                data-options="countries"
+                data-value=""
+              ></select>
+            </div>
+            <div class="field">
+              <label for="department">Department</label
+              ><select
+                id="department"
+                name="department"
+                data-options="departments"
+                data-value=""
+              ></select>
+            </div>
+            <div class="field">
+              <label for="currency">Currency</label
+              ><select
+                id="currency"
+                name="currency"
+                data-options="currencies"
+                data-value=""
+              ></select>
+            </div>
+            <button class="button" type="submit">Apply</button
+            ><button class="button ghost" type="reset">Reset</button>
+          </form>
+        </div>
+        <div id="filter-error" class="notice error" role="alert" hidden></div>
+        <div id="report-overview" aria-label="Report summaries"></div>
+        <div id="report-body" aria-live="polite"></div>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>

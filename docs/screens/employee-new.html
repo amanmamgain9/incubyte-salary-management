@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Add employee · ACME</title>
+    <link rel="stylesheet" href="styles.css?v=11" />
+    <script src="data.js" defer></script>
+    <script src="app.js?v=11" defer></script>
+  </head>
+  <body data-page="employee-new">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation"></aside>
+    <div class="shell">
+      <main class="content" id="main">
+        <a class="back-link" id="form-back" href="employees.html"
+          >← All employees</a
+        >
+        <div class="page-heading">
+          <div>
+            <h1>Add employee</h1>
+          </div>
+        </div>
+        <div class="form-layout">
+          <form class="card" id="employee-form">
+            <div class="form-section">
+              <h2>Employee details</h2>
+              <div
+                id="form-error"
+                class="notice error"
+                role="alert"
+                hidden
+              ></div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="id">Employee ID</label
+                  ><input
+                    id="id"
+                    name="id"
+                    required
+                    placeholder="e.g. EMP10001"
+                  /><span class="hint">Fixed ID; cannot be reused.</span>
+                </div>
+                <div class="field">
+                  <label for="name">Full name</label
+                  ><input
+                    id="name"
+                    name="name"
+                    required
+                    autocomplete="name"
+                    placeholder="Full name"
+                  />
+                </div>
+                <div class="field">
+                  <label for="department">Department</label
+                  ><select
+                    id="department"
+                    name="department"
+                    data-options="departments"
+                    data-value=""
+                    data-form-select
+                  ></select>
+                </div>
+                <div class="field">
+                  <label for="country">Work country</label
+                  ><select
+                    id="country"
+                    name="country"
+                    data-options="countries"
+                    data-value="US"
+                    data-form-select
+                  ></select>
+                </div>
+                <div class="field">
+                  <label for="joined">Joining date</label
+                  ><input id="joined" name="joined" type="date" required />
+                </div>
+              </div>
+            </div>
+            <section class="form-section">
+              <h2>Initial salary</h2>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="pay">Annual base pay</label
+                  ><input
+                    id="pay"
+                    name="pay"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    required
+                    placeholder="0.00"
+                  />
+                </div>
+                <div class="field">
+                  <label for="currency">Salary currency</label
+                  ><select
+                    id="currency"
+                    name="currency"
+                    data-options="currencies"
+                    data-value="USD"
+                    data-form-select
+                  ></select
+                  ><span class="hint">Separate from work country.</span>
+                </div>
+              </div>
+            </section>
+            <div class="form-footer">
+              <div>
+                <a id="form-cancel" class="button ghost" href="employees.html"
+                  >Cancel</a
+                ><button class="button" type="submit">Create employee</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Employees · ACME</title>
+    <link rel="stylesheet" href="styles.css?v=11" />
+    <script src="data.js" defer></script>
+    <script src="app.js?v=11" defer></script>
+  </head>
+  <body data-page="employees">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation"></aside>
+    <div class="shell">
+      <main class="content" id="main">
+        <div class="page-heading">
+          <h1>Employees</h1>
+          <a class="button" href="employee-new.html"
+            ><span aria-hidden="true">＋</span> Add employee</a
+          >
+        </div>
+        <form class="toolbar" id="employee-filters">
+          <div class="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10" cy="10" r="6.5" />
+              <path d="m15 15 5 5" /></svg
+            ><input
+              aria-label="Search employees by name or ID"
+              type="search"
+              name="search"
+              placeholder="Search name or employee ID…"
+            />
+          </div>
+          <select
+            name="country"
+            data-options="countries"
+            aria-label="Work country"
+          ></select
+          ><select
+            name="department"
+            data-options="departments"
+            aria-label="Department"
+          ></select
+          ><select name="status" aria-label="Employment status">
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="departed">Departed</option>
+            <option value="upcoming">Upcoming</option>
+          </select>
+        </form>
+        <div id="employee-overview"></div>
+        <section class="card directory" aria-label="Employees">
+          <div id="directory-body"></div>
+        </section>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>

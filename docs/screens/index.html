@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Screen library · ACME</title>
+    <link rel="stylesheet" href="styles.css?v=11" />
+  </head>
+  <body>
+    <header class="gallery-top">
+      <a class="brand" href="index.html"
+        ><span class="brand-mark"
+          ><svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M5 18V11M12 18V5M19 18V8" /></svg></span
+        ><span>acme<small>People & pay</small></span></a
+      ><span class="hint">Screen previews</span>
+    </header>
+    <main class="preview-content">
+      <section class="preview-intro">
+        <h1>Screens</h1>
+        <div class="preview-states">
+          <a class="button" href="login.html">Start with sign in →</a
+          ><a class="button secondary" href="employees.html"
+            >Open employee directory</a
+          >
+        </div>
+      </section>
+      <h2 class="section-title">Access & employee operations</h2>
+      <div class="overview-grid">
+        <a class="screen-card" href="login.html"
+          ><span class="screen-number">01 · ACCESS</span
+          ><strong>Sign in</strong> <span>Open screen →</span></a
+        >
+        <a class="screen-card" href="employees.html"
+          ><span class="screen-number">02 · DIRECTORY</span
+          ><strong>Employees</strong> <span>Open screen →</span></a
+        >
+        <a class="screen-card" href="employee.html"
+          ><span class="screen-number">03 · PROFILE</span
+          ><strong>Employee & salary history</strong>
+          <span>Open screen →</span></a
+        >
+        <a class="screen-card" href="employee-new.html"
+          ><span class="screen-number">04 · CREATE</span
+          ><strong>Add employee</strong> <span>Open screen →</span></a
+        >
+        <a class="screen-card" href="employee-edit.html"
+          ><span class="screen-number">05 · EDIT</span
+          ><strong>Edit employee</strong> <span>Open screen →</span></a
+        >
+        <a class="screen-card" href="salary-change.html"
+          ><span class="screen-number">06 · SALARY</span
+          ><strong>Change salary</strong> <span>Open screen →</span></a
+        >
+      </div>
+      <h2 class="section-title">Reports</h2>
+      <div class="overview-grid">
+        <a class="screen-card" href="report-commitment.html"
+          ><span class="screen-number">07 · CURRENT PAY</span
+          ><strong>Salary commitment</strong> <span>Open screen →</span></a
+        >
+        <a class="screen-card" href="report-departments.html"
+          ><span class="screen-number">08 · TEAMS</span
+          ><strong>Department breakdown</strong> <span>Open screen →</span></a
+        >
+        <a class="screen-card" href="report-growth.html"
+          ><span class="screen-number">09 · REVISIONS</span
+          ><strong>Salary growth</strong> <span>Open screen →</span></a
+        >
+        <a class="screen-card" href="report-history.html"
+          ><span class="screen-number">10 · HISTORY</span
+          ><strong>Historical benchmarking</strong>
+          <span>Open screen →</span></a
+        >
+      </div>
+      <h2 class="section-title">Review states</h2>
+      <div class="preview-states" style="justify-content: flex-start">
+        <a href="report-history.html?state=loading">Loading report</a
+        ><a href="employees.html?state=empty">No matching employees</a
+        ><a href="report-growth.html?state=error">Report error</a
+        ><a href="employee-new.html?state=error">Duplicate employee ID</a
+        ><a href="salary-change.html?state=conflict">Salary revision conflict</a
+        ><a href="login.html?state=error">Incorrect credentials</a>
+      </div>
+    </main>
+  </body>
+</html>

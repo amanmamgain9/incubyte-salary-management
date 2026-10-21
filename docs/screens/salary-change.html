@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Change salary · ACME</title>
+    <link rel="stylesheet" href="styles.css?v=11" />
+    <script src="data.js" defer></script>
+    <script src="app.js?v=11" defer></script>
+  </head>
+  <body data-page="salary-change">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation"></aside>
+    <div class="shell">
+      <main class="content" id="main">
+        <a class="back-link" id="salary-back" href="employee.html"
+          >← Employee profile</a
+        >
+        <div class="page-heading">
+          <div>
+            <h1>Change salary</h1>
+          </div>
+        </div>
+        <div class="form-layout">
+          <form class="card" id="salary-form">
+            <div class="form-section">
+              <div id="salary-person"></div>
+
+              <div class="pay-current">
+                <div>
+                  <small>Current annual base pay</small
+                  ><strong id="current-pay"></strong>
+                </div>
+                <span id="current-revision" class="badge neutral"></span>
+              </div>
+              <div
+                id="form-error"
+                class="notice error"
+                role="alert"
+                hidden
+              ></div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="pay">New annual base pay</label
+                  ><input
+                    id="pay"
+                    name="pay"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    required
+                  /><span class="hint">Effective immediately.</span>
+                </div>
+                <div class="field">
+                  <label for="currency">Salary currency</label
+                  ><select
+                    id="currency"
+                    name="currency"
+                    data-options="currencies"
+                    data-value="INR"
+                    data-form-select
+                  ></select
+                  ><span class="hint">No automatic conversion.</span>
+                </div>
+                <div class="field span-two">
+                  <label for="reason">Reason for change</label
+                  ><textarea
+                    id="reason"
+                    name="reason"
+                    required
+                    placeholder="e.g. Annual salary review or promotion"
+                  ></textarea>
+                </div>
+              </div>
+              <div
+                id="salary-delta"
+                class="delta-note"
+                aria-live="polite"
+              ></div>
+            </div>
+            <div class="form-footer">
+              <div>
+                <a class="button ghost" id="salary-cancel" href="employee.html"
+                  >Cancel</a
+                ><button class="button" type="submit">Save salary</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>
