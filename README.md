@@ -28,3 +28,5 @@ npm run lint              # ESLint, including the architecture boundary rules
 npm run typecheck         # route types + tsc
 npm run build             # production build
 ```
+
+CI (`.github/workflows/ci.yml`) runs typecheck, lint, unit tests and build on every push and pull request.
