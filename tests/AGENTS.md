@@ -40,7 +40,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
     ├── auth.spec.ts               # login error, login, sign out
     ├── employees.spec.ts          # create dialog → profile, duplicate ID, edit/date errors/departure, deep link, Esc, focus return, 404
     ├── salaries.spec.ts           # salary change with delta → new history revision; conflict reload
-    └── reports.spec.ts            # each report renders seeded rows and applies a filter (URL + table); a salary change refreshes the cached commitment report
+    └── reports.spec.ts            # each report renders rows and applies a filter (URL + table; growth first makes its own revision, so the seed date does not matter); a salary change refreshes the cached commitment report
 
 scripts/
 ├── db/

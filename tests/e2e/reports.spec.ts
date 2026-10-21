@@ -35,7 +35,24 @@ test("department breakdown lists departments and filters by department", async (
   }
 });
 
-test("salary growth lists monthly changes and filters by country", async ({ page }) => {
+test("salary growth lists monthly changes and filters by country", async ({ page, api }) => {
+  // A revision made now falls in the default period (the 12 months ending today), whenever the seed was generated.
+  await api.mutate("employees.create", {
+    id: "E2E-0302",
+    name: "Ada Lovelace",
+    department_id: "engineering",
+    work_country_code: "GB",
+    joining_date: "2024-02-01",
+    annual_base_pay: "60000",
+    salary_currency_code: "GBP",
+  });
+  await api.mutate("salaries.update", {
+    employee_id: "E2E-0302",
+    expected_revision: 1,
+    annual_base_pay: "64000",
+    salary_currency_code: "GBP",
+    reason: "Annual review",
+  });
   await page.goto("/reports/salary-growth");
   const table = page.getByRole("table", { name: "Monthly salary changes" });
   await expect(table.getByRole("row").nth(1)).toBeVisible();
