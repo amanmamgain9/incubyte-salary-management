@@ -63,6 +63,7 @@ npm run db:reset && npm run db:seed    # db:reset empties every app and auth tab
 ## Docs
 
 - [Requirements](docs/requirements.md): goal, user, features, report questions and exclusions
+- [Design decisions](docs/decisions.md): the key decisions, why they were made and their trade-offs
 - [Architecture](docs/architecture.md): stack, structure, runtime rules, delivery and report performance
 - [tRPC contracts](docs/trpc-contracts.md): every procedure's input, output, errors and report calculations
 - [Data model](docs/data-model.md): tables, constraints and indexes
