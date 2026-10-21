@@ -6,3 +6,5 @@ import { Pool } from "pg";
 export function createDb(url: string) {
   return drizzle({ client: new Pool({ connectionString: url }) });
 }
+
+export type Database = ReturnType<typeof createDb>;

@@ -114,6 +114,7 @@ Use [tRPC error codes](https://trpc.io/docs/server/error-handling):
 | --- | --- |
 | `BAD_REQUEST` | Invalid input, unknown country/department/currency, salary change for a departed employee, or invalid cursor; validation includes `error.data.field_errors` |
 | `UNAUTHORIZED` | Missing, expired or revoked session |
+| `FORBIDDEN` | Mutation whose `Origin` header is missing or not the app origin |
 | `NOT_FOUND` | Employee does not exist |
 | `CONFLICT` | Employee ID already exists (with `field_errors.id`) or salary revision is stale |
 | `INTERNAL_SERVER_ERROR` | Unexpected failure; return a generic message |

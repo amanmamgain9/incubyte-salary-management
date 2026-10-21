@@ -1,6 +1,10 @@
 import { sql } from "drizzle-orm";
+import { type Context, createContext } from "@/server/api/context";
+import { appRouter } from "@/server/api/root";
+import { createCallerFactory } from "@/server/api/trpc";
 import { auth } from "@/server/auth/auth";
 import { ownerDb } from "@/server/db/owner";
+import { getEnv } from "@/server/env";
 import type { HrUserFixture } from "./fixtures";
 
 /** Empties every app and auth table (all of `public`) as owner. Call in each db test file's `beforeEach`. */
@@ -29,4 +33,26 @@ export async function signIn(hr: HrUserFixture): Promise<string> {
     .getSetCookie()
     .map((cookie) => cookie.split(";", 1)[0])
     .join("; ");
+}
+
+export type CallOptions = {
+  /** The request clock; defaults to the real time. */
+  now?: Date;
+  /** The `Origin` header; defaults to the app origin, `null` omits it. */
+  origin?: string | null;
+};
+
+/** The tRPC context a request from `hr` (signed in through Better Auth) or an anonymous client would get. */
+export async function contextFor(hr: HrUserFixture | null, options: CallOptions = {}): Promise<Context> {
+  const headers = new Headers();
+  if (hr) headers.set("cookie", await signIn(hr));
+  const origin = options.origin === undefined ? getEnv().appOrigin : options.origin;
+  if (origin !== null) headers.set("origin", origin);
+  const context = await createContext({ headers });
+  return { ...context, now: options.now ?? context.now };
+}
+
+/** An appRouter caller for `hr`, or for an anonymous client when `hr` is null. */
+export async function callerFor(hr: HrUserFixture | null, options: CallOptions = {}) {
+  return createCallerFactory(appRouter)(await contextFor(hr, options));
 }

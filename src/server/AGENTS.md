@@ -21,7 +21,7 @@ src/server/
 │       └── salary-history.ts      # salary_history; unique (employee_id, revision), (changed_at, employee_id) index
 ├── auth/
 │   ├── auth.ts                    # betterAuth(): Drizzle adapter, email/password, signup off, cookie cache off; secret/baseURL from env
-│   └── session.ts                 # getSessionUser(headers) → { id, name, email } | null
+│   └── session.ts                 # getSessionUser(headers) → Actor | null
 ├── api/
 │   ├── trpc.ts                    # initTRPC, router, `signedInProcedure`, `signedInMutationProcedure`
 │   ├── error-formatter.ts         # generic: field errors from ZodError/ValidationError/ConflictError → data.field_errors; unexpected → generic message
@@ -29,7 +29,7 @@ src/server/
 │   ├── root.ts                    # appRouter + `AppRouter` type
 │   ├── middleware/
 │   │   ├── map-domain-errors.ts   # the ONE domain-error → TRPCError mapping; logs unexpected errors (no inputs)
-│   │   ├── require-same-origin.ts # rejects mutations whose Origin ≠ getEnv().appOrigin
+│   │   ├── require-same-origin.ts # rejects mutations whose Origin ≠ getEnv().appOrigin as FORBIDDEN
 │   │   ├── require-session.ts     # adds ctx.user or throws UNAUTHORIZED
 │   │   └── operation-context.ts   # builds ctx.op: OperationContext from db, user, now
 │   └── routers/
@@ -41,7 +41,7 @@ src/server/
 │   ├── errors.ts                  # NotFoundError, ConflictError, ValidationError(field_errors), InvalidCursorError, pg violation guards; script-safe
 │   ├── cursor.ts                  # server-only: createCursorCodec(secret) HMAC sign/verify; getCursorCodec() lazy default from getEnv().CURSOR_SECRET
 │   ├── pagination.ts              # server-only: paginateKeyset(), the only pagination implementation
-│   └── operation-context.ts       # OperationContext type { db, actor, now, today }
+│   └── operation-context.ts       # OperationContext type { db, actor: Actor, now, today (UTC YYYY-MM-DD) }; Actor { id, name, email }
 ├── lookups/
 │   ├── queries.ts                 # select countries/departments/currencies
 │   └── operations.ts              # getLookups, assertKnownCodes (field-keyed ValidationError)
