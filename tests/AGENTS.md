@@ -39,10 +39,11 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 └── e2e/
     ├── global-setup.ts            # `setup` project (runs before the specs): drop/create, migrate and seed `<db>_e2e` (+ 24 generated GB/DE/SG employees)
     ├── session.ts                 # signIn (login form), callMutation, and `test` with one HR session per worker + `api.mutate`
-    ├── pickers.ts                 # pickerTrigger(label), pickDate(label, YYYY-MM-DD): drive the shared date picker by label and accessible day names
+    ├── pickers.ts                 # pickerTrigger(label), pickDate(label, YYYY-MM-DD), pickMonth(label, YYYY-MM): drive the shared pickers by label and accessible day/month names
     ├── auth.spec.ts               # login error, login, sign out
     ├── employees.spec.ts          # create dialog → profile, duplicate ID, edit/date errors/departure, deep link, Esc, focus return, 404
     ├── salaries.spec.ts           # unchanged pay error, salary change with delta → new history revision; conflict reload
+    ├── pickers.spec.ts            # date picker keyboard use in a dialog (Esc closes only the calendar, focus returns, clear); month picker applies a first day and stops at this month; calendar fits 375px
     └── reports.spec.ts            # each report renders rows and applies a filter (URL + table; growth first makes its own revision, so the seed date does not matter); a salary change refreshes the cached commitment report
 
 scripts/
