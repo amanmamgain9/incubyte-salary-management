@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 
 /** The 38px control look shared by inputs, selects and textareas. */
 export const controlClass =
-  "min-h-control w-full min-w-0 rounded-control border border-line-control bg-surface px-2.5 py-2 text-body text-ink shadow-control transition-colors placeholder:text-muted-soft focus:border-accent-ring focus:shadow-focus read-only:bg-surface-muted read-only:text-muted aria-invalid:border-negative";
+  "min-h-control w-full min-w-0 rounded-control border border-line-control bg-surface px-2.5 py-2 text-body text-ink shadow-control transition-colors placeholder:text-muted-soft focus:border-accent-ring focus:shadow-focus [&[readonly]]:bg-surface-muted [&[readonly]]:text-muted aria-invalid:border-negative";
 
 type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "id"> & {
   /** Decoration inside the start of the field, e.g. a search icon. */

@@ -5,11 +5,13 @@ import { useDeferredValue } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { CreateEmployeeDialog } from "@/features/employees/directory/create-employee-dialog";
 import { directoryScope, hasDirectoryFilters } from "@/features/employees/directory/directory-data";
 import { DirectoryFilters } from "@/features/employees/directory/directory-filters";
 import { DirectoryOverview } from "@/features/employees/directory/directory-overview";
 import { EmployeeTable } from "@/features/employees/directory/employee-table";
 import { directorySearch } from "@/features/employees/directory/search-params";
+import { SavedAlert } from "@/features/employees/saved-alert";
 import { useDialog } from "@/hooks/use-dialog";
 import { useLookups } from "@/hooks/use-lookups";
 import { useUrlState } from "@/hooks/use-url-state";
@@ -22,8 +24,8 @@ const clearedFilters = {
   employment_status: undefined,
 };
 
-/** Employees: title/action → filters → overview → table, all driven by the URL. */
-export function EmployeeDirectory() {
+/** Employees: title/action → filters → overview → table, all driven by the URL; Add employee opens a dialog. */
+export function EmployeeDirectory({ today }: { today: string }) {
   const trpc = useTRPC();
   const lookups = useLookups();
   const dialog = useDialog();
@@ -43,6 +45,7 @@ export function EmployeeDirectory() {
           </Button>
         }
       />
+      <SavedAlert />
       <DirectoryFilters search={search} onChange={patch} />
       <div aria-busy={loading} className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
         <DirectoryOverview summary={data.summary} scope={directoryScope(input, lookups)} />
@@ -55,6 +58,7 @@ export function EmployeeDirectory() {
           />
         </Card>
       </div>
+      <CreateEmployeeDialog today={today} />
     </>
   );
 }

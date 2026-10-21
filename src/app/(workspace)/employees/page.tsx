@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EmployeeDirectory } from "@/features/employees/directory/employee-directory";
 import { directorySearch } from "@/features/employees/directory/search-params";
+import { todayUtc } from "@/lib/dates";
 import { parseSearchParams } from "@/lib/search-params";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
@@ -11,7 +12,7 @@ export default async function EmployeesPage(props: PageProps<"/employees">) {
   await Promise.all([prefetch(trpc.employees.list.queryOptions(input)), prefetch(trpc.lookups.get.queryOptions())]);
   return (
     <HydrateClient>
-      <EmployeeDirectory />
+      <EmployeeDirectory today={todayUtc(new Date())} />
     </HydrateClient>
   );
 }

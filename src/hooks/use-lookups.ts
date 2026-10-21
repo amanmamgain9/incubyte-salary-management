@@ -17,6 +17,7 @@ export function useLookups() {
       departmentName: (id: string) => departments.get(id) ?? id,
       countryOptions: data.countries.map(({ code, name }): SelectOption => ({ value: code, label: name })),
       departmentOptions: data.departments.map(({ id, name }): SelectOption => ({ value: id, label: name })),
+      currencyOptions: data.currencies.map(({ code, name }): SelectOption => ({ value: code, label: `${code} · ${name}` })),
     };
   }, [data]);
 }

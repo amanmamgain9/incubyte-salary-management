@@ -87,7 +87,7 @@ src/components/
 │   ├── table.tsx                  # Table/Head/Row/Cell, local horizontal scroller, numeric alignment, sticky first column
 │   ├── pagination.tsx             # Previous/Next over opaque cursors + "x–y of total"
 │   ├── empty-state.tsx / loading-state.tsx / error-state.tsx  # standard states (error has retry)
-│   ├── form-field.tsx             # label + control slot + hint + error, wires aria-describedby
+│   ├── form-field.tsx             # label + control slot + hint + error, wires aria-describedby (`wide` spans both columns); FormSection/FormGrid/FormActions layout
 │   ├── input.tsx / select.tsx / textarea.tsx  # 38px controls; select takes `options`
 │   ├── date-picker.tsx            # the one DayPicker + Radix popover (dates and months, clearable)
 │   ├── dialog.tsx                 # the one modal: native <dialog> + showModal, focus trap/return, Esc and backdrop close; no close while `pending`
@@ -105,7 +105,7 @@ src/hooks/
 ├── use-url-state.ts               # useUrlState(schema): read/patch search params (the only history.replaceState); patching any key except `cursor`, `dialog`, `saved` drops `cursor`
 ├── use-dialog.ts                  # useDialog(): `?dialog=create|edit|salary` via useUrlState; open(name), close(saved?) sets `?saved=`
 ├── use-form.ts                    # values, `changes` vs initial, field errors, submit via onSubmit promise, toFieldErrors, focus first error, inputProps(name)
-└── use-lookups.ts                 # lookups.get + countryName/departmentName/currencyName + select options
+└── use-lookups.ts                 # lookups.get + countryName/departmentName + country/department/currency select options
 
 src/lib/
 ├── format.ts                      # formatMoney, formatCount, formatDate, formatTimestamp, formatMonth, formatPercent, formatInitials (the only Intl use)
@@ -151,7 +151,7 @@ src/trpc/
 **Forms and mutations** (one pattern for every form)
 - `useForm({ initial, onSubmit })` + `<FormField>` + `inputProps(name)`. `onSubmit` returns `mutation.mutateAsync(...)`; `useForm` maps errors through `toFieldErrors`, keeps values and focuses the first error. Forms never write their own try/catch, `onError` or pending flags; pending is `mutation.isPending`.
 - The edit form sends `{ id, ...changes }`: only fields that differ from `initial` (a cleared date is `null`). Its submit is disabled while `changes` is empty, so an empty patch is never sent.
-- Each feature's `use-<feature>-mutations.ts` owns its mutations and invalidation by path key: employee writes invalidate `trpc.employees.pathKey()` and `trpc.reports.pathKey()`; salary writes also invalidate `trpc.salaries.pathKey()`. Never `invalidateQueries()` without a key.
+- Each feature's `use-<feature>-mutations.ts` owns its mutations and invalidation by path key: employee writes invalidate `trpc.employees.pathKey()` and `trpc.reports.pathKey()`; salary writes also invalidate `trpc.salaries.pathKey()`. Add `reports.pathKey()` to each list in the change that adds the reports router. `onSuccess` returns the invalidation promise, so `mutateAsync` resolves once the page behind is fresh. Never `invalidateQueries()` without a key.
 - On success the dialog calls `close("created" | "details" | "salary")`: it closes and the page behind (directory for create, profile otherwise) shows one `<Alert tone="success">` from `?saved=`.
 - Salary `CONFLICT`: keep form values, show the error with a reload action that refetches `employees.get` and adopts the new revision; the user resubmits.
 
