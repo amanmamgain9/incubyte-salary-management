@@ -110,7 +110,7 @@ src/components/
 src/hooks/
 ├── use-url-state.ts               # useUrlState(schema): read/patch search params (the only history.replaceState); patching any key except `cursor`, `dialog`, `saved` drops `cursor`
 ├── use-dialog.ts                  # useDialog(): `?dialog=create|edit|salary` via useUrlState; open(name), close(saved?) sets `?saved=`
-├── use-form.ts                    # values, `changes` vs initial, field errors, submit via onSubmit promise, toFieldErrors, focus first error, inputProps(name)
+├── use-form.ts                    # values, `changes` vs the baseline (`initial` at mount; `outdated` when `initial` moves, `reset()` adopts it), field errors, submit via onSubmit promise, toFieldErrors, focus first error, inputProps(name)
 └── use-lookups.ts                 # lookups.get + countryName/departmentName + country/department/currency select options
 
 src/lib/
@@ -118,6 +118,7 @@ src/lib/
 ├── money.ts                       # decimal string ↔ bigint minor units; divideRounded (half away from zero); compare/diff exactly on the units; toChartNumber (chart positions only)
 ├── dates.ts                       # todayUtc, addDays, daysBetween, addMonths, month start/end, monthsBetween (UTC)
 ├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState; patchSearchParams (cursor rule)
+├── form-diff.ts                   # formDiff: a form's changes vs its baseline, and `outdated` when the latest record differs
 ├── mutation-errors.ts             # toFieldErrors(error) → { fields, message }; isConflict(error)
 ├── product-defaults.ts            # default report ranges (benchmark: 24 months ending this month) and form selections, from `today`
 └── cn.ts                          # className merge
@@ -157,7 +158,7 @@ src/trpc/
 
 **Forms and mutations** (one pattern for every form)
 - `useForm({ initial, onSubmit })` + `<FormField>` + `inputProps(name)`. `onSubmit` returns `mutation.mutateAsync(...)`; `useForm` maps errors through `toFieldErrors`, keeps values and focuses the first error. Forms never write their own try/catch, `onError` or pending flags; pending is `mutation.isPending`.
-- The edit form sends `{ id, ...changes }`: only fields that differ from `initial` (a cleared date is `null`). Its submit is disabled while `changes` is empty, so an empty patch is never sent.
+- The edit form sends `{ id, ...changes }`: only fields that differ from the baseline, the `initial` captured when the form mounted (a cleared date is `null`). A refetched `initial` never re-baselines silently: it sets `outdated` (the form shows a notice) and only `reset()` adopts it. Its submit is disabled while `changes` is empty, so an empty patch is never sent.
 - Each feature's `use-<feature>-mutations.ts` owns its mutations and invalidation by path key: employee writes invalidate `trpc.employees.pathKey()` and `trpc.reports.pathKey()`; salary writes also invalidate `trpc.salaries.pathKey()`. `onSuccess` returns the invalidation promise, so `mutateAsync` resolves once the page behind is fresh. Never `invalidateQueries()` without a key.
 - On success the dialog calls `close("created" | "details" | "salary")`: it closes and the page behind (directory for create, profile otherwise) shows one `<Alert tone="success">` from `?saved=`.
 - Salary `CONFLICT` (`isConflict(update.error)`): keep form values, show the error with a reload action that refetches `employees.get` and adopts the new revision (`update.reset()` clears the error); the user resubmits.
@@ -166,9 +167,9 @@ src/trpc/
 // hooks/use-form.ts
 export function useForm<V extends Record<string, string>>(options: { // values are input strings; a cleared date "" is sent as null
   initial: V; onSubmit: (values: V, changes: Partial<V>) => Promise<unknown>;
-}): { values: V; changes: Partial<V>; errors: Partial<Record<keyof V, string>>; message: string | null;
+}): { values: V; changes: Partial<V>; outdated: boolean; errors: Partial<Record<keyof V, string>>; message: string | null;
   inputProps: (name: keyof V & string) => InputProps; setValue: <K extends keyof V>(name: K, value: V[K]) => void;
-  submit: (event: FormEvent) => void }; // preventDefault → onSubmit → on error: toFieldErrors, focus first error
+  reset: () => void; submit: (event: FormEvent) => void }; // preventDefault → onSubmit → on error: toFieldErrors, focus first error
 // features/employees/edit-employee-form.tsx — knows nothing about dialogs
 const form = useForm({ initial, onSubmit: async (_values, changes) => {
   await update.mutateAsync({ id, ...changes }); onSaved();

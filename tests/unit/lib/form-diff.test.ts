@@ -27,4 +27,9 @@ describe("formDiff", () => {
     const latest = { ...opened, last_working_day: "2026-03-31" };
     expect(formDiff({ baseline: opened, values: opened }, latest).outdated).toBe(true);
   });
+
+  it("does not report the form as outdated when the record now holds the form's own values", () => {
+    const values = { ...opened, name: "Ada King" };
+    expect(formDiff({ baseline: opened, values }, values).outdated).toBe(false);
+  });
 });

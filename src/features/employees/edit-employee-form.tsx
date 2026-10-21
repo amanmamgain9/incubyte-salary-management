@@ -12,8 +12,9 @@ import { useForm } from "@/hooks/use-form";
 
 /**
  * employees.update: edits details and employment dates, sending only changed fields (Save stays disabled until
- * something changes). The ID is locked; clearing the last working day removes a recorded departure. Knows nothing
- * about dialogs.
+ * something changes). The ID is locked; clearing the last working day removes a recorded departure. The form edits
+ * the version it opened: if the employee is updated meanwhile, a notice offers to load the latest details, and a
+ * save still sends only the fields edited here. Knows nothing about dialogs.
  */
 export function EditEmployeeForm({
   employee,
@@ -38,6 +39,19 @@ export function EditEmployeeForm({
     <form onSubmit={form.submit}>
       <FormSection>
         {form.message ? <Alert tone="error">{form.message}</Alert> : null}
+        {form.outdated ? (
+          <Alert
+            tone="info"
+            action={
+              <Button variant="secondary" size="sm" onClick={form.reset}>
+                Load latest details
+              </Button>
+            }
+          >
+            This employee was updated since the form opened. Saving changes only the fields you edited; loading the
+            latest details discards your edits.
+          </Alert>
+        ) : null}
         <FormGrid>
           <FormField label="Employee ID" hint="Fixed ID; cannot be reused.">
             <Input value={employee.id} readOnly />

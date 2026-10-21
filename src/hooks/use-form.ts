@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
+import { formDiff } from "@/lib/form-diff";
 import { toFieldErrors } from "@/lib/mutation-errors";
 
 type FormValues = Record<string, string>;
@@ -14,26 +15,33 @@ export type InputProps = {
 };
 
 /**
- * The one form pattern: controlled values, `changes` against `initial`, submit through a promise
+ * The one form pattern: controlled values, `changes` against the baseline, submit through a promise
  * (`mutation.mutateAsync`), and on failure field errors beside their inputs, a form message and focus on the
  * first invalid field. Values are kept on error. Forms never write their own try/catch or pending flags.
+ *
+ * The baseline is `initial` as it was when the form mounted: a later `initial` (e.g. the record refetched while
+ * editing) never becomes the baseline by itself, so untouched fields are never sent. It only sets `outdated`;
+ * `reset()` adopts the latest `initial` as the new baseline and values, on the user's request.
  */
 export function useForm<V extends FormValues>(options: {
   initial: V;
   onSubmit: (values: V, changes: Partial<V>) => Promise<unknown>;
 }) {
   const { initial, onSubmit } = options;
-  const [values, setValues] = useState<V>(initial);
+  const [form, setForm] = useState({ baseline: initial, values: initial });
   const [errors, setErrors] = useState<Partial<Record<keyof V, string>>>({});
   const [message, setMessage] = useState<string | null>(null);
-
-  const changes: Partial<V> = {};
-  for (const name of Object.keys(initial) as Array<keyof V>) {
-    if (values[name] !== initial[name]) changes[name] = values[name];
-  }
+  const { values } = form;
+  const { changes, outdated } = formDiff(form, initial);
 
   function setValue<K extends keyof V>(name: K, value: V[K]) {
-    setValues((current) => ({ ...current, [name]: value }));
+    setForm((current) => ({ ...current, values: { ...current.values, [name]: value } }));
+  }
+
+  function reset() {
+    setForm({ baseline: initial, values: initial });
+    setErrors({});
+    setMessage(null);
   }
 
   function inputProps(name: keyof V & string): InputProps {
@@ -57,5 +65,5 @@ export function useForm<V extends FormValues>(options: {
       });
   }
 
-  return { values, changes, errors, message, inputProps, setValue, submit };
+  return { values, changes, outdated, errors, message, inputProps, setValue, reset, submit };
 }
