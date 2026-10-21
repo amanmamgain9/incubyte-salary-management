@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmploymentStatusBadge } from "@/features/employees/employment-status-badge";
+import { ChangeSalaryDialog } from "@/features/employees/profile/change-salary-dialog";
 import { CurrentPay } from "@/features/employees/profile/current-pay";
 import { EditEmployeeDialog } from "@/features/employees/profile/edit-employee-dialog";
 import { EmployeeDetails } from "@/features/employees/profile/employee-details";
@@ -40,9 +41,14 @@ export function EmployeeProfile({ id }: { id: string }) {
           </>
         }
         action={
-          <Button variant="secondary" onClick={() => dialog.open("edit")}>
-            Edit details
-          </Button>
+          <>
+            <Button variant="secondary" onClick={() => dialog.open("edit")}>
+              Edit details
+            </Button>
+            {employee.employment_status === "departed" ? null : (
+              <Button onClick={() => dialog.open("salary")}>Change salary</Button>
+            )}
+          </>
         }
       />
       <SavedAlert />
@@ -57,6 +63,7 @@ export function EmployeeProfile({ id }: { id: string }) {
         <SalaryHistoryTable input={history} onPage={(cursor) => patch({ cursor })} />
       </Card>
       <EditEmployeeDialog employee={employee} />
+      <ChangeSalaryDialog employee={employee} />
     </>
   );
 }

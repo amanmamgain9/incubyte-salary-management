@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { formatCount, formatDate, formatInitials, formatMoney, formatRange, formatTimestamp } from "@/lib/format";
+import {
+  formatCount,
+  formatDate,
+  formatInitials,
+  formatMoney,
+  formatPercent,
+  formatRange,
+  formatTimestamp,
+} from "@/lib/format";
 
 describe("formatCount", () => {
   it.each([
@@ -76,5 +84,17 @@ describe("formatTimestamp", () => {
 
   it("keeps the UTC date just before midnight", () => {
     expect(formatTimestamp("2024-02-29T23:59:00.000Z")).toBe("29 Feb 2024 · 23:59 UTC");
+  });
+});
+
+describe("formatPercent", () => {
+  it.each([
+    ["5.00", "+5.00%"],
+    ["-3.25", "−3.25%"],
+    ["0.00", "0.00%"],
+    ["-0.00", "0.00%"],
+    ["1250.50", "+1,250.50%"],
+  ])("formats %j as %j", (percent, text) => {
+    expect(formatPercent(percent)).toBe(text);
   });
 });

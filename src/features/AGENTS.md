@@ -64,7 +64,7 @@ src/features/
 ├── salaries/
 │   ├── use-salary-mutations.ts    # salaries.update + its invalidation
 │   ├── change-salary-form.tsx     # current pay/revision, new amount/currency, reason, conflict reload; onSaved/onCancel, no dialog code
-│   ├── salary-delta.ts            # pure: exact change and % vs current (via lib/money); null across currencies or for an invalid new amount
+│   ├── salary-delta.ts            # pure: exact change and % vs current (via lib/money); null across currencies or for an invalid new amount; salaryDeltaNote for the form
 │   └── salary-history-table.tsx   # read-only paginated history (rendered by employees/profile)
 └── reports/
     ├── report-page.tsx            # shell: header → filters → overview/trends → table; owns query + cursor wiring
@@ -113,7 +113,7 @@ src/lib/
 ├── money.ts                       # decimal string ↔ bigint minor units; divideRounded (half away from zero); compare/diff exactly on the units
 ├── dates.ts                       # todayUtc, addDays, daysBetween, addMonths, month start/end, monthsBetween (UTC)
 ├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState; patchSearchParams (cursor rule)
-├── mutation-errors.ts             # toFieldErrors(error) → { fields, message }
+├── mutation-errors.ts             # toFieldErrors(error) → { fields, message }; isConflict(error)
 ├── product-defaults.ts            # default report ranges (benchmark: 24 months ending this month) and form selections, from `today`
 └── cn.ts                          # className merge
 
@@ -154,7 +154,7 @@ src/trpc/
 - The edit form sends `{ id, ...changes }`: only fields that differ from `initial` (a cleared date is `null`). Its submit is disabled while `changes` is empty, so an empty patch is never sent.
 - Each feature's `use-<feature>-mutations.ts` owns its mutations and invalidation by path key: employee writes invalidate `trpc.employees.pathKey()` and `trpc.reports.pathKey()`; salary writes also invalidate `trpc.salaries.pathKey()`. Add `reports.pathKey()` to each list in the change that adds the reports router. `onSuccess` returns the invalidation promise, so `mutateAsync` resolves once the page behind is fresh. Never `invalidateQueries()` without a key.
 - On success the dialog calls `close("created" | "details" | "salary")`: it closes and the page behind (directory for create, profile otherwise) shows one `<Alert tone="success">` from `?saved=`.
-- Salary `CONFLICT`: keep form values, show the error with a reload action that refetches `employees.get` and adopts the new revision; the user resubmits.
+- Salary `CONFLICT` (`isConflict(update.error)`): keep form values, show the error with a reload action that refetches `employees.get` and adopts the new revision (`update.reset()` clears the error); the user resubmits.
 
 ```tsx
 // hooks/use-form.ts

@@ -1,6 +1,6 @@
 import { TRPCClientError } from "@trpc/client";
 import { describe, expect, it } from "vitest";
-import { toFieldErrors } from "@/lib/mutation-errors";
+import { isConflict, toFieldErrors } from "@/lib/mutation-errors";
 
 function procedureError(message: string, field_errors: Record<string, string> | null) {
   return TRPCClientError.from({ error: { code: -32600, message, data: { code: "BAD_REQUEST", field_errors } } });
@@ -48,5 +48,18 @@ describe("toFieldErrors", () => {
 
   it("falls back to a generic message for anything else", () => {
     expect(toFieldErrors("boom", [])).toEqual({ fields: {}, message: "Something went wrong. Try again." });
+  });
+});
+
+describe("isConflict", () => {
+  it("recognises a CONFLICT rejection", () => {
+    const error = TRPCClientError.from({ error: { code: -32009, message: "Stale revision", data: { code: "CONFLICT" } } });
+    expect(isConflict(error)).toBe(true);
+  });
+
+  it("ignores other rejections and non-tRPC errors", () => {
+    expect(isConflict(procedureError("Invalid input", null))).toBe(false);
+    expect(isConflict(new Error("CONFLICT"))).toBe(false);
+    expect(isConflict(null)).toBe(false);
   });
 });

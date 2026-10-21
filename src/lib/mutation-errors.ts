@@ -25,3 +25,8 @@ export function toFieldErrors(error: unknown, fieldNames: readonly string[]): Fo
   if (Object.keys(fields).length === 0 && others.length === 0) return { fields, message: error.message };
   return { fields, message: others[0] ?? null };
 }
+
+/** True when a write was rejected as CONFLICT (a duplicate ID, or a salary changed since the form loaded). */
+export function isConflict(error: unknown): boolean {
+  return error instanceof TRPCClientError && error.data?.code === "CONFLICT";
+}

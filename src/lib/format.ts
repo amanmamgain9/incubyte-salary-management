@@ -54,3 +54,12 @@ export function formatTimestamp(timestamp: string): string {
   const time = new Date(timestamp).toISOString().slice(11, 16);
   return `${formatDate(timestamp)} · ${time} UTC`;
 }
+
+/** A signed two-place percentage string as shown beside a change, e.g. "5.00" → "+5.00%", "-3.25" → "−3.25%". */
+export function formatPercent(percent: string): string {
+  const units = toMinorUnits(percent.replace(/^-/, ""));
+  if (units === null) return `${percent}%`;
+  const magnitude = `${counts.format(units / 100n)}.${(units % 100n).toString().padStart(2, "0")}`;
+  if (units === 0n) return `${magnitude}%`;
+  return `${percent.startsWith("-") ? "−" : "+"}${magnitude}%`;
+}

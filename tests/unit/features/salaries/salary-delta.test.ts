@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { salaryDelta } from "@/features/salaries/salary-delta";
+import { salaryDelta, salaryDeltaNote } from "@/features/salaries/salary-delta";
 
 const inr = (annual_base_pay: string) => ({ annual_base_pay, salary_currency_code: "INR" });
 
@@ -46,4 +46,32 @@ describe("salaryDelta", () => {
       expect(salaryDelta(inr("1200000.00"), inr(annual_base_pay))).toBeNull();
     },
   );
+});
+
+describe("salaryDeltaNote", () => {
+  it("describes a raise with its percentage and exact amount", () => {
+    expect(salaryDeltaNote(inr("1200000.00"), inr("1350000.5"))).toEqual({
+      text: "+12.50% · INR 150,000.50 increase",
+      tone: "positive",
+    });
+  });
+
+  it("describes a cut", () => {
+    expect(salaryDeltaNote(inr("1000.00"), inr("966.67"))).toEqual({ text: "−3.33% · INR 33.33 decrease", tone: "negative" });
+  });
+
+  it("says when the pay is unchanged", () => {
+    expect(salaryDeltaNote(inr("1000.00"), inr("1000"))).toEqual({ text: "Same as current pay", tone: "neutral" });
+  });
+
+  it("flags a currency switch instead of comparing amounts", () => {
+    expect(salaryDeltaNote(inr("1000.00"), { annual_base_pay: "20.00", salary_currency_code: "USD" })).toEqual({
+      text: "Currency change · no automatic conversion",
+      tone: "neutral",
+    });
+  });
+
+  it("shows nothing while the new amount is invalid", () => {
+    expect(salaryDeltaNote(inr("1000.00"), inr("12.345"))).toBeNull();
+  });
 });
