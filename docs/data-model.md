@@ -91,7 +91,8 @@ For application tables; auth tables follow the generated schema above.
 - Struct references are foreign keys with `ON DELETE RESTRICT`.
 - Unique `(employee_id, revision)`; positive revision numbers, including `salary_revision`.
 - `last_working_day >= joining_date` when set.
-- Salary amounts: `NUMERIC(18,2)`, positive and finite.
+- Salary amounts: `NUMERIC(18,2)`, positive and finite (checks exclude `NaN`; the precision already rejects infinity).
+- History IDs default to `gen_random_uuid()`; the seed may supply stable ones. `changed_at` is `timestamptz`; a revision's UTC date is `(changed_at at time zone 'UTC')::date`.
 
 ## Indexes
 

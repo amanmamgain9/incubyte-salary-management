@@ -1,7 +1,8 @@
 import { sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/server/db/client";
-import { countries, currencies, departments } from "@/server/db/schema";
+import { countries, currencies, departments, employees, salaryHistory } from "@/server/db/schema";
+import { insertEmployee, insertHrUser, insertLookups } from "./fixtures";
 import { resetTables } from "./harness";
 
 // Exactly what the app role may do on each public table (src/server/AGENTS.md › Data access).
@@ -10,6 +11,8 @@ const expectedPrivileges: Record<string, string[]> = {
   countries: ["SELECT"],
   currencies: ["SELECT"],
   departments: ["SELECT"],
+  employees: ["SELECT", "INSERT", "UPDATE"],
+  salary_history: ["SELECT", "INSERT"],
   user: betterAuthTable,
   session: betterAuthTable,
   account: betterAuthTable,
@@ -45,5 +48,35 @@ describe("app role grants", () => {
     await expect(db.insert(countries).values({ code: "IN", name: "India" })).rejects.toMatchObject(permissionDenied);
     await expect(db.update(currencies).set({ name: "Euro" })).rejects.toMatchObject(permissionDenied);
     await expect(db.delete(departments)).rejects.toMatchObject(permissionDenied);
+  });
+
+  it("lets the app role append and read salary history but never change or delete it", async () => {
+    await insertLookups();
+    await insertHrUser();
+    const employee = await insertEmployee();
+    await db.insert(salaryHistory).values({
+      employee_id: employee.id,
+      revision: 2,
+      annual_base_pay: "1300000.00",
+      currency_code: "INR",
+      work_country_code_at_change: "IN",
+      department_id_at_change: "engineering",
+      changed_by: "hr-1",
+      changed_at: new Date("2025-04-01T10:00:00Z"),
+      reason: "Annual review",
+    });
+
+    await expect(db.select().from(salaryHistory)).resolves.toHaveLength(2);
+    await expect(db.update(salaryHistory).set({ reason: "Edited" })).rejects.toMatchObject(permissionDenied);
+    await expect(db.delete(salaryHistory)).rejects.toMatchObject(permissionDenied);
+  });
+
+  it("lets the app role keep employees but never delete one", async () => {
+    await insertLookups();
+    await insertHrUser();
+    await insertEmployee();
+
+    await expect(db.update(employees).set({ name: "Asha R." })).resolves.toBeDefined();
+    await expect(db.delete(employees)).rejects.toMatchObject(permissionDenied);
   });
 });
