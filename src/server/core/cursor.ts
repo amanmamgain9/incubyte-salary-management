@@ -1,6 +1,7 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { InvalidCursorError } from "@/server/core/errors";
+import { getEnv } from "@/server/env";
 
 /** Signs payloads into opaque cursor strings and verifies them back. */
 export type CursorCodec = {
@@ -41,4 +42,12 @@ function parseBody(body: string): unknown {
   } catch {
     throw new InvalidCursorError();
   }
+}
+
+let defaultCodec: CursorCodec | undefined;
+
+/** The app's codec, keyed by CURSOR_SECRET; created on first use so importing this module reads no env. */
+export function getCursorCodec(): CursorCodec {
+  defaultCodec ??= createCursorCodec(getEnv().CURSOR_SECRET);
+  return defaultCodec;
 }
