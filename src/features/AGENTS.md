@@ -68,9 +68,9 @@ src/features/
 │   └── salary-history-table.tsx   # read-only paginated history (rendered by employees/profile)
 └── reports/
     ├── report-page.tsx            # shell: header → filters → overview/trends → table; owns query + cursor wiring
-    ├── report-filters.tsx         # country/department/currency/date/month controls, configured per report
+    ├── report-filters.tsx         # country/department/currency/date/month controls, configured per report; Apply checks the period, Reset → defaults
     ├── country-totals.tsx         # by-country/currency summary groups used by all four reports
-    ├── search-params.ts           # build a report's input from URL params + defaults(today)
+    ├── search-params.ts           # build a report's input from URL params + defaults(today); periodErrors (contract rules + `to` ≤ today); filter form → patch
     └── <report>/                  # salary-commitment | department-breakdown | salary-growth | historical-salary-benchmark
         ├── <report>-report.tsx    # composes <ReportPage> with this report's parts
         ├── <report>-summary.tsx   # overview measures for this report
@@ -87,6 +87,7 @@ src/components/
 │   ├── overview.tsx / stat.tsx    # overview block: scope line + 2–4 measures + optional visual slot
 │   ├── table.tsx                  # Table/Head/Row/Cell, local horizontal scroller, numeric alignment, sticky first column
 │   ├── pagination.tsx             # Previous/Next over opaque cursors + "x–y of total"
+│   ├── deferred-content.tsx       # dims (aria-busy) results kept on screen while the deferred next result loads
 │   ├── empty-state.tsx / loading-state.tsx / error-state.tsx  # standard states (error has retry)
 │   ├── form-field.tsx             # label + control slot + hint + error, wires aria-describedby (`wide` spans both columns); FormSection/FormGrid/FormActions layout
 │   ├── input.tsx / select.tsx / textarea.tsx  # 38px controls; select takes `options`
@@ -152,7 +153,7 @@ src/trpc/
 **Forms and mutations** (one pattern for every form)
 - `useForm({ initial, onSubmit })` + `<FormField>` + `inputProps(name)`. `onSubmit` returns `mutation.mutateAsync(...)`; `useForm` maps errors through `toFieldErrors`, keeps values and focuses the first error. Forms never write their own try/catch, `onError` or pending flags; pending is `mutation.isPending`.
 - The edit form sends `{ id, ...changes }`: only fields that differ from `initial` (a cleared date is `null`). Its submit is disabled while `changes` is empty, so an empty patch is never sent.
-- Each feature's `use-<feature>-mutations.ts` owns its mutations and invalidation by path key: employee writes invalidate `trpc.employees.pathKey()` and `trpc.reports.pathKey()`; salary writes also invalidate `trpc.salaries.pathKey()`. Add `reports.pathKey()` to each list in the change that adds the reports router. `onSuccess` returns the invalidation promise, so `mutateAsync` resolves once the page behind is fresh. Never `invalidateQueries()` without a key.
+- Each feature's `use-<feature>-mutations.ts` owns its mutations and invalidation by path key: employee writes invalidate `trpc.employees.pathKey()` and `trpc.reports.pathKey()`; salary writes also invalidate `trpc.salaries.pathKey()`. `onSuccess` returns the invalidation promise, so `mutateAsync` resolves once the page behind is fresh. Never `invalidateQueries()` without a key.
 - On success the dialog calls `close("created" | "details" | "salary")`: it closes and the page behind (directory for create, profile otherwise) shows one `<Alert tone="success">` from `?saved=`.
 - Salary `CONFLICT` (`isConflict(update.error)`): keep form values, show the error with a reload action that refetches `employees.get` and adopts the new revision (`update.reset()` clears the error); the user resubmits.
 
@@ -196,12 +197,13 @@ export function useSalaryMutations() {
 
 ```tsx
 // features/reports/report-page.tsx — each <report>-report.tsx only fills these props
-export function ReportPage<I extends Paging, O extends { rows: Page<unknown>; summary: unknown }>(props: {
+export function ReportPage<I extends Paging & FilterValues, O extends { rows: Page<unknown>; summary: unknown }, E, K extends QueryKey>(props: {
   title: string;
-  search: z.ZodType<I>;                     // from the report's search-params.ts, built with `today`
-  filters: ReportFilterField[];             // controls <ReportFilters> shows, e.g. ["date_range", "country"]
-  queryOptions: (input: I) => UseSuspenseQueryOptions<O>; // (i) => trpc.reports.salaryGrowth.queryOptions(i)
-  summary: (output: O, input: I) => ReactNode;            // overview + chart
-  table: (items: O["rows"]["items"]) => ReactNode;        // columns only; <Pagination> belongs to the shell
+  today: string;                            // from the page, like every `today`
+  search: z.ZodType<I, ReportParams>;       // from the report's search-params.ts, built with `today` (useMemo it)
+  filters: readonly ReportFilterField[];    // controls <ReportFilters> shows, e.g. ["dates", "country"]
+  queryOptions: (input: I) => UseSuspenseQueryOptions<O, E, O, K>; // (i) => trpc.reports.salaryGrowth.queryOptions(i)
+  summary: (output: O, input: I) => ReactNode;            // overview + group totals + chart
+  table: (items: O["rows"]["items"], input: I) => ReactNode; // columns only; <Pagination> and the empty state belong to the shell
 }): ReactNode;
 ```

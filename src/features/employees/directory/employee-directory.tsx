@@ -4,6 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useDeferredValue } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DeferredContent } from "@/components/ui/deferred-content";
 import { PageHeader } from "@/components/ui/page-header";
 import { CreateEmployeeDialog } from "@/features/employees/directory/create-employee-dialog";
 import { directoryScope, hasDirectoryFilters } from "@/features/employees/directory/directory-data";
@@ -47,7 +48,7 @@ export function EmployeeDirectory({ today }: { today: string }) {
       />
       <SavedAlert />
       <DirectoryFilters search={search} onChange={patch} />
-      <div aria-busy={loading} className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
+      <DeferredContent stale={loading}>
         <DirectoryOverview summary={data.summary} scope={directoryScope(input, lookups)} />
         <Card label="Employees">
           <EmployeeTable
@@ -57,7 +58,7 @@ export function EmployeeDirectory({ today }: { today: string }) {
             onClearFilters={() => patch(clearedFilters)}
           />
         </Card>
-      </div>
+      </DeferredContent>
       <CreateEmployeeDialog today={today} />
     </>
   );

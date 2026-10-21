@@ -3,6 +3,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useDeferredValue } from "react";
 import { Amount } from "@/components/ui/amount";
+import { DeferredContent } from "@/components/ui/deferred-content";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,7 +23,7 @@ export function SalaryHistoryTable({ input, onPage }: { input: SalaryHistoryInpu
 
   if (data.items.length === 0) return <EmptyState title="No salary history" />;
   return (
-    <div aria-busy={loading} className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
+    <DeferredContent stale={loading}>
       <Table label="Salary history">
         <TableHead>
           <TableHeader>Revision / date</TableHeader>
@@ -58,6 +59,6 @@ export function SalaryHistoryTable({ input, onPage }: { input: SalaryHistoryInpu
         nextCursor={data.next_cursor}
         onPage={onPage}
       />
-    </div>
+    </DeferredContent>
   );
 }
