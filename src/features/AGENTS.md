@@ -45,6 +45,7 @@ src/features/
 │   ├── saved-alert.tsx            # `?saved=` → one success <Alert> (directory and profile)
 │   ├── create-employee-form.tsx   # employees.create form (ID, details, initial pay + currency); onSaved/onCancel, no dialog code
 │   ├── edit-employee-form.tsx     # employees.update form ({ id, ...changes }; submit disabled until a change); ID locked; set/clear last working day
+│   ├── details-patch.ts           # pure: employee → edit form values; changes → DetailsPatch (cleared date → null)
 │   ├── directory/
 │   │   ├── employee-directory.tsx # title/action → filters → overview → table
 │   │   ├── create-employee-dialog.tsx # `?dialog=create` <Dialog> around <CreateEmployeeForm>
