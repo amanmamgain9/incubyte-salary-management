@@ -1,10 +1,18 @@
 import "server-only";
-import type { UpdateSalaryInput } from "@/contracts/salaries";
+import type { HistoryView, SalaryHistoryInput, SalaryHistoryOutput, UpdateSalaryInput } from "@/contracts/salaries";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/core/errors";
 import type { OperationContext } from "@/server/core/operation-context";
+import { paginateKeyset } from "@/server/core/pagination";
 import type { Executor } from "@/server/db/connect";
 import { assertKnownCodes } from "@/server/lookups/operations";
-import { insertHistoryEntry, lockCurrentPay, selectAssignment, updateCurrentPay } from "@/server/salaries/queries";
+import {
+  countHistory,
+  insertHistoryEntry,
+  lockCurrentPay,
+  selectAssignment,
+  selectHistoryPage,
+  updateCurrentPay,
+} from "@/server/salaries/queries";
 
 export type NewRevision = {
   employee_id: string;
@@ -56,5 +64,17 @@ export async function changeSalary(op: OperationContext, input: UpdateSalaryInpu
       currency_code: salary_currency_code,
       reason,
     });
+  });
+}
+
+/** One employee's salary history, newest revision first; kept and readable after departure. */
+export async function listSalaryHistory(op: OperationContext, input: SalaryHistoryInput): Promise<SalaryHistoryOutput> {
+  if (!(await selectAssignment(op.db, input.employee_id))) throw new NotFoundError("Employee not found");
+  return paginateKeyset({
+    scope: "salaries.history",
+    input,
+    keyOf: (row: HistoryView) => [row.revision] as const,
+    fetch: (from, take) => selectHistoryPage(op.db, input.employee_id, from, take),
+    count: () => countHistory(op.db, input.employee_id),
   });
 }

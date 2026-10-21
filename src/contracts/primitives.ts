@@ -14,6 +14,9 @@ export const EmployeeId = z
 /** A calendar date, `YYYY-MM-DD` (impossible dates such as 2025-02-30 are rejected). */
 export const IsoDate = z.iso.date("Use a valid date (YYYY-MM-DD)");
 
+/** An instant as an ISO 8601 UTC string, e.g. `2026-10-21T12:00:00.000Z`. */
+export const Timestamp = z.iso.datetime();
+
 const MONEY_MESSAGE = "Use a positive amount with at most two decimals";
 
 /** Input money: a positive decimal string with at most two decimals and 16 integer digits (fits NUMERIC(18,2)). */

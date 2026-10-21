@@ -1,6 +1,8 @@
-import { eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, lt } from "drizzle-orm";
+import type { KeysetFrom } from "@/contracts/paging";
+import type { HistoryView } from "@/contracts/salaries";
 import type { Executor } from "@/server/db/connect";
-import { employees, salaryHistory } from "@/server/db/schema";
+import { employees, salaryHistory, user } from "@/server/db/schema";
 
 /** The employee's current work country and department, snapshotted onto each history entry. */
 export async function selectAssignment(
@@ -42,4 +44,50 @@ export async function updateCurrentPay(
   pay: { annual_base_pay: string; salary_currency_code: string; salary_revision: number },
 ): Promise<void> {
   await db.update(employees).set(pay).where(eq(employees.id, employee_id));
+}
+
+/**
+ * One page of the employee's history, newest revision first: after `from.key` (lower revisions), or before it
+ * (higher revisions, in ascending order) when `from.before`.
+ */
+export async function selectHistoryPage(
+  db: Executor,
+  employee_id: string,
+  from: KeysetFrom<readonly [number]>,
+  take: number,
+): Promise<HistoryView[]> {
+  const after =
+    from === null
+      ? undefined
+      : from.before
+        ? gt(salaryHistory.revision, from.key[0])
+        : lt(salaryHistory.revision, from.key[0]);
+  const rows = await db
+    .select({
+      id: salaryHistory.id,
+      employee_id: salaryHistory.employee_id,
+      revision: salaryHistory.revision,
+      annual_base_pay: salaryHistory.annual_base_pay,
+      currency_code: salaryHistory.currency_code,
+      work_country_code_at_change: salaryHistory.work_country_code_at_change,
+      department_id_at_change: salaryHistory.department_id_at_change,
+      changed_by: salaryHistory.changed_by,
+      changed_by_name: user.name,
+      changed_at: salaryHistory.changed_at,
+      reason: salaryHistory.reason,
+    })
+    .from(salaryHistory)
+    .innerJoin(user, eq(user.id, salaryHistory.changed_by))
+    .where(and(eq(salaryHistory.employee_id, employee_id), after))
+    .orderBy(from?.before ? asc(salaryHistory.revision) : desc(salaryHistory.revision))
+    .limit(take);
+  return rows.map((row) => ({ ...row, changed_at: row.changed_at.toISOString() }));
+}
+
+export async function countHistory(db: Executor, employee_id: string): Promise<number> {
+  const [row] = await db
+    .select({ total: count() })
+    .from(salaryHistory)
+    .where(eq(salaryHistory.employee_id, employee_id));
+  return row?.total ?? 0;
 }
