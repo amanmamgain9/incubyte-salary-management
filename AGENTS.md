@@ -420,7 +420,8 @@ export const ownerEnv = () => z.object({ DATABASE_OWNER_URL: z.url() }).parse(pr
 
 ## 6. Testing rules
 
-- TDD for business logic: failing test, pass, refactor. Commit the test with the implementation.
+- TDD for business logic: failing test, pass, refactor. Test behavior, not markup: no unit tests for JSX, layout, Tailwind, routers or `page.tsx`; e2e covers them.
+- Core rules land as a red → green pair: `test(scope): <behavior>` with the failing test (unit or db), then `feat(scope): …` that makes it pass. Core rules: cursor codec, `paginateKeyset`, domain-error mapping, salary revision (expected revision, conflict, history append), employment-date validation, salary delta, each report's numbers against the seed manifest. All other changes commit tests with the implementation.
 - `npm test` runs `tests/unit` only: fast, deterministic, no DB, network or real clock (pass `today`/`now` in).
 - Required unit coverage: cursor codec, `paginateKeyset` (next/previous pages, range_start, fingerprint mismatch, tampering), error formatter and domain-error mapping, contract edge cases, every `lib/*` module, every `*-data.ts`, `salary-delta.ts`, data generator determinism/quotas and manifest arithmetic.
 - `npm run test:db` runs `tests/db` on a fresh database; `npm run test:e2e` runs `tests/e2e` against the seeded app.
@@ -446,4 +447,4 @@ export const ownerEnv = () => z.object({ DATABASE_OWNER_URL: z.url() }).parse(pr
 - [ ] `npm run typecheck`, `npm run lint` and `npm test` pass; `npm run test:db` if server/db changed; `npm run test:e2e` if a user flow changed.
 - [ ] Migrations generated and committed for schema changes; `.env.example` updated for new env vars.
 - [ ] Docs updated in the same change when behavior, contracts or setup change. README describes only what works today.
-- [ ] One small, focused change → one Conventional Commit: `type(scope): summary`. Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`. Scopes: `auth`, `employees`, `salaries`, `lookups`, `reports`, `ui`, `api`, `db`, `scripts`, `e2e`, `docs`.
+- [ ] One small, focused change → one Conventional Commit (a core rule → its red → green pair): `type(scope): summary`. Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`. Scopes: `auth`, `employees`, `salaries`, `lookups`, `reports`, `ui`, `api`, `db`, `scripts`, `e2e`, `docs`.
