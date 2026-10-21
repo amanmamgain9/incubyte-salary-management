@@ -15,7 +15,7 @@ import { EmployeeDetails } from "@/features/employees/profile/employee-details";
 import { historyInput, profileSearch } from "@/features/employees/profile/search-params";
 import { SavedAlert } from "@/features/employees/saved-alert";
 import { SalaryHistoryTable } from "@/features/salaries/salary-history-table";
-import { useDialog } from "@/hooks/use-dialog";
+import { useEmployeeDialog } from "@/features/employees/use-employee-dialog";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useTRPC } from "@/trpc/client";
 
@@ -23,7 +23,7 @@ import { useTRPC } from "@/trpc/client";
 export function EmployeeProfile({ id }: { id: string }) {
   const trpc = useTRPC();
   const { data: employee } = useSuspenseQuery(trpc.employees.get.queryOptions({ id }));
-  const dialog = useDialog();
+  const dialog = useEmployeeDialog();
   const [{ cursor }, patch] = useUrlState(profileSearch);
   // Stable while only `?dialog=`/`?saved=` change, so the history does not re-defer (dim) on those.
   const history = useMemo(() => historyInput(id, { cursor }), [id, cursor]);

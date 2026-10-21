@@ -13,7 +13,7 @@ import { DirectoryOverview } from "@/features/employees/directory/directory-over
 import { EmployeeTable } from "@/features/employees/directory/employee-table";
 import { directorySearch } from "@/features/employees/directory/search-params";
 import { SavedAlert } from "@/features/employees/saved-alert";
-import { useDialog } from "@/hooks/use-dialog";
+import { useEmployeeDialog } from "@/features/employees/use-employee-dialog";
 import { useLookups } from "@/hooks/use-lookups";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useTRPC } from "@/trpc/client";
@@ -29,7 +29,7 @@ const clearedFilters = {
 export function EmployeeDirectory({ today }: { today: string }) {
   const trpc = useTRPC();
   const lookups = useLookups();
-  const dialog = useDialog();
+  const dialog = useEmployeeDialog();
   const [search, patch] = useUrlState(directorySearch);
   // While the next page or filter result loads, keep showing (dimmed) results instead of the loading state.
   const input = useDeferredValue(search);

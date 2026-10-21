@@ -40,6 +40,7 @@ src/features/
 │   └── account-footer.tsx         # signed-in user + <SignOutButton>
 ├── employees/
 │   ├── use-employee-mutations.ts  # employees.create/update + their invalidation
+│   ├── use-employee-dialog.ts     # the employee dialog names (create, edit, salary) and saved notices → useEmployeeDialog()
 │   ├── employee-fields.tsx        # field group shared by create and edit forms
 │   ├── employment-status-badge.tsx  # EmploymentStatus → <Badge> label/tone (only mapping)
 │   ├── saved-alert.tsx            # `?saved=` → one success <Alert> (directory and profile)
@@ -109,7 +110,7 @@ src/components/
 
 src/hooks/
 ├── use-url-state.ts               # useUrlState(schema): read/patch search params (the only history.replaceState); patching any key except `cursor`, `dialog`, `saved` drops `cursor`
-├── use-dialog.ts                  # useDialog(): `?dialog=create|edit|salary` via useUrlState; open(name), close(saved?) sets `?saved=`
+├── use-dialog.ts                  # dialogParams(dialogs, notices) → URL schema; useDialog(schema): `?dialog=` via useUrlState, open(name), close(saved?) sets `?saved=`; names belong to the feature
 ├── use-form.ts                    # values, `changes` vs the baseline (`initial` at mount; `outdated` when `initial` moves, `reset()` adopts it), field errors, submit via onSubmit promise, toFieldErrors, focus first error, inputProps(name)
 └── use-lookups.ts                 # lookups.get + countryName/departmentName + country/department/currency select options
 
@@ -148,7 +149,7 @@ src/trpc/
 - Colors, radii and shadows come only from `@theme` tokens in `src/app/globals.css`, ported once from `docs/screens/styles.input.css`. No hex/rgb/hsl values or arbitrary color classes (`bg-[#…]`) in components.
 - Dates and months use native `<Input type="date">` / `<Input type="month">` with ISO values; no date-picker library. A month input also carries `placeholder="YYYY-MM"` for browsers that render it as text.
 - Every amount renders through `<Amount>` with its currency. Currencies are never summed or charted together.
-- Every form is a modal: `<Dialog>` (`components/ui/dialog.tsx`) opened and closed only through `useDialog()` (`?dialog=`). Dialog files wrap a dialog-agnostic form (`onSaved`/`onCancel` props) and pass `pending` from `useIsMutating({ mutationKey })`. Never copy dialog plumbing (`showModal`, backdrop, focus, `replaceState`) anywhere else.
+- Every form is a modal: `<Dialog>` (`components/ui/dialog.tsx`) opened and closed only through `useDialog` (`?dialog=`), wrapped per feature with its own names (`useEmployeeDialog`). Dialog files wrap a dialog-agnostic form (`onSaved`/`onCancel` props) and pass `pending` from `useIsMutating({ mutationKey })`. Never copy dialog plumbing (`showModal`, backdrop, focus, `replaceState`) anywhere else.
 
 **URL state**
 - Intentional: filters, pages and dialogs replace the current history entry (`replaceState`), so links and reloads keep the state but Back leaves the page instead of stepping through filter, page or dialog changes.
@@ -176,7 +177,7 @@ const form = useForm({ initial, onSubmit: async (_values, changes) => {
 } });
 <Button type="submit" pending={update.isPending} disabled={Object.keys(form.changes).length === 0}>Save</Button>
 // features/employees/profile/edit-employee-dialog.tsx — the dialog wraps the form
-const dialog = useDialog();
+const dialog = useEmployeeDialog();
 const pending = useIsMutating({ mutationKey: trpc.employees.update.mutationKey() }) > 0;
 <Dialog open={dialog.current === "edit"} title="Edit details" pending={pending} onClose={() => dialog.close()}>
   <EditEmployeeForm employee={employee} onSaved={() => dialog.close("details")} onCancel={() => dialog.close()} />
