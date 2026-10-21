@@ -69,7 +69,7 @@ src/features/
 └── reports/
     ├── report-page.tsx            # shell: header → filters → overview/trends → table; owns query + cursor wiring
     ├── report-filters.tsx         # country/department/currency/date/month controls, configured per report; Apply checks the period, Reset → defaults
-    ├── country-totals.tsx         # by-country/currency summary groups used by all four reports
+    ├── country-totals.tsx         # by-country/currency summary group strip (department, growth, benchmark); commitment's rows are its groups
     ├── report-scope.ts            # pure: overview scope line from the filters ("All countries · …")
     ├── search-params.ts           # build a report's input from URL params + defaults(today); periodErrors (contract rules + `to` ≤ today); filter form → patch
     └── <report>/                  # salary-commitment | department-breakdown | salary-growth | historical-salary-benchmark
@@ -84,7 +84,7 @@ src/components/
 │   ├── button.tsx                 # variants: primary | secondary | ghost | danger; size; `pending`
 │   ├── alert.tsx                  # info | success | error notices (role="alert" for errors, "status" otherwise)
 │   ├── page-header.tsx            # title + optional back link, leading avatar and meta line + actions (one primary)
-│   ├── card.tsx                   # white data surface (no nesting) + CardHeader title row
+│   ├── card.tsx                   # white data surface (no nesting) + CardHeader title row + padded CardBody (charts)
 │   ├── overview.tsx / stat.tsx    # overview block: scope line + 2–4 measures + optional visual slot
 │   ├── table.tsx                  # Table/Head/Row/Cell, local horizontal scroller, numeric alignment, sticky first column
 │   ├── pagination.tsx             # Previous/Next over opaque cursors + "x–y of total"
@@ -101,6 +101,7 @@ src/components/
 │   ├── brand.tsx                  # ACME mark + wordmark; a link only on signed-in pages (a prefetched link on /login caches its redirect)
 │   └── icon.tsx                   # 18px icon wrapper; the only icon-library import site
 └── charts/                        # the only chart-library import site
+    ├── chart-tones.ts             # token color references (`var(--color-…)`) and axis/grid strokes for every chart
     ├── mini-bars.tsx              # the overview's small bar visual (plain elements, no library)
     ├── bar-chart.tsx              # horizontal/vertical bars, negative values
     ├── line-chart.tsx             # lines with optional range band (P10–P90) and reference line
@@ -114,7 +115,7 @@ src/hooks/
 
 src/lib/
 ├── format.ts                      # formatMoney, formatCompact (exact, overview figures), formatCount, formatDate, formatTimestamp, formatMonth, formatPercent, formatInitials (the only Intl use)
-├── money.ts                       # decimal string ↔ bigint minor units; divideRounded (half away from zero); compare/diff exactly on the units
+├── money.ts                       # decimal string ↔ bigint minor units; divideRounded (half away from zero); compare/diff exactly on the units; toChartNumber (chart positions only)
 ├── dates.ts                       # todayUtc, addDays, daysBetween, addMonths, month start/end, monthsBetween (UTC)
 ├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState; patchSearchParams (cursor rule)
 ├── mutation-errors.ts             # toFieldErrors(error) → { fields, message }; isConflict(error)

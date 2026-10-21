@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { divideRounded, fromMinorUnits, toMinorUnits } from "@/lib/money";
+import { divideRounded, fromMinorUnits, toChartNumber, toMinorUnits } from "@/lib/money";
 
 describe("toMinorUnits", () => {
   it.each([
@@ -48,5 +48,12 @@ describe("divideRounded", () => {
 
   it("rejects division by zero", () => {
     expect(() => divideRounded(1n, 0n)).toThrow(RangeError);
+  });
+});
+
+describe("toChartNumber", () => {
+  it("reads a decimal string as a number for chart positions", () => {
+    expect(toChartNumber("-1250.50")).toBe(-1250.5);
+    expect(toChartNumber("0.00")).toBe(0);
   });
 });

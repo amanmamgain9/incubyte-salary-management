@@ -8,6 +8,9 @@ export const navSections: ReadonlyArray<{ label: string; items: readonly NavItem
   { label: "People", items: [{ href: "/employees", label: "Employees", icon: "employees" }] },
   {
     label: "Reports",
-    items: [{ href: "/reports/salary-commitment", label: "Salary commitment", icon: "commitment" }],
+    items: [
+      { href: "/reports/salary-commitment", label: "Salary commitment", icon: "commitment" },
+      { href: "/reports/department-breakdown", label: "Departments", icon: "departments" },
+    ],
   },
 ];

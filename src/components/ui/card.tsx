@@ -21,3 +21,8 @@ export function CardHeader({ title, aside }: { title: string; aside?: ReactNode 
     </div>
   );
 }
+
+/** A card's padded content below its header, e.g. a chart. */
+export function CardBody({ children }: { children: ReactNode }) {
+  return <div className="px-4.5 py-4 sm:px-5.5">{children}</div>;
+}

@@ -27,3 +27,8 @@ export function divideRounded(numerator: bigint, denominator: bigint): bigint {
   const quotient = (2n * n + d) / (2n * d);
   return negative ? -quotient : quotient;
 }
+
+/** An amount as a plain number to position chart marks only; never compute or display money with it. */
+export function toChartNumber(amount: string): number {
+  return Number(amount);
+}
