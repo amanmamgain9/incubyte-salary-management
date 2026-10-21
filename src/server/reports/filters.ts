@@ -4,6 +4,7 @@ import { type AnyColumn, and, asc, desc, eq, type SQL, sql } from "drizzle-orm";
 import type { KeysetFrom } from "@/contracts/paging";
 import type { ReportFilters } from "@/contracts/reports/filters";
 import { employees, salaryHistory } from "@/server/db/schema";
+import { isActiveOn } from "@/server/employees/status";
 
 /** The columns a report filters on, under the filter field names. */
 export type FilterColumns = { [Field in keyof ReportFilters]-?: AnyColumn };
@@ -29,6 +30,11 @@ export function matchesFilters(filters: ReportFilters, columns: FilterColumns): 
     return value === undefined ? undefined : eq(columns[field], value);
   });
   return and(...conditions) ?? sql`true`;
+}
+
+/** SQL: the employee is active on `today` and matches the filters by current assignment (commitment, departments). */
+export function activeAndMatching(filters: ReportFilters, today: string): SQL {
+  return sql`${isActiveOn(today)} and ${matchesFilters(filters, currentAssignment)}`;
 }
 
 type KeyPart = AnyColumn | SQL;
