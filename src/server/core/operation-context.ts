@@ -1,3 +1,4 @@
+import "server-only";
 import type { Database } from "@/server/db/connect";
 
 /** The signed-in HR user acting on a request (Better Auth `user`). */
