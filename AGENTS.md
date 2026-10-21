@@ -5,6 +5,25 @@ Scope, contracts and design live in [`docs/`](docs/): requirements, data model, 
 **Read the doc for the area you are touching before writing code.** `docs/trpc-contracts.md` is the API source of truth; if code and a doc disagree, fix one of them in the same change.
 This is Next.js 16: `proxy.ts` replaces `middleware.ts`; `params`, `searchParams`, `cookies()` and `headers()` are async only; `next lint` is gone and `next build` does not lint. Check `node_modules/next/dist/docs/` before using any Next API.
 
+## Top rules
+
+1. Create files only at the planned paths and names; search before adding anything (§1, §2).
+2. Shared code has one home; the second copy is extracted in the same change, never forked (§2).
+3. Backend layers: router → `operations.ts` → `queries.ts` → schema; a router makes one operation call (§4 Layering).
+4. Every procedure uses `signedInProcedure` or `signedInMutationProcedure`; auth is checked nowhere else (§4 Middleware).
+5. Static rules live in Zod contracts; DB/clock rules in operations, thrown as `core/errors.ts` errors keyed by field (§4 Validation).
+6. Every list and report pages through `paginateKeyset`; no offsets or hand-made cursors (§4 Pagination).
+7. Money math runs in SQL `NUMERIC` or `lib/money.ts`, never `Number`; currencies are never summed or charted together (§4 Reports, §5 UI).
+8. Pay changes only through `changeSalary`; history is append-only via `appendSalaryRevision` (§4 Module ownership).
+9. The migration that creates a table also grants the app role on it (§4 Data access).
+10. Config comes only from `getEnv()`/`ownerEnv()` in `src/server/env.ts` (§4 Environment).
+11. Frontend never imports `@/server`; features import each other only along the allow-list (§5 Boundaries).
+12. Screens use `components/ui` and `@theme` tokens; no pasted class strings or color literals (§5 UI).
+13. URL state via `useUrlState`, forms via `useForm`, writes via `use-<feature>-mutations.ts` with keyed invalidation (§5).
+14. Totals and counts come from the API; never aggregate paginated rows on the client (§5 Components).
+15. Core rules land red → green; only a red commit may fail `npm test` (§6).
+16. Done means typecheck, lint and tests pass and the docs match the code (§7).
+
 ## 1. File structure
 
 Every folder and file below is planned. Create files at these paths with these names; add new files only as sections 2–3 allow.
@@ -280,18 +299,7 @@ scripts/
 ## 2. How to reuse properly
 
 - **Search first.** Before creating a component, hook, helper, schema, query or type: check the trees above, then `rg -n "<concept>" src scripts`. If it exists, use it.
-- **Shared things go in exactly one place by kind:**
-
-  | Kind (used by 2+ features) | Home |
-  | --- | --- |
-  | UI primitive / chart | `src/components/ui`, `src/components/charts` |
-  | Client hook | `src/hooks` |
-  | Pure helper (format, money, dates, parsing) | `src/lib` |
-  | Schema or type crossing the API | `src/contracts` |
-  | Backend cross-cutting (errors, cursor, pagination) | `src/server/core` |
-  | Shared by 2+ reports (UI) | `src/features/reports/` root |
-  | Shared by 2+ report queries (SQL) | `src/server/reports/filters.ts` |
-
+- **Shared things (used by 2+ features) have one home by kind:** UI primitive/chart → `src/components/{ui,charts}`; client hook → `src/hooks`; pure helper (format, money, dates, parsing) → `src/lib`; schema or type crossing the API → `src/contracts`; backend cross-cutting (errors, cursor, pagination) → `src/server/core`; shared by 2+ reports → `src/features/reports/` root (UI) or `src/server/reports/filters.ts` (SQL).
 - **Rule of two.** The second copy of logic, markup or a class string is extracted to its home in the same change, and both call sites use it. Never leave two versions.
 - **Extend, don't fork.** Add a variant, prop or option to the existing helper. If it then needs more than ~4 options or branches on the caller, split it by purpose and name both clearly.
 - **Defined once:**
@@ -340,19 +348,39 @@ scripts/
 - The cursor is signed and binds `scope` plus a fingerprint of the parsed input minus `cursor`/`limit`, computed inside `paginateKeyset` from all input keys (sorted). Never build a fingerprint or filter list by hand. Mismatch or tampering → `InvalidCursorError` → `BAD_REQUEST`.
 
 ```ts
+// Cursor (signed by core/cursor.ts): { scope, fingerprint, key: Key, before: boolean, range_start: number }
 export async function paginateKeyset<Row, Key extends readonly unknown[]>(args: {
-  scope: string;                                     // "reports.salaryGrowth"
-  input: Paging & Record<string, unknown>;           // the parsed procedure input, as-is
-  keyOf: (row: Row) => Key;                          // same columns as ORDER BY
+  scope: string; input: Paging & Record<string, unknown>; // "reports.salaryGrowth"; the parsed input, as-is
+  keyOf: (row: Row) => Key;                                // same columns as ORDER BY
   fetch: (from: { key: Key; before: boolean } | null, take: number) => Promise<Row[]>; // ORDER BY key (reversed when before), LIMIT take
   count: () => Promise<number>;
-}): Promise<Page<Row>>;                              // { items, next_cursor, prev_cursor, total_count, range_start }
+}): Promise<Page<Row>>; // { items, next_cursor, prev_cursor, total_count, range_start }; empty → no cursors, range_start 0
+// c = decode(input.cursor); limit = input.limit ?? DEFAULT_LIMIT; rows = await fetch(c && { key: c.key, before: c.before }, limit + 1)
+// more = rows.length > limit; items = rows.slice(0, limit); if (c?.before) items.reverse()
+// start = !c ? 1 : c.before ? c.range_start - items.length : c.range_start
+// next_cursor if (c?.before || more): { key: keyOf(last item), before: false, range_start: start + items.length }
+// prev_cursor if (c?.before ? more : start > 1): { key: keyOf(first item), before: true, range_start: start }
 ```
 
 **Reports**
 - Each report folder has exactly `queries.ts` + `operations.ts`. Operation body: input checks (`assertKnownCodes`; `to ≤ today` for growth/benchmark), then `return { rows: await paginateKeyset({...}), summary: await <summary query> }`; nothing else.
 - Output contracts have no unbounded arrays except `Page.items`; every other array uses the `.max(n)` from the array-limits table in `docs/trpc-contracts.md` (constants in `contracts/primitives.ts`). Chart series are bounded `summary` fields defined in that doc and the contract first; never return all rows beside the page.
 - SQL does all salary math (`NUMERIC`, exact percentiles, rounding); TypeScript only formats.
+
+```ts
+// src/server/reports/salary-growth/operations.ts — every report operation has this shape
+export async function salaryGrowth(op: OperationContext, input: SalaryGrowthInput): Promise<SalaryGrowthOutput> {
+  await assertKnownCodes(op, input);
+  if (input.to > op.today) throw new ValidationError({ to: "Must be today or earlier" });
+  const rows = await paginateKeyset({
+    scope: "reports.salaryGrowth", input,
+    keyOf: (row) => [row.month, row.work_country_code, row.salary_currency_code] as const,
+    fetch: (from, take) => selectGrowthRows(op.db, input, from, take),
+    count: () => countGrowthRows(op.db, input),
+  });
+  return { rows, summary: await selectGrowthSummary(op.db, input) };
+}
+```
 
 **Data access**
 - CRUD uses the Drizzle query builder. Raw `sql` is for reports only and interpolates Drizzle tables/columns (`${employees.work_country_code}`); never table or column names in strings, never `sql.raw`.
@@ -371,15 +399,12 @@ export async function paginateKeyset<Row, Key extends readonly unknown[]>(args: 
 - Origin checks compare the request `Origin` with `getEnv().appOrigin` (`new URL(APP_URL).origin`), never with the raw `APP_URL`.
 
 ```ts
-const appEnvSchema = z.object({
-  DATABASE_URL: z.url(), APP_URL: z.url(),
-  BETTER_AUTH_SECRET: z.string().min(32), CURSOR_SECRET: z.string().min(32),
-  DEMO_HR_EMAIL: z.email(), DEMO_HR_PASSWORD: z.string().min(12),
-}).refine((e) => e.CURSOR_SECRET !== e.BETTER_AUTH_SECRET, { path: ["CURSOR_SECRET"] })
+const appEnvSchema = z.object({ DATABASE_URL: z.url(), APP_URL: z.url(), BETTER_AUTH_SECRET: z.string().min(32),
+  CURSOR_SECRET: z.string().min(32), DEMO_HR_EMAIL: z.email(), DEMO_HR_PASSWORD: z.string().min(12) })
+  .refine((e) => e.CURSOR_SECRET !== e.BETTER_AUTH_SECRET, { path: ["CURSOR_SECRET"] })
   .transform((e) => ({ ...e, appOrigin: new URL(e.APP_URL).origin }));
 const ownerEnvSchema = z.object({ DATABASE_OWNER_URL: z.url() });
-export function parseEnv(source): AppEnv; export function parseOwnerEnv(source): OwnerEnv; // pure, unit-tested
-export function getEnv(): AppEnv;     // parseEnv(process.env), memoized
+export function getEnv(): AppEnv;     // parseEnv(process.env), memoized; parseEnv/parseOwnerEnv(source) are pure
 export function ownerEnv(): OwnerEnv; // parseOwnerEnv(process.env), memoized
 ```
 
@@ -422,10 +447,49 @@ export function ownerEnv(): OwnerEnv; // parseOwnerEnv(process.env), memoized
 - On success, navigate to the profile with `?saved=created|details|salary`; the profile shows one `<Alert tone="success">`.
 - Salary `CONFLICT`: keep form values, show the error with a reload action that refetches `employees.get` and adopts the new revision; the user resubmits.
 
+```tsx
+// hooks/use-form.ts
+export function useForm<V extends Record<string, unknown>>(options: {
+  initial: V; onSubmit: (values: V, changes: Partial<V>) => Promise<unknown>;
+}): { values: V; changes: Partial<V>; errors: Partial<Record<keyof V, string>>; message: string | null;
+  inputProps: (name: keyof V & string) => InputProps; setValue: <K extends keyof V>(name: K, value: V[K]) => void;
+  submit: (event: FormEvent) => void }; // preventDefault → onSubmit → on error: toFieldErrors, focus first error
+// features/employees/edit-employee-form.tsx
+const form = useForm({ initial, onSubmit: async (_values, changes) => {
+  await update.mutateAsync({ id, ...changes }); router.push(`/employees/${id}?saved=details`);
+} });
+<Button type="submit" pending={update.isPending} disabled={Object.keys(form.changes).length === 0}>Save</Button>
+```
+
+```ts
+// features/salaries/use-salary-mutations.ts — invalidation keys are explicit, per mutation
+export function useSalaryMutations() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const invalidate = () => Promise.all(
+    [trpc.employees.pathKey(), trpc.salaries.pathKey(), trpc.reports.pathKey()]
+      .map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+  );
+  return { update: useMutation(trpc.salaries.update.mutationOptions({ onSuccess: invalidate })) };
+}
+```
+
 **Components render; data files shape**
 - Components contain JSX and event wiring only. Grouping, sorting, chart points and deltas live in tested `*-data.ts` (or `salary-delta.ts`) files beside them.
 - Totals and counts come from the API. Never sum or count paginated rows on the client.
 - Report screens differ only in summary, chart and table columns; URL parsing, query/cursor wiring and pagination live in `report-page.tsx` and are never rewritten per report.
+
+```tsx
+// features/reports/report-page.tsx — each <report>-report.tsx only fills these props
+export function ReportPage<I extends Paging, O extends { rows: Page<unknown>; summary: unknown }>(props: {
+  title: string;
+  search: z.ZodType<I>;                     // from the report's search-params.ts, built with `today`
+  filters: ReportFilterField[];             // controls <ReportFilters> shows, e.g. ["date_range", "country"]
+  queryOptions: (input: I) => UseSuspenseQueryOptions<O>; // (i) => trpc.reports.salaryGrowth.queryOptions(i)
+  summary: (output: O, input: I) => ReactNode;            // overview + chart
+  table: (items: O["rows"]["items"]) => ReactNode;        // columns only; <Pagination> belongs to the shell
+}): ReactNode;
+```
 
 ## 6. Testing rules
 
@@ -443,14 +507,9 @@ export function ownerEnv(): OwnerEnv; // parseOwnerEnv(process.env), memoized
 - Benchmarks, verifiers and seed tools live in `scripts/`, never in `tests/`.
 
 **Enforced at scaffold time** (`eslint.config.mjs`, all errors; run `eslint .`):
-- `no-restricted-properties`: `process.env` outside `src/server/env.ts`.
-- `import/no-cycle`; `import/no-default-export` outside Next route/config files.
-- `boundaries/*` (one `no-restricted-imports` alias per boundary, so zones never override each other):
-  - Everywhere: `../*`; `docs/`; `pg` outside `db/connect.ts`; each UI library outside its one import site (§5).
-  - Backend: script-safe modules and `scripts/**` import no `server-only` and only script-safe server modules; operations/queries no `@trpc/*` or `@/server/api`; queries no `@/server/env` or operations; routers no `drizzle-orm`, `@/server/db` or queries; `core` no modules; `employees` → `salaries` → `lookups`, no module imports `reports`.
-  - Frontend: every §5 boundary — `@/server`, shared-home direction, cross-feature allow-list.
+- `no-restricted-properties` (`process.env` outside `src/server/env.ts`); `import/no-cycle`; `import/no-default-export` outside Next route/config files; `max-lines` 200 `*.tsx` / 300 `*.ts`; `@typescript-eslint/no-floating-promises`.
+- `boundaries/*` (one `no-restricted-imports` alias per boundary, so zones never override each other): everywhere `../*`, `docs/`, `pg` outside `db/connect.ts`, each UI library outside its import site; backend script-safe imports (§4), operations/queries no `@trpc/*` or `@/server/api`, queries no `env` or operations, routers no `drizzle-orm`/`db`/queries, `core` no modules, module direction (no module imports `reports`); frontend every §5 boundary.
 - `no-restricted-syntax`: hex/rgb/hsl literals and `[#` values in `className`, `style`, `fill`, `stroke`, `stopColor`, `color`; `invalidateQueries()` with no arguments; `sql.raw`.
-- `max-lines`: 200 for `*.tsx`, 300 for `*.ts`. `@typescript-eslint/no-floating-promises`.
 
 ## 7. Definition of done (every change)
 
