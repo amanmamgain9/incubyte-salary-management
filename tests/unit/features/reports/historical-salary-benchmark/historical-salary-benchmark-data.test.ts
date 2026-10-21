@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { BenchmarkPoint } from "@/contracts/reports/historical-salary-benchmark";
+import type { BenchmarkGroup, BenchmarkPoint } from "@/contracts/reports/historical-salary-benchmark";
 import {
-  finalMedian,
   headcountTrend,
   payRangeTrend,
+  singleGroup,
 } from "@/features/reports/historical-salary-benchmark/historical-salary-benchmark-data";
 
 const point = (month: string, median: string | null, employees = 3): BenchmarkPoint => ({
@@ -38,13 +38,30 @@ describe("headcountTrend", () => {
   });
 });
 
-describe("finalMedian", () => {
-  it("is the final month's single-group median", () => {
-    expect(finalMedian([point("2026-09", "100000.00"), point("2026-10", "101000.00")])).toBe("101000.00");
+const engineeringIndia: BenchmarkGroup = { work_country_code: "IN", department_id: "engineering", salary_currency_code: "INR" };
+const summaryOf = (group: BenchmarkGroup | null, trend: BenchmarkPoint[]) => ({
+  snapshot_date: "2026-10-15",
+  employee_count: trend.at(-1)?.employee_count ?? 0,
+  by_country: [],
+  group,
+  trend,
+});
+
+describe("singleGroup", () => {
+  it("is the summary's group with its median at the final snapshot", () => {
+    const summary = summaryOf(engineeringIndia, [point("2026-09", "100000.00"), point("2026-10", "101000.00")]);
+
+    expect(singleGroup(summary)).toEqual({ group: engineeringIndia, finalMedian: "101000.00" });
   });
 
-  it("is null without a single group in the final month", () => {
-    expect(finalMedian([point("2026-10", null)])).toBeNull();
-    expect(finalMedian([])).toBeNull();
+  it("keeps the group without a median when nobody in it is active at the final snapshot", () => {
+    const summary = summaryOf(engineeringIndia, [point("2026-09", "100000.00"), point("2026-10", null, 0)]);
+
+    expect(singleGroup(summary)).toEqual({ group: engineeringIndia, finalMedian: null });
+  });
+
+  it("is null when several groups match, whatever the trend holds", () => {
+    expect(singleGroup(summaryOf(null, [point("2026-10", null, 12)]))).toBeNull();
+    expect(singleGroup(summaryOf(null, []))).toBeNull();
   });
 });

@@ -1,5 +1,9 @@
 import type { LinePoint } from "@/components/charts/line-chart";
-import type { BenchmarkPoint } from "@/contracts/reports/historical-salary-benchmark";
+import type {
+  BenchmarkGroup,
+  BenchmarkPoint,
+  HistoricalSalaryBenchmarkSummary,
+} from "@/contracts/reports/historical-salary-benchmark";
 import { formatMonth } from "@/lib/format";
 import { toChartNumber } from "@/lib/money";
 
@@ -29,7 +33,13 @@ export function headcountTrend(trend: readonly BenchmarkPoint[]): LinePoint[] {
   return trend.map((point) => ({ label: formatMonth(point.month, "short"), values: { employees: point.employee_count } }));
 }
 
-/** The single group's median at the final snapshot, or null (several groups, or none in the final month). */
-export function finalMedian(trend: readonly BenchmarkPoint[]): string | null {
-  return trend.at(-1)?.median_annual_base_pay ?? null;
+/**
+ * The only matching group, from the summary (never the current page), with its median at the final snapshot (null when
+ * nobody in it is active then); null when several groups match or none.
+ */
+export function singleGroup(
+  summary: HistoricalSalaryBenchmarkSummary,
+): { group: BenchmarkGroup; finalMedian: string | null } | null {
+  if (!summary.group) return null;
+  return { group: summary.group, finalMedian: summary.trend.at(-1)?.median_annual_base_pay ?? null };
 }

@@ -11,7 +11,7 @@ import type {
 } from "@/contracts/reports/historical-salary-benchmark";
 import { CountryTotals, GroupTotal } from "@/features/reports/country-totals";
 import { HistoricalSalaryBenchmarkChart } from "@/features/reports/historical-salary-benchmark/historical-salary-benchmark-chart";
-import { finalMedian, headcountTrend } from "@/features/reports/historical-salary-benchmark/historical-salary-benchmark-data";
+import { headcountTrend, singleGroup } from "@/features/reports/historical-salary-benchmark/historical-salary-benchmark-data";
 import { reportScope } from "@/features/reports/report-scope";
 import { useLookups } from "@/hooks/use-lookups";
 import { formatCompact, formatCount, formatDate } from "@/lib/format";
@@ -29,9 +29,7 @@ export function HistoricalSalaryBenchmarkSummary({
 }) {
   const lookups = useLookups();
   const { summary } = output;
-  // Single-group amounts mean every matching row shares one group, so any row names it.
-  const median = finalMedian(summary.trend);
-  const group = summary.trend.some((point) => point.median_annual_base_pay !== null) ? output.rows.items[0] : undefined;
+  const single = singleGroup(summary);
   const snapshot = summary.by_country.length === 1 ? summary.by_country[0] : undefined;
   return (
     <>
@@ -39,7 +37,7 @@ export function HistoricalSalaryBenchmarkSummary({
         scope={`${reportScope(input, lookups)} · Final snapshot ${formatDate(summary.snapshot_date)}`}
         visualCaption="Employees at month end"
         visual={
-          !group && summary.trend.length > 1 ? (
+          !single && summary.trend.length > 1 ? (
             <LineChart
               compact
               height={54}
@@ -51,11 +49,11 @@ export function HistoricalSalaryBenchmarkSummary({
         }
       >
         <Stat label="Employees" value={formatCount(summary.employee_count)} />
-        {group && median ? (
+        {single?.finalMedian ? (
           <Stat
-            label={`Median · ${group.salary_currency_code}`}
-            value={formatCompact(median)}
-            detail={<Amount value={median} currency={group.salary_currency_code} />}
+            label={`Median · ${single.group.salary_currency_code}`}
+            value={formatCompact(single.finalMedian)}
+            detail={<Amount value={single.finalMedian} currency={single.group.salary_currency_code} />}
           />
         ) : null}
         {snapshot ? (
@@ -80,7 +78,7 @@ export function HistoricalSalaryBenchmarkSummary({
           )}
         </CountryTotals>
       ) : null}
-      {group ? <HistoricalSalaryBenchmarkChart trend={summary.trend} group={group} /> : null}
+      {single ? <HistoricalSalaryBenchmarkChart trend={summary.trend} group={single.group} /> : null}
     </>
   );
 }
