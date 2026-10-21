@@ -90,11 +90,30 @@ struct HrSession {
 
 Behavior and security: [Login](login.md).
 
+## Database constraints
+
+- Primary keys: each `id`; country/currency `code`.
+- Fields are `NOT NULL` unless marked `?`.
+- Struct references are foreign keys with `ON DELETE RESTRICT`.
+- Unique `(employee_id, revision)`; positive revision numbers.
+- Salary amounts: `NUMERIC(18,2)`, positive and finite.
+
+## Indexes
+
+[Primary and unique keys create their own indexes](https://www.postgresql.org/docs/current/ddl-constraints.html). Add:
+
+| Record | Index | Purpose |
+| --- | --- | --- |
+| Employee | `(work_country_code, id)`, `(department_id, id)` | Filtered pagination |
+| SalaryHistoryEntry | `(changed_at, employee_id)` | Period-based growth reports |
+
+The unique `(employee_id, revision)` index also supports ordered salary history. Measure name search before adding further indexes.
+
 ## Storage rules
 
-- Country/currency codes and department IDs reference their lookup records; retain referenced records.
 - Employee IDs remain unique and cannot be reused; records are retained after departure.
 - Store the initial salary and each revision as separate snapshots; history cannot be edited or deleted.
-- Each employee's revision numbers are unique and increasing; the preceding entry supplies the previous salary.
-- Store money exactly to two decimal places; keep country and currency independent.
-- Write current salary and its history in one transaction; a failure saves neither.
+- Order history by revision; the preceding entry supplies the previous salary.
+- Lock the employee and check the expected revision before assigning the next revision.
+- Create employees with initial history, and update current salary with new history, in one transaction; a failure saves neither.
+- The application database role can only read/insert salary history; migrations use a separate owner role.
