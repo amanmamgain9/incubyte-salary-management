@@ -67,30 +67,23 @@ struct SalaryHistoryEntry {
 
 ```text
 struct HrUser {
-    id: String
+    id: String                       // Better Auth user.id
     name: String
-    email: String                    // unique, case-insensitive
-    password_hash: String
+    email: String
 }
 ```
 
-Unique index on `lower(HrUser.email)`.
+Application view of Better Auth's `user`; no separate HR table. Salary history's `changed_by` references `user.id` with `ON DELETE RESTRICT`.
 
-## Login session
+## Auth storage
 
-```text
-struct HrSession {
-    token_hash: String               // primary key
-    hr_user_id: String               // HrUser.id
-    expires_at: Timestamp
-}
-```
-
-`token_hash` is the primary key; `hr_user_id` references `HrUser.id` with `ON DELETE RESTRICT`. Index `expires_at` for cleanup.
+Use Better Auth's [generated schema](https://better-auth.com/docs/concepts/database#core-schema): `user` (identity), `account` (credentials/password hash), `session` (token, user and expiry), and `verification` (library verification records). Generate through its Drizzle adapter; commit migrations. Library fields, keys and relations follow that schema.
 
 Behavior and security: [Login](login.md).
 
 ## Database constraints
+
+For application tables; auth tables follow the generated schema above.
 
 - Primary keys: each `id`; country/currency `code`.
 - Fields are `NOT NULL` unless marked `?`.

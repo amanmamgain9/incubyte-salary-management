@@ -6,11 +6,11 @@ One seeded HR account; show its credentials on the login page. All data is synth
 
 Signup, password reset and user administration are excluded.
 
-## Proposed library
+## Library
 
-[Better Auth](https://better-auth.com/docs/integrations/next) with its [Drizzle/PostgreSQL adapter](https://better-auth.com/docs/adapters/drizzle). It handles password hashing, cookie sessions and login/logout. Next.js [recommends using an auth library](https://nextjs.org/docs/app/guides/authentication).
+[Better Auth](https://better-auth.com/docs/integrations/next) with its [Drizzle/PostgreSQL adapter](https://better-auth.com/docs/adapters/drizzle) handles password hashing, cookie sessions and login/logout at `/api/auth/[...all]`.
 
-If adopted, use its generated auth tables in place of the draft custom credential/session storage.
+Generate its auth schema and commit Drizzle migrations. Enable email/password; disable public signup.
 
 ## Flow
 
@@ -21,7 +21,7 @@ If adopted, use its generated auth tables in place of the draft custom credentia
 
 ## Security
 
-- **Cookie-based authentication:** Browser holds the session token; server checks the PostgreSQL session on every request and rejects expired or revoked sessions.
+- **Cookie-based authentication:** Browser holds the session token; server checks the PostgreSQL session on every request and rejects expired or revoked sessions. Keep [session cookie caching](https://better-auth.com/docs/concepts/session-management#cookie-cache) disabled.
 - **Cookie protections:** Production cookies use `HttpOnly` (blocks JavaScript access), `Secure` (HTTPS only), `SameSite=Lax` (limits cross-site sending), host-only scope and `Path=/`.
 - Use the library's password hashing: [scrypt by default](https://better-auth.com/docs/authentication/email-password#configuration).
 - Retain the library's [origin and CSRF protections](https://better-auth.com/docs/reference/security); check same-origin requests for tRPC mutations too.

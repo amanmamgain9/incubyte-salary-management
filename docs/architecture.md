@@ -20,14 +20,14 @@ flowchart LR
 
 ## Structure
 
-- `src/app`: pages, layouts and `/api/trpc` handler.
+- `src/app`: pages, layouts, `/api/trpc` and `/api/auth/[...all]` handlers.
 - `src/server`: auth, employees, salaries, reports and database modules. Procedures validate/authenticate; feature functions own operations and transactions.
 
 ## Runtime rules
 
 - Money: `NUMERIC(18,2)` in PostgreSQL; decimal strings in JSON. SQL handles salary calculations, filtering and stable pagination.
 - Salary edits: lock employee, check expected revision, update current pay and append history in one transaction.
-- Authentication: PostgreSQL cookie sessions; see [login and security](login.md).
+- Authentication: Better Auth with Drizzle/PostgreSQL cookie sessions; see [login and security](login.md).
 
 ## Delivery
 
