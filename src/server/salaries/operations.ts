@@ -1,9 +1,10 @@
 import "server-only";
 import type { UpdateSalaryInput } from "@/contracts/salaries";
-import { NotFoundError } from "@/server/core/errors";
+import { ConflictError, NotFoundError, ValidationError } from "@/server/core/errors";
 import type { OperationContext } from "@/server/core/operation-context";
 import type { Executor } from "@/server/db/connect";
-import { insertHistoryEntry, selectAssignment } from "@/server/salaries/queries";
+import { assertKnownCodes } from "@/server/lookups/operations";
+import { insertHistoryEntry, lockCurrentPay, selectAssignment, updateCurrentPay } from "@/server/salaries/queries";
 
 export type NewRevision = {
   employee_id: string;
@@ -33,6 +34,27 @@ export async function appendSalaryRevision(tx: Executor, op: OperationContext, r
  * The only way current pay changes: locks the employee, rejects a departed employee or a stale `expected_revision`,
  * then updates current pay to the next revision and appends its history entry, in one transaction.
  */
-export async function changeSalary(_op: OperationContext, _input: UpdateSalaryInput): Promise<void> {
-  throw new Error("not implemented");
+export async function changeSalary(op: OperationContext, input: UpdateSalaryInput): Promise<void> {
+  await assertKnownCodes(op, input);
+  const { employee_id, expected_revision, annual_base_pay, salary_currency_code, reason } = input;
+  await op.db.transaction(async (tx) => {
+    const stored = await lockCurrentPay(tx, employee_id);
+    if (!stored) throw new NotFoundError("Employee not found");
+    // Departed = last working day before today (UTC); upcoming and active employees may change pay.
+    if (stored.last_working_day !== null && stored.last_working_day < op.today) {
+      throw new ValidationError({ employee_id: "Salary cannot change after the last working day" });
+    }
+    if (stored.salary_revision !== expected_revision) {
+      throw new ConflictError("Salary changed since it was loaded; reload and try again");
+    }
+    const revision = expected_revision + 1;
+    await updateCurrentPay(tx, employee_id, { annual_base_pay, salary_currency_code, salary_revision: revision });
+    await appendSalaryRevision(tx, op, {
+      employee_id,
+      revision,
+      annual_base_pay,
+      currency_code: salary_currency_code,
+      reason,
+    });
+  });
 }
