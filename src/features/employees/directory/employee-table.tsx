@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Amount } from "@/components/ui/amount";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { CountryLabel } from "@/components/ui/country-label";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icon } from "@/components/ui/icon";
 import { Pagination } from "@/components/ui/pagination";
@@ -69,10 +70,7 @@ export function EmployeeTable({
               </TableCell>
               <TableCell>{departmentName(employee.department_id)}</TableCell>
               <TableCell>
-                <span className="mr-1.75 inline-grid h-5.75 w-6.25 place-items-center rounded-[4px] border border-line bg-surface-muted text-[10px] text-muted">
-                  {employee.work_country_code}
-                </span>
-                {countryName(employee.work_country_code)}
+                <CountryLabel code={employee.work_country_code} name={countryName(employee.work_country_code)} />
               </TableCell>
               <TableCell>
                 <EmploymentStatusBadge status={employee.employment_status} />

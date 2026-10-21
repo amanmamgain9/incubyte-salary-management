@@ -1,5 +1,5 @@
 // Display formatting shared by every screen. The only place that uses `Intl`.
-import { toMinorUnits } from "@/lib/money";
+import { divideRounded, toMinorUnits } from "@/lib/money";
 
 const counts = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
@@ -19,6 +19,36 @@ export function formatMoney(amount: string, currency: string): string {
   const whole = counts.format(magnitude / 100n);
   const fraction = (magnitude % 100n).toString().padStart(2, "0");
   return `${currency} ${units < 0n ? "−" : ""}${whole}.${fraction}`;
+}
+
+const COMPACT_STEPS: ReadonlyArray<readonly [bigint, string]> = [
+  [1n, ""],
+  [1_000n, "K"],
+  [1_000_000n, "M"],
+  [1_000_000_000n, "B"],
+  [1_000_000_000_000n, "T"],
+];
+
+/**
+ * A short overview figure for an exact amount, without currency, e.g. "1234567.89" → "1.23M", "-950.5" → "−950.5";
+ * at most two decimals, rounded half away from zero on minor units (never `Number`). Show the exact amount beside it.
+ */
+export function formatCompact(amount: string): string {
+  const units = toMinorUnits(amount);
+  if (units === null) return amount;
+  const magnitude = units < 0n ? -units : units;
+  // The largest step whose rounded value is at least 1 (999,999.99 → "1M", not "1,000K").
+  let hundredths = magnitude;
+  let suffix = "";
+  for (const [step, name] of COMPACT_STEPS) {
+    const scaled = divideRounded(magnitude, step);
+    if (step > 1n && scaled < 100n) break;
+    hundredths = scaled;
+    suffix = name;
+  }
+  const fraction = (hundredths % 100n).toString().padStart(2, "0").replace(/0+$/, "");
+  const sign = units < 0n && hundredths > 0n ? "−" : "";
+  return `${sign}${counts.format(hundredths / 100n)}${fraction ? `.${fraction}` : ""}${suffix}`;
 }
 
 /** The pagination summary, e.g. (51, 50, 10000) → "51–100 of 10,000 results". */

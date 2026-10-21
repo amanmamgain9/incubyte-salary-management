@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatCompact,
   formatCount,
   formatDate,
   formatInitials,
@@ -96,5 +97,25 @@ describe("formatPercent", () => {
     ["1250.50", "+1,250.50%"],
   ])("formats %j as %j", (percent, text) => {
     expect(formatPercent(percent)).toBe(text);
+  });
+});
+
+describe("formatCompact", () => {
+  it.each([
+    ["0.00", "0"],
+    ["950.50", "950.5"],
+    ["999.99", "1K"],
+    ["12500.00", "12.5K"],
+    ["1234567.89", "1.23M"],
+    ["999999.99", "1M"],
+    ["-2500000.00", "−2.5M"],
+    ["8765432109876.54", "8.77T"],
+    ["9999999999999999.99", "10,000T"],
+  ])("shortens %j to %j", (amount, text) => {
+    expect(formatCompact(amount)).toBe(text);
+  });
+
+  it("returns a non-decimal value unchanged", () => {
+    expect(formatCompact("n/a")).toBe("n/a");
   });
 });

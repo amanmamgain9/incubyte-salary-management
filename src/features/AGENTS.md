@@ -70,6 +70,7 @@ src/features/
     ├── report-page.tsx            # shell: header → filters → overview/trends → table; owns query + cursor wiring
     ├── report-filters.tsx         # country/department/currency/date/month controls, configured per report; Apply checks the period, Reset → defaults
     ├── country-totals.tsx         # by-country/currency summary groups used by all four reports
+    ├── report-scope.ts            # pure: overview scope line from the filters ("All countries · …")
     ├── search-params.ts           # build a report's input from URL params + defaults(today); periodErrors (contract rules + `to` ≤ today); filter form → patch
     └── <report>/                  # salary-commitment | department-breakdown | salary-growth | historical-salary-benchmark
         ├── <report>-report.tsx    # composes <ReportPage> with this report's parts
@@ -94,11 +95,13 @@ src/components/
 │   ├── date-picker.tsx            # the one DayPicker + Radix popover (dates and months, clearable)
 │   ├── dialog.tsx                 # the one modal: native <dialog> + showModal, focus trap/return, Esc and backdrop close; no close while `pending`
 │   ├── amount.tsx                 # tabular right-aligned money with visible currency
+│   ├── country-label.tsx          # country code marker + name (table cells)
 │   ├── badge.tsx                  # neutral/semantic tones; no domain knowledge
 │   ├── avatar.tsx                 # initials tile (account footer, directory rows, profile `lg`); one tint, no decorative colors
 │   ├── brand.tsx                  # ACME mark + wordmark; a link only on signed-in pages (a prefetched link on /login caches its redirect)
 │   └── icon.tsx                   # 18px icon wrapper; the only icon-library import site
 └── charts/                        # the only chart-library import site
+    ├── mini-bars.tsx              # the overview's small bar visual (plain elements, no library)
     ├── bar-chart.tsx              # horizontal/vertical bars, negative values
     ├── line-chart.tsx             # lines with optional range band (P10–P90) and reference line
     └── chart-legend.tsx           # legend keyed to token colors
@@ -110,7 +113,7 @@ src/hooks/
 └── use-lookups.ts                 # lookups.get + countryName/departmentName + country/department/currency select options
 
 src/lib/
-├── format.ts                      # formatMoney, formatCount, formatDate, formatTimestamp, formatMonth, formatPercent, formatInitials (the only Intl use)
+├── format.ts                      # formatMoney, formatCompact (exact, overview figures), formatCount, formatDate, formatTimestamp, formatMonth, formatPercent, formatInitials (the only Intl use)
 ├── money.ts                       # decimal string ↔ bigint minor units; divideRounded (half away from zero); compare/diff exactly on the units
 ├── dates.ts                       # todayUtc, addDays, daysBetween, addMonths, month start/end, monthsBetween (UTC)
 ├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState; patchSearchParams (cursor rule)
