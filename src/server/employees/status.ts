@@ -4,8 +4,11 @@ import type { FieldErrors } from "@/contracts/errors";
 import type { DetailsPatch, EmploymentStatus } from "@/contracts/employees";
 import { employees } from "@/server/db/schema";
 
-/** SQL: the employee is active on `date` (`YYYY-MM-DD`), from the joining date through the last working day. */
-export function isActiveOn(date: string): SQL {
+/**
+ * SQL: the employee is active on `date` (`YYYY-MM-DD`, or a date-valued SQL expression such as a snapshot date column),
+ * from the joining date through the last working day.
+ */
+export function isActiveOn(date: string | SQL): SQL {
   return sql`(${employees.joining_date} <= ${date}::date
     and (${employees.last_working_day} is null or ${employees.last_working_day} >= ${date}::date))`;
 }

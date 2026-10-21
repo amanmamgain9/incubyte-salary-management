@@ -46,7 +46,7 @@ src/server/
 │   ├── queries.ts                 # select countries/departments/currencies; country/department/currency existence
 │   └── operations.ts              # getLookups, assertKnownCodes (field-keyed ValidationError)
 ├── employees/
-│   ├── status.ts                  # isActiveOn(date), employmentStatusOn(date) SQL expressions; employmentDateErrors (pure details-edit date rule)
+│   ├── status.ts                  # isActiveOn(date | date SQL), employmentStatusOn(date) SQL expressions; employmentDateErrors (pure details-edit date rule)
 │   ├── queries.ts                 # directory page/count/summary, EmployeeView select (incl. salary_revision), insert, lock + employment dates, details update
 │   └── operations.ts              # listEmployees, getEmployee, createEmployee, updateEmployeeDetails
 ├── salaries/
@@ -133,6 +133,7 @@ export async function paginateKeyset<Row, Key extends readonly unknown[]>(args: 
 
 **Reports**
 - Each report folder has exactly `queries.ts` + `operations.ts`. Operation body: input checks (`assertKnownCodes`; `to ≤ today` for growth/benchmark), then `return { rows: await paginateKeyset({...}), summary: await <summary query> }`; nothing else.
+- Benchmark exception: its month-end snapshot is built once per request (`createBenchmarkGroups`) into a transaction-scoped temporary table (`ON COMMIT DROP`, declared with `pgTable` in its `queries.ts`, outside `db/schema`) that page, count and summary read; the operation wraps those calls in `op.db.transaction`. Session settings only via `SET LOCAL` inside that transaction.
 - Output contracts have no unbounded arrays except `Page.items`; every other array uses the `.max(n)` from the array-limits table in `docs/trpc-contracts.md` (constants in `contracts/primitives.ts`). Chart series are bounded `summary` fields defined in that doc and the contract first; never return all rows beside the page.
 - SQL does all salary math (`NUMERIC`, exact percentiles, rounding); TypeScript only formats.
 
@@ -152,7 +153,7 @@ export async function salaryGrowth(op: OperationContext, input: SalaryGrowthInpu
 ```
 
 **Data access**
-- CRUD uses the Drizzle query builder. Raw `sql` is for reports only and interpolates Drizzle tables/columns (`${employees.work_country_code}`); never table or column names in strings, never `sql.raw`.
+- CRUD uses the Drizzle query builder. Raw `sql` is for reports only and interpolates Drizzle tables/columns (`${employees.work_country_code}`); never table or column names in strings, never `sql.raw`. CTE names and output aliases (`as total_annual_base_pay`) are plain SQL; a second copy of a table is a Drizzle `alias()` joined as `${table} as ${alias}`.
 - Connections come only from `db/client.ts` (app role) and `db/owner.ts` (owner role), both via `connect.ts`.
 - Grants ship with each table: the migration that creates a table also GRANTs the app role (`acme_app`) exactly its privileges (appended to the generated SQL): `SELECT` on lookups; `SELECT, INSERT, UPDATE` on `employees`; `SELECT, INSERT` on `salary_history`; `SELECT, INSERT, UPDATE, DELETE` on Better Auth tables. No default privileges; `tests/db/grants.test.ts` checks every table in `public`.
 
