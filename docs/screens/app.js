@@ -279,7 +279,7 @@
     document.querySelector("#employee-profile").innerHTML = `
       <div class="page-heading profile-heading">
         <div class="employee-heading"><span class="avatar" aria-hidden="true">${escape(initials(employee.name))}</span><div><h1>${escape(employee.name)}</h1><div class="employee-meta"><span>${escape(employee.id)}</span>${badge(employee)}</div></div></div>
-        <div class="heading-actions"><a class="button secondary" href="${url("employee-edit.html", employee.id)}">Edit details</a><a class="button" href="${url("salary-change.html", employee.id)}">Change salary</a></div>
+        <div class="heading-actions"><a class="button secondary" href="${url("employee-edit.html", employee.id)}">Edit details</a>${status(employee) === "departed" ? "" : `<a class="button" href="${url("salary-change.html", employee.id)}">Change salary</a>`}</div>
       </div>
       <section class="card profile-overview" aria-label="Employee details and current salary">
         <dl class="profile-facts">${[

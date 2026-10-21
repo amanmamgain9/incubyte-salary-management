@@ -10,9 +10,9 @@ Read before changing `src/server/`, `src/contracts/`, a migration in `drizzle/` 
 src/server/
 ├── env.ts                         # THE env module: lazy `getEnv()` (app, incl. `appOrigin`) + `ownerEnv()` (owner URL only); script-safe
 ├── db/
-│   ├── connect.ts                 # `createDb(url)`: the only file that imports `pg` / creates a Pool
-│   ├── client.ts                  # server-only app-role `db` from getEnv().DATABASE_URL
-│   ├── owner.ts                   # owner-role `db` for migrate, reset, seed, verify, test setup
+│   ├── connect.ts                 # `createDb(url)`: the only file that imports `pg` / creates a Pool; script-safe
+│   ├── client.ts                  # server-only: app-role `db` = createDb(getEnv().DATABASE_URL)
+│   ├── owner.ts                   # owner-role `ownerDb` = createDb(ownerEnv().DATABASE_OWNER_URL) for migrate, reset, seed, verify, db tests; script-safe
 │   └── schema/
 │       ├── index.ts               # re-exports all tables (the only barrel file in src/)
 │       ├── auth.ts                # Better Auth generated tables (user, account, session, verification)
@@ -38,9 +38,9 @@ src/server/
 │       ├── salaries.ts            # salaries.history/update
 │       └── reports.ts             # reports.salaryCommitment/departmentBreakdown/salaryGrowth/historicalSalaryBenchmark
 ├── core/                          # cross-cutting backend code; the only shared server folder
-│   ├── errors.ts                  # NotFoundError, ConflictError, ValidationError(field_errors), InvalidCursorError, pg violation guards
-│   ├── cursor.ts                  # createCursorCodec(secret): HMAC sign/verify; default codec uses getEnv().CURSOR_SECRET
-│   ├── pagination.ts              # paginateKeyset(): the only pagination implementation
+│   ├── errors.ts                  # NotFoundError, ConflictError, ValidationError(field_errors), InvalidCursorError, pg violation guards; script-safe
+│   ├── cursor.ts                  # server-only: createCursorCodec(secret) HMAC sign/verify; getCursorCodec() lazy default from getEnv().CURSOR_SECRET
+│   ├── pagination.ts              # server-only: paginateKeyset(), the only pagination implementation
 │   └── operation-context.ts       # OperationContext type { db, actor, now, today }
 ├── lookups/
 │   ├── queries.ts                 # select countries/departments/currencies
@@ -73,7 +73,7 @@ src/server/
 ```text
 src/contracts/
 ├── primitives.ts                  # IsoDate, Month (YYYY-MM), Timestamp, Money (input: positive, ≤2 dp), Decimal (output: signed, 2 dp), codes, EmployeeId, array caps (MAX_COUNTRIES …)
-├── paging.ts                      # Paging input, page(item) output factory (next/prev cursor, total_count, range_start), DEFAULT_LIMIT 50, MAX_LIMIT 100
+├── paging.ts                      # Paging input, page(item) → Page<T> (next/prev cursor, total_count, range_start), KeysetFrom<Key> (a fetch's `from`), DEFAULT_LIMIT 50, MAX_LIMIT 100
 ├── errors.ts                      # FieldErrors shape of error.data.field_errors
 ├── lookups.ts                     # Country, Department, Currency, lookups.get output
 ├── employees.ts                   # EmploymentStatus (only definition), EmployeeInput, DetailsPatch, EmployeeFilters, EmployeeView, DirectorySummary, get/list/update inputs and outputs
@@ -94,7 +94,7 @@ src/contracts/
 
 - Routers are thin: `.input(contract).output(contract)` and one operation call. No SQL, rules or try/catch. Sole exception: `salaries.update` calls `changeSalary` then `getEmployee` to return `EmployeeView`, so `salaries` never imports `employees`.
 - Operations take `op: OperationContext` and parsed input, own transactions, throw `core/errors.ts` errors, and never import `@trpc/*` or `api/`.
-- Script-safe modules (no `server-only`; importable by scripts and unit tests): `env.ts`, `db/connect.ts`, `db/owner.ts`, `db/schema/*`, every `queries.ts`, `employees/status.ts`, `reports/filters.ts`, `core/errors.ts`. They and `scripts/` import only each other. Queries take the executor as an argument and never import `db/client` or `env`.
+- Script-safe modules (no `server-only`; importable by scripts and unit tests): `src/contracts/*`, `env.ts`, `db/connect.ts`, `db/owner.ts`, `db/schema/*`, every `queries.ts`, `employees/status.ts`, `reports/filters.ts`, `core/errors.ts`. They and `scripts/` import only each other (`core/cursor.ts` and `core/pagination.ts` are server-only). Queries take the executor as an argument and never import `db/client` or `env`.
 - Every other server module starts with `import "server-only"`; no dynamic `await import()` to dodge it. No Server Actions: every read and write is a tRPC procedure.
 
 **Middleware and procedures**
@@ -110,19 +110,22 @@ src/contracts/
 
 **Pagination**
 - Every list and report uses `paginateKeyset`. No offsets, `LIMIT` paging or cursor code anywhere else.
-- The cursor is signed and binds `scope` plus a fingerprint of the parsed input minus `cursor`/`limit`, computed inside `paginateKeyset` from all input keys (sorted). Never build a fingerprint or filter list by hand. Mismatch or tampering → `InvalidCursorError` → `BAD_REQUEST`.
+- The cursor is signed and binds `scope` plus a fingerprint: sha256 of the parsed input minus `cursor`/`limit`, keys sorted, computed inside `paginateKeyset`. Never build a fingerprint or filter list by hand. Tampering, `""`, a wrong payload shape, another scope or fingerprint → `InvalidCursorError` → `BAD_REQUEST`, before any fetch.
+- Keys are JSON-safe (strings, numbers) in ORDER BY column order. A `queries.ts` types its fetch's `from` as `KeysetFrom<Key>` from `contracts/paging.ts`, never from `core/`.
 
 ```ts
-// Cursor (signed by core/cursor.ts): { scope, fingerprint, key: Key, before: boolean, range_start: number }
+// Cursor (signed by getCursorCodec(), shape checked on decode): { scope, fingerprint, key: Key, before: boolean, range_start: int ≥ 1 }
 export async function paginateKeyset<Row, Key extends readonly unknown[]>(args: {
   scope: string; input: Paging & Record<string, unknown>; // "reports.salaryGrowth"; the parsed input, as-is
-  keyOf: (row: Row) => Key;                                // same columns as ORDER BY
-  fetch: (from: { key: Key; before: boolean } | null, take: number) => Promise<Row[]>; // ORDER BY key (reversed when before), LIMIT take
+  keyOf: (row: Row) => Key;                                // same columns as ORDER BY; strings/numbers only
+  fetch: (from: KeysetFrom<Key>, take: number) => Promise<Row[]>; // ORDER BY key (reversed when before), LIMIT take
   count: () => Promise<number>;
-}): Promise<Page<Row>>; // { items, next_cursor, prev_cursor, total_count, range_start }; empty → no cursors, range_start 0
-// c = decode(input.cursor); limit = input.limit ?? DEFAULT_LIMIT; rows = await fetch(c && { key: c.key, before: c.before }, limit + 1)
+}): Promise<Page<Row>>; // { items, next_cursor, prev_cursor, total_count, range_start }
+// c = input.cursor === undefined ? null : decode + validate; limit = input.limit ?? DEFAULT_LIMIT
+// [rows, total_count] = await Promise.all([fetch(c && { key: c.key, before: c.before }, limit + 1), count()])
 // more = rows.length > limit; items = rows.slice(0, limit); if (c?.before) items.reverse()
-// start = !c ? 1 : c.before ? c.range_start - items.length : c.range_start
+// no items (even with a cursor) → { items: [], next_cursor: null, prev_cursor: null, total_count, range_start: 0 }
+// start = !c ? 1 : c.before ? (more ? max(1, c.range_start - items.length) : 1) : c.range_start
 // next_cursor if (c?.before || more): { key: keyOf(last item), before: false, range_start: start + items.length }
 // prev_cursor if (c?.before ? more : start > 1): { key: keyOf(first item), before: true, range_start: start }
 ```

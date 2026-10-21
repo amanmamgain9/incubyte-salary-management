@@ -110,4 +110,4 @@ Fix the code to satisfy it; never disable a rule or add an `eslint-disable` comm
 - [ ] `npm run typecheck`, `npm run lint` and `npm test` pass (red commit: only its new test fails); `npm run test:db` if server/db changed; `npm run test:e2e` if a user flow changed.
 - [ ] Migrations generated (`npm run db:generate`) with their grants and committed for schema changes; `.env.example` updated for new env vars.
 - [ ] Docs updated in the same change when behavior, contracts or setup change. README describes only what works today.
-- [ ] One small, focused change → one Conventional Commit (a core rule → its red → green pair): `type(scope): summary`. Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`. Scopes: `auth`, `employees`, `salaries`, `lookups`, `reports`, `ui`, `api`, `db`, `scripts`, `e2e`, `docs`.
+- [ ] One small, focused change → one Conventional Commit (a core rule → its red → green pair): `type(scope): summary`. Types: `feat`, `fix`, `refactor`, `test`, `docs`, `ci`, `chore`. Scopes: `auth`, `employees`, `salaries`, `lookups`, `reports`, `ui`, `api`, `core` (`src/server/core`), `db`, `scripts`, `e2e`, `docs`; `ci` commits need none.
