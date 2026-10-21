@@ -60,7 +60,7 @@ src/features/
 ├── salaries/
 │   ├── use-salary-mutations.ts    # salaries.update + its invalidation
 │   ├── change-salary-form.tsx     # current pay/revision, new amount/currency, reason, conflict reload
-│   ├── salary-delta.ts            # pure: change and % vs current; null across currencies
+│   ├── salary-delta.ts            # pure: exact change and % vs current (via lib/money); null across currencies or for an invalid new amount
 │   └── salary-history-table.tsx   # read-only paginated history (rendered by employees/profile)
 └── reports/
     ├── report-page.tsx            # shell: header → filters → overview/trends → table; owns query + cursor wiring
@@ -102,7 +102,7 @@ src/hooks/
 
 src/lib/
 ├── format.ts                      # formatMoney, formatCount, formatDate, formatMonth, formatPercent (the only Intl use)
-├── money.ts                       # decimal string ↔ integer minor units, exact compare/diff
+├── money.ts                       # decimal string ↔ bigint minor units; compare/diff exactly on the units
 ├── dates.ts                       # todayUtc, month start/end, addMonths, monthsBetween (UTC)
 ├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState
 ├── mutation-errors.ts             # toFieldErrors(error) → { fields, message }
