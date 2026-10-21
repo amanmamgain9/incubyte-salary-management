@@ -48,7 +48,8 @@ scripts/
 │   ├── migrate.ts                 # apply drizzle/ as owner
 │   ├── reset.ts                   # explicit wipe before reseeding
 │   ├── seed.ts                    # HR account first (better-auth/crypto hashPassword, upserted), lookups, then employees + history in bulk (--seed, --as-of); exports its steps for db tests (main runs only under `import.meta.main`)
-│   └── verify.ts                  # compare the DB with the manifest: status, history, commitment/department SQL; report queries as they land (CI, after seeding)
+│   ├── verify.ts                  # compare the DB with the manifest: status, history and the report checks (CI, after seeding)
+│   └── verify-reports.ts          # each report's queries for representative filters vs expectations re-aggregated from the manifest
 ├── data-generation/
 │   ├── generate.ts                # pure deterministic generator (seed, as_of) → rows: population, IDs, known cases
 │   ├── history.ts                 # one employee's salary history from the review profiles

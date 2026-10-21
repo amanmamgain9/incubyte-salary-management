@@ -1,17 +1,18 @@
 // `npm run db:verify [-- --seed <text>] [--as-of YYYY-MM-DD]`: regenerates the seeded dataset, builds its independent
 // manifest (scripts/data-generation/manifest.ts) and compares the database with it, as owner. Exits non-zero on drift.
 // `--as-of` defaults to the latest salary history date, which the seed records upcoming joiners' entries at.
-// Checked today: status counts, history row count and current-pay consistency, and the commitment and department
-// numbers via direct SQL. Growth and benchmark rows join once their report queries exist.
+// Checked: status counts, history row count and current-pay consistency, and all four reports' queries for
+// representative filter sets (scripts/db/verify-reports.ts).
 import { isDeepStrictEqual } from "node:util";
 import { and, eq, exists, gt, isNull, max, ne, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { ownerDb } from "@/server/db/owner";
 import { employees, salaryHistory } from "@/server/db/schema";
-import { employmentStatusOn, isActiveOn } from "@/server/employees/status";
+import { employmentStatusOn } from "@/server/employees/status";
 import { generateDataset } from "@scripts/data-generation/generate";
 import { buildManifest, type Manifest } from "@scripts/data-generation/manifest";
 import { DEMO_HR_ID, parseDatasetOptions } from "./seed";
+import { reportChecks } from "./verify-reports";
 
 async function latestHistoryDate(): Promise<string | undefined> {
   const [row] = await ownerDb
@@ -32,40 +33,6 @@ async function statusCounts(asOf: string): Promise<Manifest["status"]> {
     })
     .from(employees);
   return row ?? { employee_count: 0, active_count: 0, upcoming_count: 0, departed_count: 0 };
-}
-
-const totals = {
-  employee_count: sql<number>`count(*)::int`,
-  total_annual_base_pay: sql<string>`sum(${employees.annual_base_pay})::text`,
-};
-
-function commitmentRows(asOf: string): Promise<Manifest["commitment"]> {
-  return ownerDb
-    .select({
-      work_country_code: employees.work_country_code,
-      salary_currency_code: employees.salary_currency_code,
-      ...totals,
-    })
-    .from(employees)
-    .where(isActiveOn(asOf))
-    .groupBy(employees.work_country_code, employees.salary_currency_code)
-    .orderBy(employees.work_country_code, employees.salary_currency_code);
-}
-
-function departmentRows(asOf: string): Promise<Manifest["departments"]> {
-  const keys = [employees.work_country_code, employees.department_id, employees.salary_currency_code] as const;
-  return ownerDb
-    .select({
-      work_country_code: employees.work_country_code,
-      department_id: employees.department_id,
-      salary_currency_code: employees.salary_currency_code,
-      ...totals,
-      average_annual_base_pay: sql<string>`round(avg(${employees.annual_base_pay}), 2)::text`,
-    })
-    .from(employees)
-    .where(isActiveOn(asOf))
-    .groupBy(...keys)
-    .orderBy(...keys);
 }
 
 /** History rows, and employees whose salary_revision, pay or currency differ from their latest history entry. */
@@ -108,8 +75,7 @@ if (import.meta.main) {
     const checks: [string, unknown, unknown][] = [
       ["status counts", manifest.status, await statusCounts(as_of)],
       ["history", { history_count: dataset.history.length, mismatched_employees: 0 }, await historyConsistency()],
-      ["salary commitment rows", manifest.commitment, await commitmentRows(as_of)],
-      ["department breakdown rows", manifest.departments, await departmentRows(as_of)],
+      ...(await reportChecks(manifest, as_of)),
     ];
     let failures = 0;
     for (const [name, expected, actual] of checks) {
