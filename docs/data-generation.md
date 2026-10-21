@@ -4,11 +4,11 @@ Synthetic demonstration data; salary bands and review patterns are fictional.
 
 ## Reproducibility
 
-- Generate from a `seed` and UTC `as_of` date (default: the run's UTC date). Identical `seed` + `as_of` reproduce employees and salary histories. Tests freeze both.
+- Generate from a `seed` and UTC `as_of` date (default: the run's UTC date): `npm run db:seed -- --seed <text> --as-of YYYY-MM-DD` (seed default `acme`). Identical `seed` + `as_of` reproduce employees and salary histories. Tests freeze both.
 - Use stable employee/history IDs: `E-00001`… in joining-date order; history `<employee ID>-<revision>`. Seed a fresh database; reseeding requires an explicit reset. Each deploy reseeds or records the `as_of` it used in the README, since reports use today's UTC date.
 - Seed the demo HR account (`DEMO_HR_EMAIL`, `DEMO_HR_PASSWORD`) first as owner: a `user` row plus a credential `account` row whose password is hashed with Better Auth's `hashPassword` (`better-auth/crypto`), so normal sign-in verifies it; signup stays disabled. All history entries reference it. Each employee's `salary_revision` equals its latest entry.
 - Lookups have no migration data: the seed inserts the 7 countries, 6 currencies and 5 departments below as owner before employees (the app role only reads them). Department IDs are lowercase names (`engineering`, `sales`, `operations`, `finance`, `people`).
-- The HR account and lookups are upserted, so re-running the seed is safe for them.
+- The HR account and lookups are upserted, so re-running the seed is safe for them; employees go only into an empty `employees` table, so a reseed needs `npm run db:reset` first.
 
 ## Population
 
@@ -77,6 +77,6 @@ Salary review profiles: India has a broad review spike; the US has staggered qua
 - Include known cases within the 10,000: multiple revisions in one day, month-boundary changes, a predecessor outside the selected period, a later leaver with earlier raises, a revised offer before joining, assignment changes and currency switches.
 - Example arithmetic: EUR 100,000 → 110,000 → 108,000 gives increases 10,000, decreases 2,000 and net 8,000. Initial salaries and currency switches contribute no growth amount.
 - Preserve valid empty filters, such as France + INR; unknown codes are rejected, not empty. Compare paginated results with summaries over the full matching population.
-- Generate a manifest of expected headcounts, country/department/currency totals and monthly deltas using independent exact arithmetic. `npm run db:verify` validates report results against it; CI runs it after seeding. DB tests check report numbers on small fixtures of these cases.
+- Generate a manifest of expected headcounts, country/department/currency totals and monthly deltas using independent exact arithmetic. `npm run db:verify` validates report results against it; CI runs it after seeding. It regenerates the dataset (same `--seed`; `--as-of` defaults to the latest history date, where upcoming joiners' entries sit). Until the report queries exist it checks status counts, history consistency and the commitment/department numbers by direct SQL. DB tests check report numbers on small fixtures of these cases.
 - The manifest rounds like PostgreSQL `round(numeric)` (half away from zero) and derives percentages from exact, unrounded medians. Growth is kept per month and snapshot country/department/currency so filters can be summed from it.
 - For historical benchmarking, independently reconstruct monthly salaries and exact percentiles from the dataset. Check month boundaries, partial months, later leavers, snapshot assignments and prior-year data outside the visible range.

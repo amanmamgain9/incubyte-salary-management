@@ -58,7 +58,7 @@ jobs:
         run: psql "postgres://acme_owner:acme_owner_local@127.0.0.1:55432/acme" -v ON_ERROR_STOP=1 -f scripts/db/init-roles.sql
       - run: cp .env.example .env
       - run: npm run test:db
-      # Smoke-test the setup scripts against the service database (run twice: the seed is re-runnable).
+      # Seed the service database with the 10,000-employee dataset and check it against the generator manifest.
       - run: npm run db:migrate
       - run: npm run db:seed
-      - run: npm run db:seed
+      - run: npm run db:verify

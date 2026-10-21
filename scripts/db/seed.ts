@@ -1,16 +1,32 @@
-// `npm run db:seed`: seeds the demo HR account, then the lookups, as owner (docs/data-generation.md).
-// Both steps upsert, so re-running is safe. Employee and salary history rows come after them, in the same transaction.
+// `npm run db:seed [-- --seed <text>] [--as-of YYYY-MM-DD]`: seeds the demo HR account, the lookups, then the
+// generated 10,000 employees and their salary history, as owner in one transaction (docs/data-generation.md).
+// The HR account and lookups upsert; employees go only into an empty table (reseeding needs `npm run db:reset`).
+import { parseArgs } from "node:util";
 import { hashPassword } from "better-auth/crypto";
+import { IsoDate } from "@/contracts/primitives";
+import { todayUtc } from "@/lib/dates";
 import type { Executor } from "@/server/db/connect";
 import { ownerDb } from "@/server/db/owner";
-import { account, countries, currencies, departments, user } from "@/server/db/schema";
+import { account, countries, currencies, departments, employees, salaryHistory, user } from "@/server/db/schema";
 import { getEnv } from "@/server/env";
+import { type Dataset, generateDataset } from "@scripts/data-generation/generate";
 import { SEED_LOOKUPS } from "@scripts/data-generation/profiles";
 
 export type HrAccount = { id: string; name: string; email: string; password: string };
 
 /** The demo HR user's stable ID; seeded salary history references it as `changed_by`. */
 export const DEMO_HR_ID = "demo-hr";
+
+/** The generator seed used when `--seed` is not given. */
+export const DEFAULT_SEED = "acme";
+
+/** `--seed` and `--as-of` from the command line; `as_of` stays undefined when not given. */
+export function parseDatasetOptions(args: string[]): { seed: string; as_of: string | undefined } {
+  const { values } = parseArgs({ args, options: { seed: { type: "string" }, "as-of": { type: "string" } } });
+  const asOf = values["as-of"];
+  if (asOf !== undefined && !IsoDate.safeParse(asOf).success) throw new Error("--as-of must be a date (YYYY-MM-DD)");
+  return { seed: values.seed ?? DEFAULT_SEED, as_of: asOf };
+}
 
 /**
  * Inserts or refreshes a Better Auth `user` plus its `credential` account, the password hashed with Better Auth's
@@ -43,13 +59,43 @@ export async function seedLookups(db: Executor): Promise<void> {
   await db.insert(departments).values(SEED_LOOKUPS.departments).onConflictDoNothing();
 }
 
+// PostgreSQL binds at most 65,535 parameters per statement; employees have 9 columns, history entries 10.
+const EMPLOYEE_BATCH = 5_000;
+const HISTORY_BATCH = 6_000;
+
+/**
+ * Bulk-inserts a generated dataset's employees and salary history. Refuses when any employee exists, so a reseed
+ * never mixes datasets; needs the lookups and the history's `changed_by` user.
+ */
+export async function seedEmployees(db: Executor, dataset: Pick<Dataset, "employees" | "history">): Promise<void> {
+  const existing = await db.select({ id: employees.id }).from(employees).limit(1);
+  if (existing.length > 0) throw new Error("Employees already exist; run `npm run db:reset` before reseeding.");
+  for (let i = 0; i < dataset.employees.length; i += EMPLOYEE_BATCH) {
+    await db.insert(employees).values(dataset.employees.slice(i, i + EMPLOYEE_BATCH));
+  }
+  for (let i = 0; i < dataset.history.length; i += HISTORY_BATCH) {
+    await db.insert(salaryHistory).values(dataset.history.slice(i, i + HISTORY_BATCH));
+  }
+}
+
 if (import.meta.main) {
   try {
+    const options = parseDatasetOptions(process.argv.slice(2));
+    const as_of = options.as_of ?? todayUtc(new Date());
+    const started = performance.now();
+    const dataset = generateDataset({ seed: options.seed, as_of, changed_by: DEMO_HR_ID });
+    const generated = performance.now();
     await ownerDb.transaction(async (tx) => {
       await seedDemoHrAccount(tx);
       await seedLookups(tx);
+      await seedEmployees(tx, dataset);
     });
-    console.log("Seeded the demo HR account and lookups.");
+    const seconds = (from: number, to: number) => ((to - from) / 1000).toFixed(1);
+    console.log(
+      `Seeded the demo HR account, lookups, ${dataset.employees.length} employees and ${dataset.history.length} ` +
+        `salary history entries (seed "${options.seed}", as_of ${as_of}) in ${seconds(started, performance.now())}s ` +
+        `(generation ${seconds(started, generated)}s).`,
+    );
   } finally {
     await ownerDb.$client.end();
   }

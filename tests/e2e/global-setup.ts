@@ -1,5 +1,6 @@
 // Playwright `setup` project (runs before every spec): drop/create and migrate `<db>_e2e`, then seed the demo HR
-// account and the lookups exactly as `npm run db:seed` does. The dev database is never touched.
+// account and the lookups with `npm run db:seed`'s own steps (no generated employees: specs arrange their data).
+// The dev database is never touched.
 import { test as setup } from "@playwright/test";
 import { createDb } from "@/server/db/connect";
 import { recreateMigratedDatabase } from "@/server/db/owner";
