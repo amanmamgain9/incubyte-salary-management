@@ -37,6 +37,9 @@ export default defineConfig({
           include: ["tests/db/**/*.test.ts"],
           environment: "node",
           fileParallelism: false,
+          // Recreates and migrates `<db>_test`; setup.ts then points each worker's database URLs at it.
+          globalSetup: ["tests/db/global-setup.ts"],
+          setupFiles: ["tests/db/setup.ts"],
         },
       },
     ],

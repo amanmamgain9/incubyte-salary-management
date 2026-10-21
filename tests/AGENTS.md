@@ -16,8 +16,10 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── features/**/*.test.ts      # every *-data.ts, salary-delta, search-params builders
 │   └── scripts/data-generation/*.test.ts  # determinism, quotas, tenure, history rules, manifest arithmetic
 ├── db/                            # integration against a disposable PostgreSQL database
-│   ├── global-setup.ts            # drop/create `<db>_test`, migrate once as owner
+│   ├── global-setup.ts            # drop/create `<db>_test`, migrate once as owner, provide its URLs
+│   ├── setup.ts                   # per worker: stub DATABASE_URL/DATABASE_OWNER_URL with the `_test` URLs
 │   ├── harness.ts                 # resetTables(), callerFor(user) (see Database and e2e harness below)
+│   ├── harness.test.ts            # app role reaches `<db>_test`; resetTables empties public tables
 │   ├── fixtures.ts                # minimal builders: lookups, HR user, employee + history
 │   ├── constraints.test.ts / grants.test.ts  # FKs, checks, unique revision; app role cannot UPDATE/DELETE history
 │   ├── employees.test.ts          # list filters/search/status boundaries, create (+ revision 1), duplicate ID, details edit
@@ -55,7 +57,7 @@ scripts/
 - One behavior per test, named as a sentence. Assert through public functions or procedures. Fixtures are minimal and built in the test.
 
 **Database and e2e harness**
-- `npm run test:db`: the vitest `db` project points both URLs at `<db>_test` (dev database name + `_test`); `tests/db/global-setup.ts` drops and recreates it as owner and migrates once per run.
-- `tests/db/harness.ts`: `resetTables()` truncates app and auth tables (`TRUNCATE … RESTART IDENTITY CASCADE`) in each file's `beforeEach`; `callerFor(user | null, { now?, origin? })` signs the fixture user in through Better Auth and returns `appRouter.createCaller({ ...(await createContext({ headers })), now })` with cookie and Origin headers.
+- `npm run test:db` loads `.env` (`node --env-file-if-exists`) and runs the vitest `db` project, which points both URLs at `<db>_test` (dev database name + `_test`): `tests/db/global-setup.ts` drops and recreates it as owner, migrates once per run and provides the `_test` URLs; `tests/db/setup.ts` stubs them into each worker before any test file reads env.
+- `tests/db/harness.ts`: `resetTables()` truncates app and auth tables (`TRUNCATE … RESTART IDENTITY CASCADE`) in each file's `beforeEach` and refuses any database not named `*_test`; `callerFor(user | null, { now?, origin? })` signs the fixture user in through Better Auth and returns `appRouter.createCaller({ ...(await createContext({ headers })), now })` with cookie and Origin headers. `callerFor` lands with the first router.
 - `npm run test:e2e`: `tests/e2e/global-setup.ts` drops/recreates, migrates and seeds `<db>_e2e`; the web server's `DATABASE_URL` points at it. Neither suite ever touches the dev database.
 - Benchmarks, verifiers and seed tools live in `scripts/`, never in `tests/`.

@@ -24,9 +24,10 @@ The Compose database listens on `127.0.0.1:55432` (not 5432) to avoid clashing w
 
 ```bash
 npm test                  # unit tests (tests/unit)
+npm run test:db           # database tests (tests/db) against a fresh `acme_test` on the Compose database
 npm run lint              # ESLint, including the architecture boundary rules
 npm run typecheck         # route types + tsc
 npm run build             # production build
 ```
 
-CI (`.github/workflows/ci.yml`) runs typecheck, lint, unit tests and build on every push and pull request.
+CI (`.github/workflows/ci.yml`) runs typecheck, lint, unit tests and build on every push and pull request, and `npm run test:db` against a PostgreSQL 17 service.

@@ -53,7 +53,7 @@ Every folder and file here and in the area guide trees is planned. Create files 
 ├── playwright.config.ts      # e2e against `next start` + a freshly seeded `<db>_e2e` database
 ├── docker-compose.yml        # local PostgreSQL; runs scripts/db/init-roles.sql
 ├── .env.example              # every variable env.ts reads, with safe local values
-├── .github/workflows/ci.yml  # CI: typecheck, lint, unit tests, build; Node from package.json engines
+├── .github/workflows/ci.yml  # CI: typecheck, lint, unit tests, build; db tests on a postgres:17 service; Node from package.json engines
 ├── drizzle/                  # generated, committed migrations; each GRANTs the app role on the tables it creates
 ├── docs/                     # product docs + static screen prototypes (reference only)
 ├── scripts/                  # seed, migrate, verify, benchmark (tree in tests/AGENTS.md)

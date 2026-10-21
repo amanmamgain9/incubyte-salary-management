@@ -13,7 +13,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run --project unit",
-    "test:db": "vitest run --project db",
+    "test:db": "node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run --project db",
     "test:e2e": "playwright test",
     "db:generate": "tsx --env-file-if-exists=.env node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "tsx --env-file-if-exists=.env scripts/db/migrate.ts",

@@ -26,3 +26,33 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+  db:
+    name: Database tests
+    runs-on: ubuntu-latest
+    services:
+      # Same roles, database and host port as docker-compose.yml, so .env.example works unchanged.
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: acme_owner
+          POSTGRES_PASSWORD: acme_owner_local
+          POSTGRES_DB: acme
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U acme_owner -d acme"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: package.json
+          cache: npm
+      - run: npm ci
+      - name: Create the app role
+        run: psql "postgres://acme_owner:acme_owner_local@127.0.0.1:55432/acme" -v ON_ERROR_STOP=1 -f scripts/db/init-roles.sql
+      - run: cp .env.example .env
+      - run: npm run test:db
