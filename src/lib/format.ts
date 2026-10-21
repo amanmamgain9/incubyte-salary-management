@@ -81,9 +81,10 @@ export function formatDate(date: string | null): string {
 
 const months = new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" });
 
-/** A `YYYY-MM` month, e.g. "2026-10" → "Oct 2026"; `short` for chart axes → "Oct ’26". */
-export function formatMonth(month: string, style: "long" | "short" = "long"): string {
+/** A `YYYY-MM` month, e.g. "2026-10" → "Oct 2026"; `short` for chart axes → "Oct ’26"; `name` alone → "Oct". */
+export function formatMonth(month: string, style: "long" | "short" | "name" = "long"): string {
   const name = months.format(new Date(`${month}-01T00:00:00Z`));
+  if (style === "name") return name;
   return style === "short" ? `${name} ’${month.slice(2, 4)}` : `${name} ${month.slice(0, 4)}`;
 }
 

@@ -131,4 +131,8 @@ describe("formatMonth", () => {
   it("abbreviates the year for chart axes", () => {
     expect(formatMonth("2026-03", "short")).toBe("Mar ’26");
   });
+
+  it("names the month alone for a month grid", () => {
+    expect(formatMonth("2026-03", "name")).toBe("Mar");
+  });
 });

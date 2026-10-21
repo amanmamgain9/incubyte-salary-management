@@ -97,6 +97,8 @@ src/components/
 │   ├── date-picker.tsx            # <DatePicker>: the one date field (DayPicker calendar, month/year dropdowns, min/max, clearable); the only calendar-library import site
 │   ├── date-picker-data.ts        # pure: the calendar's navigable range and opening day
 │   ├── picker-popover.tsx         # the picker field shell: control-styled trigger named "label + value", hidden input for FormData, clear button, popover (not portalled, works in <Dialog>); the only popover-library import site
+│   ├── month-picker.tsx           # <MonthPicker>: the one month field (a year of months, previous/next year, min/max, arrow/PageUp/PageDown/Home/End keys); values are first days `YYYY-MM-01`
+│   ├── month-picker-data.ts       # pure: month cells (disabled/selected/this month), opening month, key moves within bounds
 │   ├── dialog.tsx                 # the one modal: native <dialog> + showModal, focus trap/return, Esc and backdrop close; no close while `pending`
 │   ├── amount.tsx                 # tabular right-aligned money with visible currency
 │   ├── country-label.tsx          # country code marker + name (table cells)
