@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { DEFAULT_LIMIT, type Page, type Paging } from "@/contracts/paging";
+import { DEFAULT_LIMIT, type KeysetFrom, type Page, type Paging } from "@/contracts/paging";
 import { type CursorCodec, getCursorCodec } from "@/server/core/cursor";
 import { InvalidCursorError } from "@/server/core/errors";
 
@@ -24,7 +24,7 @@ export async function paginateKeyset<Row, Key extends readonly unknown[]>(args: 
   scope: string;
   input: Paging & Record<string, unknown>;
   keyOf: (row: Row) => Key;
-  fetch: (from: { key: Key; before: boolean } | null, take: number) => Promise<Row[]>;
+  fetch: (from: KeysetFrom<Key>, take: number) => Promise<Row[]>;
   count: () => Promise<number>;
 }): Promise<Page<Row>> {
   const { scope, input, keyOf } = args;
@@ -33,7 +33,7 @@ export async function paginateKeyset<Row, Key extends readonly unknown[]>(args: 
   const c = input.cursor === undefined ? null : readCursor(codec, input.cursor, scope, fingerprint);
   const limit = input.limit ?? DEFAULT_LIMIT;
   // The key was produced by keyOf and signed by us, so it has Key's shape.
-  const from = c && { key: c.key as unknown as Key, before: c.before };
+  const from: KeysetFrom<Key> = c && { key: c.key as unknown as Key, before: c.before };
   const [rows, total_count] = await Promise.all([args.fetch(from, limit + 1), args.count()]);
 
   const more = rows.length > limit;

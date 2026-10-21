@@ -21,3 +21,6 @@ export function page<Item extends z.ZodType>(item: Item) {
   });
 }
 export type Page<T> = z.infer<ReturnType<typeof page<z.ZodType<T>>>>;
+
+/** Where a keyset `fetch` resumes: after `key`, or before it (reversed order) when `before`; null for the first page. */
+export type KeysetFrom<Key> = { key: Key; before: boolean } | null;
