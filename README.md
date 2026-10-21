@@ -2,7 +2,7 @@
 
 HR salary management app (Next.js + tRPC + PostgreSQL). Scope and design live in [`docs/`](docs/); contributor rules in [`AGENTS.md`](AGENTS.md).
 
-> Status: backend foundation. Migrations create the lookup and Better Auth tables, and Better Auth serves `/api/auth/*` (email/password sign-in, sign-up disabled); there is no migrate/seed script or UI yet, so `npm run test:db` is the only place migrations run. The app serves a placeholder `/employees` page (`/` redirects there).
+> Status: backend foundation. Migrations create the lookup and Better Auth tables; Better Auth serves `/api/auth/*` (email/password sign-in, sign-up disabled) and tRPC serves `/api/trpc` with one session-guarded procedure, `lookups.get`. There is no migrate/seed script or UI yet, so `npm run test:db` is the only place migrations run. The app serves a placeholder `/employees` page (`/` redirects there).
 
 ## Prerequisites
 
