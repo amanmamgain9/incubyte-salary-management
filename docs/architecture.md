@@ -27,9 +27,7 @@ flowchart LR
 
 - Money: `NUMERIC(18,2)` in PostgreSQL; decimal strings in JSON. SQL handles salary calculations, filtering and stable pagination.
 - Salary edits: lock employee, check expected revision, update current pay and append history in one transaction.
-- Login: email/password, [Argon2id](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html), PostgreSQL sessions; rotate on login and invalidate on logout.
-- Cookies: `HttpOnly`, `Secure`, `SameSite=Lax`; CSRF protection and login rate limits.
-- All data procedures require an HR session, including direct server calls; audit actor comes from that session.
+- Authentication: PostgreSQL cookie sessions; see [login and security](login.md).
 
 ## Delivery
 

@@ -69,12 +69,26 @@ struct SalaryHistoryEntry {
 struct HrUser {
     id: String
     name: String
-    email: String                    // unique
+    email: String                    // unique, case-insensitive
     password_hash: String
 }
 ```
 
-Login uses email/password. All HR users have equal access; salary revisions identify the signed-in user.
+Unique index on `lower(HrUser.email)`.
+
+## Login session
+
+```text
+struct HrSession {
+    token_hash: String               // primary key
+    hr_user_id: String               // HrUser.id
+    expires_at: Timestamp
+}
+```
+
+`token_hash` is the primary key; `hr_user_id` references `HrUser.id` with `ON DELETE RESTRICT`. Index `expires_at` for cleanup.
+
+Behavior and security: [Login](login.md).
 
 ## Storage rules
 

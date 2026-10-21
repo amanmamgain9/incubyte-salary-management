@@ -6,7 +6,7 @@
 
 ## Access
 
-HR users sign in with email/password and can perform all employee operations and view all reports. Salary history remains read-only; revisions identify the signed-in user.
+HR users sign in with email/password and can perform all employee operations and view all reports. Salary history remains read-only; revisions identify the signed-in user. See [login and security](login.md).
 
 ## Data operations
 
