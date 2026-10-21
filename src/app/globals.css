@@ -99,6 +99,8 @@
   --text-metric--line-height: 1.15;
   --text-metric--letter-spacing: -0.8px;
   --text-metric--font-weight: 600;
+  --text-heading: 14px;
+  --text-heading--font-weight: 600;
   --text-body: 13px;
   --text-body--line-height: 1.5;
   --text-label: 12px;
