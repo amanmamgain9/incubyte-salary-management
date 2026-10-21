@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fromMinorUnits, toMinorUnits } from "@/lib/money";
+import { divideRounded, fromMinorUnits, toMinorUnits } from "@/lib/money";
 
 describe("toMinorUnits", () => {
   it.each([
@@ -30,5 +30,23 @@ describe("fromMinorUnits", () => {
     [999999999999999999n, "9999999999999999.99"],
   ])("writes %s as %s", (units, amount) => {
     expect(fromMinorUnits(units)).toBe(amount);
+  });
+});
+
+describe("divideRounded", () => {
+  it("rounds halves away from zero", () => {
+    expect(divideRounded(5n, 2n)).toBe(3n);
+    expect(divideRounded(-5n, 2n)).toBe(-3n);
+    expect(divideRounded(7n, -2n)).toBe(-4n);
+  });
+
+  it("rounds other remainders to the nearest integer", () => {
+    expect(divideRounded(10n, 3n)).toBe(3n);
+    expect(divideRounded(20n, 3n)).toBe(7n);
+    expect(divideRounded(-20n, 3n)).toBe(-7n);
+  });
+
+  it("rejects division by zero", () => {
+    expect(() => divideRounded(1n, 0n)).toThrow(RangeError);
   });
 });

@@ -51,6 +51,7 @@ scripts/
 │   ├── generate.ts                # pure deterministic generator (seed, as_of) → rows
 │   ├── random.ts                  # seeded PRNG
 │   ├── profiles.ts                # seeded lookups (SEED_LOOKUPS), population, tenure, pay bands, review profiles from the doc
+│   ├── names.ts                   # small per-country name pools (repeated names)
 │   └── manifest.ts                # independent exact-arithmetic expected totals/percentiles
 └── bench-reports.ts               # time each report on the seeded DB
 ```

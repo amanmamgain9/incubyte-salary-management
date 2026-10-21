@@ -107,7 +107,7 @@ src/hooks/
 
 src/lib/
 ├── format.ts                      # formatMoney, formatCount, formatDate, formatMonth, formatPercent, formatInitials (the only Intl use)
-├── money.ts                       # decimal string ↔ bigint minor units; compare/diff exactly on the units
+├── money.ts                       # decimal string ↔ bigint minor units; divideRounded (half away from zero); compare/diff exactly on the units
 ├── dates.ts                       # todayUtc, addDays, daysBetween, addMonths, month start/end, monthsBetween (UTC)
 ├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState; patchSearchParams (cursor rule)
 ├── mutation-errors.ts             # toFieldErrors(error) → { fields, message }

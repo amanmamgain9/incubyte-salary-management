@@ -17,3 +17,13 @@ export function fromMinorUnits(units: bigint): string {
   const fraction = (magnitude % 100n).toString().padStart(2, "0");
   return `${units < 0n ? "-" : ""}${magnitude / 100n}.${fraction}`;
 }
+
+/** `numerator / denominator` rounded to the nearest integer, halves away from zero (PostgreSQL `round`). */
+export function divideRounded(numerator: bigint, denominator: bigint): bigint {
+  if (denominator === 0n) throw new RangeError("Division by zero");
+  const negative = numerator < 0n !== denominator < 0n;
+  const n = numerator < 0n ? -numerator : numerator;
+  const d = denominator < 0n ? -denominator : denominator;
+  const quotient = (2n * n + d) / (2n * d);
+  return negative ? -quotient : quotient;
+}

@@ -1,4 +1,4 @@
-import { fromMinorUnits, toMinorUnits } from "@/lib/money";
+import { divideRounded, fromMinorUnits, toMinorUnits } from "@/lib/money";
 
 /** A pay change in one currency: the signed difference and the signed percentage of current pay, both to 2 places. */
 export type SalaryDelta = { change: string; percent: string };
@@ -18,11 +18,4 @@ export function salaryDelta(current: Pay, next: Pay): SalaryDelta | null {
   // Percent in hundredths: change / from × 100 × 100, rounded half away from zero.
   const hundredths = divideRounded(change * 10_000n, from);
   return { change: fromMinorUnits(change), percent: fromMinorUnits(hundredths) };
-}
-
-// Integer division of a signed numerator by a positive divisor, rounding half away from zero.
-function divideRounded(numerator: bigint, divisor: bigint): bigint {
-  const magnitude = numerator < 0n ? -numerator : numerator;
-  const rounded = (magnitude * 2n + divisor) / (divisor * 2n);
-  return numerator < 0n ? -rounded : rounded;
 }
