@@ -62,3 +62,43 @@ jobs:
       - run: npm run db:migrate
       - run: npm run db:seed
       - run: npm run db:verify
+
+  e2e:
+    name: End-to-end tests
+    runs-on: ubuntu-latest
+    services:
+      # Same as the db job: playwright.config.ts derives `<db>_e2e` from .env.example's URLs.
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: acme_owner
+          POSTGRES_PASSWORD: acme_owner_local
+          POSTGRES_DB: acme
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U acme_owner -d acme"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: package.json
+          cache: npm
+      - run: npm ci
+      - name: Create the app role
+        run: psql "postgres://acme_owner:acme_owner_local@127.0.0.1:55432/acme" -v ON_ERROR_STOP=1 -f scripts/db/init-roles.sql
+      - run: cp .env.example .env
+      - run: npx playwright install --with-deps chromium
+      # Builds the app, serves it on :3100 and runs the specs against a fresh `acme_e2e`.
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

@@ -36,9 +36,10 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   └── reports/<report>.test.ts   # report numbers on small fixtures (known cases in docs/data-generation.md)
 └── e2e/
     ├── global-setup.ts            # `setup` project (runs before the specs): drop/create, migrate and seed `<db>_e2e`
+    ├── session.ts                 # signIn (login form), callMutation, and `test` with one HR session per worker + `api.mutate`
     ├── auth.spec.ts               # login error, login, sign out
-    ├── employees.spec.ts          # directory search/filter/paging, create, edit, departure
-    ├── salaries.spec.ts           # salary change incl. conflict reload
+    ├── employees.spec.ts          # create dialog → profile, duplicate ID, edit/date errors/departure, deep link, Esc, focus return, 404
+    ├── salaries.spec.ts           # salary change with delta → new history revision; conflict reload
     └── reports.spec.ts            # each report renders and filters
 
 scripts/
@@ -70,5 +71,5 @@ scripts/
 - `npm run test:db` loads `.env` (`node --env-file-if-exists`) and runs the vitest `db` project, which points both URLs at `<db>_test` (dev database name + `_test`): `tests/db/global-setup.ts` drops and recreates it as owner, migrates once per run and provides the `_test` URLs; `tests/db/setup.ts` stubs them into each worker before any test file reads env.
 - `tests/db/harness.ts`: `resetTables()` truncates every `public` table, app and auth (`TRUNCATE … RESTART IDENTITY CASCADE`) in each file's `beforeEach` and refuses any database not named `*_test`; `callerFor(user | null, { now?, origin? })` signs the fixture user in through Better Auth and returns `createCallerFactory(appRouter)({ ...(await createContext({ headers })), now })` with cookie and Origin (default: the app origin; `null` omits it) headers. `contextFor` builds the same context for test-local routers, e.g. `procedures.test.ts`'s probes of the middleware chain.
 - If `test:db` prints only `TypeError: code.charCodeAt is not a function` / `No test files found`, global setup threw (vitest 5.0.5 hides the error): check `.env` exists and Postgres is up (`docker compose up -d`).
-- `npm run test:e2e` loads `.env` and runs Playwright: the web server (`next build` + `next start` on port 3100, `APP_URL` set to it) gets `DATABASE_URL` pointed at `<db>_e2e`; the `setup` project (`tests/e2e/global-setup.ts`, a setup test so it needs no default export) drops/recreates, migrates and seeds it (demo HR + lookups with `db:seed`'s own steps; no generated employees) before the specs. Specs arrange data through the API with the signed-in page's cookies and an `Origin` header. Both suites recreate their database with `recreateMigratedDatabase` (`server/db/owner.ts`); neither ever touches the dev database. Browsers are not installed by the scripts: run `npx playwright install chromium` once.
+- `npm run test:e2e` loads `.env` and runs Playwright: the web server (`next build` + `next start` on port 3100, `APP_URL` set to it) gets `DATABASE_URL` pointed at `<db>_e2e`; the `setup` project (`tests/e2e/global-setup.ts`, a setup test so it needs no default export) drops/recreates, migrates and seeds it (demo HR + lookups with `db:seed`'s own steps; no generated employees) before the specs. Specs arrange data through the API with the signed-in page's cookies and an `Origin` header. Better Auth allows three sign-ins per 10 s, so only `auth.spec.ts` signs in through the form; other specs import `test` from `session.ts`, which signs in once per worker through the API (waiting out the limit) and reuses that session. Both suites recreate their database with `recreateMigratedDatabase` (`server/db/owner.ts`); neither ever touches the dev database. Browsers are not installed by the scripts: run `npx playwright install chromium` once.
 - Benchmarks, verifiers and seed tools live in `scripts/`, never in `tests/`.
