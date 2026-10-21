@@ -8,6 +8,7 @@ export default defineConfig({
     alias: {
       "@": fromRoot("./src"),
       "@scripts": fromRoot("./scripts"),
+      "@tests": fromRoot("./tests"),
       // `server-only` throws outside React Server Components; tests import server modules directly.
       "server-only": fromRoot("./node_modules/server-only/empty.js"),
     },
