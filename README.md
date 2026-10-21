@@ -76,4 +76,5 @@ npm run db:reset && npm run db:seed    # db:reset empties every app and auth tab
 - [Data generation](docs/data-generation.md): the seeded population, salary histories and known cases
 - [Screens](docs/screens.md): screen list, navigation and the static prototypes
 - [Login and security](docs/login.md) and [design language](docs/design-language.md)
+- [AI workflow](docs/ai-workflow.md): how AI agents were used, reviewed and corrected, with commit references
 - [AGENTS.md](AGENTS.md): contributor rules, with area guides in `src/server`, `src/features` and `tests`
