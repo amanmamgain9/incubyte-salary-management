@@ -8,7 +8,8 @@ test("signing in opens the employee directory", async ({ page, baseURL }) => {
   await signIn(page);
   await expect(page).toHaveURL(/\/employees$/);
   await expect(page.getByRole("heading", { level: 1, name: "Employees" })).toBeVisible();
-  await expect(page.getByText("No employees yet")).toBeVisible();
+  // The setup project seeded 24 generated employees (global-setup.ts).
+  await expect(page.getByText("1–24 of 24 results")).toBeVisible();
 
   // The browser's session cookie authorises the API call; mutations must come from the app origin.
   await callMutation(page.request, baseURL ?? "", "employees.create", {
@@ -29,7 +30,7 @@ test("signing in opens the employee directory", async ({ page, baseURL }) => {
   await expect(row).toContainText("United Kingdom");
   await expect(row).toContainText("Active");
   await expect(row).toContainText("GBP 98,000.50");
-  await expect(page.getByText("1–1 of 1 result")).toBeVisible();
+  await expect(page.getByText("1–25 of 25 results")).toBeVisible();
 });
 
 test("a wrong password shows an error and stays on the login page", async ({ page }) => {
