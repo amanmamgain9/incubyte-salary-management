@@ -108,7 +108,7 @@ src/hooks/
 src/lib/
 ├── format.ts                      # formatMoney, formatCount, formatDate, formatMonth, formatPercent, formatInitials (the only Intl use)
 ├── money.ts                       # decimal string ↔ bigint minor units; compare/diff exactly on the units
-├── dates.ts                       # todayUtc, month start/end, addMonths, monthsBetween (UTC)
+├── dates.ts                       # todayUtc, addDays, daysBetween, addMonths, month start/end, monthsBetween (UTC)
 ├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState; patchSearchParams (cursor rule)
 ├── mutation-errors.ts             # toFieldErrors(error) → { fields, message }
 ├── product-defaults.ts            # default report ranges (benchmark: 24 months ending this month) and form selections, from `today`
