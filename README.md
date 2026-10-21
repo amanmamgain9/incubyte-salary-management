@@ -2,7 +2,7 @@
 
 HR salary management app (Next.js + tRPC + PostgreSQL). Scope and design live in [`docs/`](docs/); contributor rules in [`AGENTS.md`](AGENTS.md).
 
-> Status: tooling scaffold. The app currently serves a placeholder `/employees` page (`/` redirects there); no database schema, auth or features yet.
+> Status: backend foundation. Migrations create the lookup and Better Auth tables, and Better Auth serves `/api/auth/*` (email/password sign-in, sign-up disabled); there is no migrate/seed script or UI yet, so `npm run test:db` is the only place migrations run. The app serves a placeholder `/employees` page (`/` redirects there).
 
 ## Prerequisites
 
@@ -27,7 +27,7 @@ npm test                  # unit tests (tests/unit)
 npm run test:db           # database tests (tests/db) against a fresh `acme_test` on the Compose database
 npm run lint              # ESLint, including the architecture boundary rules
 npm run typecheck         # route types + tsc
-npm run build             # production build
+npm run build             # production build (needs the app variables from .env)
 ```
 
 CI (`.github/workflows/ci.yml`) runs typecheck, lint, unit tests and build on every push and pull request, and `npm run test:db` against a PostgreSQL 17 service.

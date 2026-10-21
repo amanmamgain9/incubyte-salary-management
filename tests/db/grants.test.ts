@@ -5,10 +5,15 @@ import { countries, currencies, departments } from "@/server/db/schema";
 import { resetTables } from "./harness";
 
 // Exactly what the app role may do on each public table (src/server/AGENTS.md › Data access).
+const betterAuthTable = ["SELECT", "INSERT", "UPDATE", "DELETE"];
 const expectedPrivileges: Record<string, string[]> = {
   countries: ["SELECT"],
   currencies: ["SELECT"],
   departments: ["SELECT"],
+  user: betterAuthTable,
+  session: betterAuthTable,
+  account: betterAuthTable,
+  verification: betterAuthTable,
 };
 
 const privileges = ["SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"];

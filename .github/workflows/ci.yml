@@ -25,6 +25,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
+      # Route modules read the app env (db client, auth) when the build collects page data.
+      - run: cp .env.example .env
       - run: npm run build
 
   db:

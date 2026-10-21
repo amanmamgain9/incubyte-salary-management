@@ -18,7 +18,8 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 ├── db/                            # integration against a disposable PostgreSQL database
 │   ├── global-setup.ts            # drop/create `<db>_test`, migrate once as owner, provide its URLs
 │   ├── setup.ts                   # per worker: stub DATABASE_URL/DATABASE_OWNER_URL with the `_test` URLs
-│   ├── harness.ts                 # resetTables() (refuses non-`_test` databases); callerFor(user) lands with the first router
+│   ├── harness.ts                 # resetTables() (refuses non-`_test` databases); signIn(user) → Cookie header; callerFor(user) lands with the first router
+│   ├── auth.test.ts               # getSessionUser: no cookie, signed in, signed out, expired; sign-up disabled
 │   ├── harness.test.ts            # app role reaches `<db>_test`; resetTables empties public tables and restarts identities
 │   ├── fixtures.ts                # minimal builders: lookups, HR user, employee + history
 │   ├── constraints.test.ts / grants.test.ts  # FKs, checks, unique revision; app role cannot UPDATE/DELETE history

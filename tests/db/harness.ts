@@ -1,5 +1,7 @@
 import { sql } from "drizzle-orm";
+import { auth } from "@/server/auth/auth";
 import { ownerDb } from "@/server/db/owner";
+import type { HrUserFixture } from "./fixtures";
 
 /** Empties every app and auth table (all of `public`) as owner. Call in each db test file's `beforeEach`. */
 export async function resetTables(): Promise<void> {
@@ -17,4 +19,14 @@ export async function resetTables(): Promise<void> {
     sql`, `,
   );
   await ownerDb.execute(sql`TRUNCATE ${tables} RESTART IDENTITY CASCADE`);
+}
+
+/** Signs the user in through Better Auth and returns the `Cookie` header value carrying the session. */
+export async function signIn(hr: HrUserFixture): Promise<string> {
+  const response = await auth.api.signInEmail({ body: { email: hr.email, password: hr.password }, asResponse: true });
+  if (!response.ok) throw new Error(`Sign-in failed with ${response.status}`);
+  return response.headers
+    .getSetCookie()
+    .map((cookie) => cookie.split(";", 1)[0])
+    .join("; ");
 }
