@@ -56,6 +56,30 @@ const boundaries = {
       bans: [ban("^lucide-react(/|$)", "Only src/components/ui/icon.tsx imports the icon library; use <Icon>.")],
     },
   ],
+  "calendar-library-site": [
+    {
+      files: allSources,
+      ignores: ["src/components/ui/date-picker.tsx"],
+      bans: [
+        ban(
+          "^(react-day-picker|@daypicker/.+|date-fns|@date-fns/.+)(/|$)",
+          "Only src/components/ui/date-picker.tsx imports the calendar library; use <DatePicker> or <MonthPicker>.",
+        ),
+      ],
+    },
+  ],
+  "popover-library-site": [
+    {
+      files: allSources,
+      ignores: ["src/components/ui/picker-popover.tsx"],
+      bans: [
+        ban(
+          "^(radix-ui|@radix-ui/.+)(/|$)",
+          "Only src/components/ui/picker-popover.tsx imports the popover library; use <DatePicker> or <MonthPicker>.",
+        ),
+      ],
+    },
+  ],
   "auth-client-site": [
     {
       files: allSources,

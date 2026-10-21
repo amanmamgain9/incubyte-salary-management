@@ -8,6 +8,8 @@ type FormValues = Record<string, string>;
 
 type FieldElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
+export type ValueProps = { name: string; value: string; onChange: (value: string) => void };
+
 export type InputProps = {
   name: string;
   value: string;
@@ -48,6 +50,11 @@ export function useForm<V extends FormValues>(options: {
     return { name, value: values[name] ?? "", onChange: (event) => setValue(name, event.target.value as V[typeof name]) };
   }
 
+  /** Props for a control that reports its value directly (`<DatePicker>`, `<MonthPicker>`) instead of an event. */
+  function valueProps(name: keyof V & string): ValueProps {
+    return { name, value: values[name] ?? "", onChange: (value) => setValue(name, value as V[typeof name]) };
+  }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -60,10 +67,11 @@ export function useForm<V extends FormValues>(options: {
         setErrors(result.fields as Partial<Record<keyof V, string>>);
         setMessage(result.message);
         const [first] = Object.keys(result.fields);
-        const control = first ? form.elements.namedItem(first) : null;
+        // The first visible control of that name: a picker also submits its value through a hidden input.
+        const control = first ? form.querySelector(`[name="${CSS.escape(first)}"]:not([type="hidden"])`) : null;
         if (control instanceof HTMLElement) control.focus();
       });
   }
 
-  return { values, changes, outdated, errors, message, inputProps, setValue, reset, submit };
+  return { values, changes, outdated, errors, message, inputProps, valueProps, setValue, reset, submit };
 }

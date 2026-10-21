@@ -15,7 +15,7 @@ flowchart LR
 | Application | [Next.js App Router](https://nextjs.org/docs/app/getting-started/route-handlers), TypeScript, Node.js 24 LTS | Frontend and backend |
 | API | [tRPC + TanStack Query](https://trpc.io/docs/client/tanstack-react-query/server-components), [Zod](https://zod.dev/) | Typed, validated queries and mutations; refresh after edits |
 | Styling | [Tailwind CSS](https://tailwindcss.com/docs/installation/framework-guides/nextjs) | Layout and component styling |
-| UI libraries | [Recharts](https://recharts.org/), [Lucide](https://lucide.dev/) | Report charts, 18px icons; dates and months use native date/month inputs |
+| UI libraries | [Recharts](https://recharts.org/), [Lucide](https://lucide.dev/), [React DayPicker](https://daypicker.dev/) + [Radix Popover](https://www.radix-ui.com/primitives/docs/components/popover) | Report charts, 18px icons, the date and month pickers |
 | Data | [PostgreSQL](https://www.postgresql.org/docs/current/datatype-numeric.html), [Drizzle](https://orm.drizzle.team/docs/migrations) | Constraints, transactions, SQL reports and migrations |
 | Tests | [Vitest](https://vitest.dev/guide/), [Playwright](https://playwright.dev/docs/intro) | Unit, database/procedure and browser tests |
 | Tooling | [tsx](https://tsx.is/), [Docker Compose](https://docs.docker.com/compose/), ESLint | Seed/migrate/verify scripts, local PostgreSQL, lint |

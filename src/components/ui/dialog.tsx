@@ -3,7 +3,8 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { Icon } from "@/components/ui/icon";
 
-const FIRST_FIELD = "input:not([readonly]):not([disabled]), select:not([disabled]), textarea:not([disabled])";
+const FIRST_FIELD =
+  "input:not([type='hidden']):not([readonly]):not([disabled]), select:not([disabled]), textarea:not([disabled])";
 
 type DialogProps = {
   /** Whether the dialog is shown; screens pass `useDialog().current === name`. */

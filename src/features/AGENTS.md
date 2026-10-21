@@ -92,8 +92,11 @@ src/components/
 │   ├── pagination.tsx             # Previous/Next over opaque cursors + "x–y of total"
 │   ├── deferred-content.tsx       # dims (aria-busy) results kept on screen while the deferred next result loads
 │   ├── empty-state.tsx / loading-state.tsx / error-state.tsx  # standard states (error has retry)
-│   ├── form-field.tsx             # label + control slot + hint + error, wires aria-describedby (`wide` spans both columns); FormSection/FormGrid/FormActions layout
-│   ├── input.tsx / select.tsx / textarea.tsx  # 38px controls; select takes `options`; dates and months are native `type="date"`/`type="month"` inputs
+│   ├── form-field.tsx             # label + control slot + hint + error, wires id, label id and aria-describedby (`wide` spans both columns); FormSection/FormGrid/FormActions layout
+│   ├── input.tsx / select.tsx / textarea.tsx  # 38px controls; select takes `options`
+│   ├── date-picker.tsx            # <DatePicker>: the one date field (DayPicker calendar, month/year dropdowns, min/max, clearable); the only calendar-library import site
+│   ├── date-picker-data.ts        # pure: the calendar's navigable range and opening day
+│   ├── picker-popover.tsx         # the picker field shell: control-styled trigger named "label + value", hidden input for FormData, clear button, popover (not portalled, works in <Dialog>); the only popover-library import site
 │   ├── dialog.tsx                 # the one modal: native <dialog> + showModal, focus trap/return, Esc and backdrop close; no close while `pending`
 │   ├── amount.tsx                 # tabular right-aligned money with visible currency
 │   ├── country-label.tsx          # country code marker + name (table cells)
@@ -112,7 +115,7 @@ src/components/
 src/hooks/
 ├── use-url-state.ts               # useUrlState(schema, keepsCursor?): read/patch search params (the only history.replaceState); patching any key except `cursor` and the caller's `keepsCursor` drops `cursor`
 ├── use-dialog.ts                  # dialogParams(dialogs, notices) → URL schema; useDialog(schema): `?dialog=` via useUrlState (`dialog`/`saved` keep the cursor), open(name), close(saved?) sets `?saved=`; names belong to the feature
-├── use-form.ts                    # values, `changes` vs the baseline (`initial` at mount; `outdated` when `initial` moves, `reset()` adopts it), field errors, submit via onSubmit promise, toFieldErrors, focus first error, inputProps(name)
+├── use-form.ts                    # values, `changes` vs the baseline (`initial` at mount; `outdated` when `initial` moves, `reset()` adopts it), field errors, submit via onSubmit promise, toFieldErrors, focus first error, inputProps(name) for inputs/selects, valueProps(name) for pickers
 ├── form-diff.ts                   # pure, used only by use-form: a form's changes vs its baseline, and `outdated` when the latest record differs
 └── use-lookups.ts                 # lookups.get → LookupNames (countryName/departmentName) + LookupOptions (select options); called once per screen, passed down as `names`/`options`
 
@@ -147,7 +150,7 @@ src/trpc/
 **UI and styling**
 - Build screens from `src/components/ui`. Never paste Tailwind class strings for buttons, alerts, headers, cards, tables or fields; add a variant instead.
 - Colors, radii and shadows come only from `@theme` tokens in `src/app/globals.css`, ported once from `docs/screens/styles.input.css`. No hex/rgb/hsl values or arbitrary color classes (`bg-[#…]`) in components.
-- Dates and months use native `<Input type="date">` / `<Input type="month">` with ISO values; no date-picker library. A month input also carries `placeholder="YYYY-MM"` for browsers that render it as text.
+- Dates and months use native `<Input type="date">` / `<Input type="month">` with ISO values. A month input also carries `placeholder="YYYY-MM"` for browsers that render it as text.
 - Every amount renders through `<Amount>` with its currency. Currencies are never summed or charted together.
 - Every form is a modal: `<Dialog>` (`components/ui/dialog.tsx`) opened and closed only through `useDialog` (`?dialog=`), wrapped per feature with its own names (`useEmployeeDialog`). Dialog files wrap a dialog-agnostic form (`onSaved`/`onCancel` props) and pass `pending` from `useIsMutating({ mutationKey })`. Never copy dialog plumbing (`showModal`, backdrop, focus, `replaceState`) anywhere else.
 
@@ -169,7 +172,7 @@ src/trpc/
 export function useForm<V extends Record<string, string>>(options: { // values are input strings; a cleared date "" is sent as null
   initial: V; onSubmit: (values: V, changes: Partial<V>) => Promise<unknown>;
 }): { values: V; changes: Partial<V>; outdated: boolean; errors: Partial<Record<keyof V, string>>; message: string | null;
-  inputProps: (name: keyof V & string) => InputProps; setValue: <K extends keyof V>(name: K, value: V[K]) => void;
+  inputProps: (name: keyof V & string) => InputProps; valueProps: (name: keyof V & string) => ValueProps; setValue: <K extends keyof V>(name: K, value: V[K]) => void;
   reset: () => void; submit: (event: FormEvent) => void }; // preventDefault → onSubmit → on error: toFieldErrors, focus first error
 // features/employees/edit-employee-form.tsx — knows nothing about dialogs
 const form = useForm({ initial, onSubmit: async (_values, changes) => {

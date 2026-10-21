@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useId, type ReactNode } from "react";
 
-type FieldControl = { id: string; describedBy: string | undefined; invalid: boolean };
+/** `labelId` lets a control whose content is its value (a picker's trigger) name itself "label + value". */
+type FieldControl = { id: string; labelId: string; describedBy: string | undefined; invalid: boolean };
 
 const FieldContext = createContext<FieldControl | null>(null);
 
@@ -29,15 +30,16 @@ export function FormField({
   children: ReactNode;
 }) {
   const id = useId();
+  const labelId = `${id}-label`;
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [errorId, hintId].filter(Boolean).join(" ") || undefined;
   return (
     <div className={wide ? "sm:col-span-2" : undefined}>
-      <label htmlFor={id} className="mb-1.5 block text-label font-medium text-muted">
+      <label id={labelId} htmlFor={id} className="mb-1.5 block text-label font-medium text-muted">
         {label}
       </label>
-      <FieldContext value={{ id, describedBy, invalid: Boolean(error) }}>{children}</FieldContext>
+      <FieldContext value={{ id, labelId, describedBy, invalid: Boolean(error) }}>{children}</FieldContext>
       {hint ? (
         <span id={hintId} className="mt-1.25 block text-label text-muted">
           {hint}

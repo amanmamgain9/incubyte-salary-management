@@ -1,8 +1,12 @@
 // The only icon-library import site: screens name an icon; the 18px size and stroke stay consistent.
 import {
   ArrowUpRight,
+  Calendar,
   ChartLine,
   ChartNoAxesColumnIncreasing,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   LayoutGrid,
   LoaderCircle,
   LogOut,
@@ -30,6 +34,10 @@ const icons = {
   open: ArrowUpRight,
   spinner: LoaderCircle,
   close: X,
+  calendar: Calendar,
+  previous: ChevronLeft,
+  next: ChevronRight,
+  expand: ChevronDown,
 } as const;
 
 export type IconName = keyof typeof icons;

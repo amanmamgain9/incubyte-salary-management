@@ -49,3 +49,29 @@ export function monthsBetween(from: string, to: string): number {
   const index = (date: string) => Number(date.slice(0, 4)) * 12 + Number(date.slice(5, 7));
   return index(to) - index(from);
 }
+
+/** Whether `value` is a real calendar date written `YYYY-MM-DD` (2025-02-30 is not). */
+export function isIsoDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && fromUtcMs(toUtcMs(value)) === value;
+}
+
+/** `date` moved into `min`–`max` (either bound optional). */
+export function clampDate(date: string, bounds: { min?: string; max?: string }): string {
+  if (bounds.min !== undefined && date < bounds.min) return bounds.min;
+  if (bounds.max !== undefined && date > bounds.max) return bounds.max;
+  return date;
+}
+
+/**
+ * A calendar widget's `Date` for an ISO date: local midnight of that day, so the widget (which works in local time)
+ * shows the same day in every time zone. `fromCalendarDate` is its inverse.
+ */
+export function toCalendarDate(date: string): Date {
+  return new Date(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)));
+}
+
+/** The ISO date of a calendar widget's local `Date` (its local year, month and day). */
+export function fromCalendarDate(date: Date): string {
+  const pad = (part: number, length: number) => String(part).padStart(length, "0");
+  return `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1, 2)}-${pad(date.getDate(), 2)}`;
+}

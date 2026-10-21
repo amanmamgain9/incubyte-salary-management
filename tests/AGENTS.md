@@ -18,6 +18,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── lib/*.test.ts              # format, money, dates, search-params, mutation-errors
 │   ├── hooks/form-diff.test.ts    # formDiff (the pure part of use-form)
 │   ├── features/**/*.test.ts      # every *-data.ts, salary-delta, search-params builders
+│   ├── components/ui/*.test.ts    # the pickers' *-data.ts
 │   └── scripts/data-generation/*.test.ts  # determinism, quotas, tenure, history rules, manifest arithmetic
 ├── db/                            # integration against a disposable PostgreSQL database
 │   ├── global-setup.ts            # drop/create `<db>_test`, migrate once as owner, provide its URLs
