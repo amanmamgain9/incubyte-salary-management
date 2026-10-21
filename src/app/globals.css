@@ -85,13 +85,30 @@
   --shadow-panel: 0 10px 40px #20243106;
   --shadow-focus: 0 0 0 3px #6253d80a;
 
-  /* Typography */
-  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Typography: --font-inter is the bundled Inter from next/font/local (src/app/layout.tsx). */
+  --font-sans: var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, monospace;
   --text-title: 28px;
   --text-title--line-height: 1.3;
   --text-title--letter-spacing: -0.9px;
   --text-title--font-weight: 650;
+  --text-brand: 24px;
+  --text-brand--letter-spacing: -1px;
+  --text-brand--font-weight: 700;
+  --text-metric: clamp(21px, 2.2vw, 29px);
+  --text-metric--line-height: 1.15;
+  --text-metric--letter-spacing: -0.8px;
+  --text-metric--font-weight: 600;
+  --text-body: 13px;
+  --text-body--line-height: 1.5;
+  --text-label: 12px;
+  --text-label--line-height: 1.5;
+  --text-caption: 11px;
+
+  /* Sizes: a px spacing scale (p-4 = 16px), since the root font size is 14px. */
+  --spacing: 4px;
+  --spacing-control: 38px;
+  --spacing-rail: 232px;
 }
 
 @layer base {

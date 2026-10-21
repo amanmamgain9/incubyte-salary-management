@@ -90,6 +90,8 @@ src/components/
 │   ├── dialog.tsx                 # the one modal: native <dialog> + showModal, focus trap/return, Esc and backdrop close; no close while `pending`
 │   ├── amount.tsx                 # tabular right-aligned money with visible currency
 │   ├── badge.tsx                  # neutral/semantic tones; no domain knowledge
+│   ├── avatar.tsx                 # initials tile (account footer, directory rows); one tint, no decorative colors
+│   ├── brand.tsx                  # ACME mark + wordmark linking to /employees (login, nav rail)
 │   └── icon.tsx                   # 18px icon wrapper; the only icon-library import site
 └── charts/                        # the only chart-library import site
     ├── bar-chart.tsx              # horizontal/vertical bars, negative values
@@ -103,7 +105,7 @@ src/hooks/
 └── use-lookups.ts                 # lookups.get + countryName/departmentName/currencyName + select options
 
 src/lib/
-├── format.ts                      # formatMoney, formatCount, formatDate, formatMonth, formatPercent (the only Intl use)
+├── format.ts                      # formatMoney, formatCount, formatDate, formatMonth, formatPercent, formatInitials (the only Intl use)
 ├── money.ts                       # decimal string ↔ bigint minor units; compare/diff exactly on the units
 ├── dates.ts                       # todayUtc, month start/end, addMonths, monthsBetween (UTC)
 ├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState
@@ -152,7 +154,7 @@ src/trpc/
 
 ```tsx
 // hooks/use-form.ts
-export function useForm<V extends Record<string, unknown>>(options: {
+export function useForm<V extends Record<string, string>>(options: { // values are input strings; a cleared date "" is sent as null
   initial: V; onSubmit: (values: V, changes: Partial<V>) => Promise<unknown>;
 }): { values: V; changes: Partial<V>; errors: Partial<Record<keyof V, string>>; message: string | null;
   inputProps: (name: keyof V & string) => InputProps; setValue: <K extends keyof V>(name: K, value: V[K]) => void;
