@@ -118,4 +118,6 @@ Use [tRPC error codes](https://trpc.io/docs/server/error-handling):
 | `CONFLICT` | Employee ID already exists (with `field_errors.id`) or salary revision is stale |
 | `INTERNAL_SERVER_ERROR` | Unexpected failure; return a generic message |
 
+`error.data.field_errors` is `{ [dotted input path]: message }` (one message per field) or `null`; an input-level issue (e.g. an empty patch) is `error.message` instead. `INTERNAL_SERVER_ERROR` always carries the generic message `Internal server error`.
+
 Rejected writes change neither current data nor history. On revision conflict, preserve the form and reload the latest record before retrying.

@@ -99,6 +99,7 @@ src/contracts/
 
 **Middleware and procedures**
 - Chain: `mapDomainErrors` → `requireSameOrigin` (mutations only) → `requireSession` → `operationContext`. Each does one thing; names say what is checked. There are no roles.
+- Each middleware file exports a procedure from its own `initTRPC.context<…>().create()` builder; `api/trpc.ts` joins them with `.concat()` (tRPC's replacement for standalone middleware), so middleware never imports `api/trpc.ts`.
 - `signedInProcedure` (queries) and `signedInMutationProcedure` (adds same-origin) in `api/trpc.ts`. Every procedure uses one; auth is checked there and nowhere else.
 - Middleware and `error-formatter.ts` never branch on procedure paths, router names or feature-specific errors. A feature need is solved in its operation.
 - Field errors are keyed by full dotted input path. Every input is flat (including `employees.update`), so paths equal form field names.
