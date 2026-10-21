@@ -6,7 +6,7 @@ Synthetic demonstration data; salary bands and review patterns are fictional.
 
 - Generate from a `seed` and UTC `as_of` date (default: the run's UTC date). Identical `seed` + `as_of` reproduce employees and salary histories. Tests freeze both.
 - Use stable employee/history IDs. Seed a fresh database; reseeding requires an explicit reset. Each deploy reseeds or records the `as_of` it used in the README, since reports use today's UTC date.
-- Seed the demo HR account (`DEMO_HR_EMAIL`, `DEMO_HR_PASSWORD`) first; all history entries reference it. Each employee's `salary_revision` equals its latest entry.
+- Seed the demo HR account (`DEMO_HR_EMAIL`, `DEMO_HR_PASSWORD`) first as owner: a `user` row plus a credential `account` row whose password is hashed with Better Auth's `hashPassword` (`better-auth/crypto`), so normal sign-in verifies it; signup stays disabled. All history entries reference it. Each employee's `salary_revision` equals its latest entry.
 
 ## Population
 
@@ -75,5 +75,5 @@ Salary review profiles: India has a broad review spike; the US has staggered qua
 - Include known cases within the 10,000: multiple revisions in one day, month-boundary changes, a predecessor outside the selected period, a later leaver with earlier raises, assignment changes and currency switches.
 - Example arithmetic: EUR 100,000 → 110,000 → 108,000 gives increases 10,000, decreases 2,000 and net 8,000. Initial salaries and currency switches contribute no growth amount.
 - Preserve valid empty filters, such as France + INR; unknown codes are rejected, not empty. Compare paginated results with summaries over the full matching population.
-- Generate a manifest of expected headcounts, country/department/currency totals and monthly deltas using independent exact arithmetic. Validate report results against it.
+- Generate a manifest of expected headcounts, country/department/currency totals and monthly deltas using independent exact arithmetic. `npm run db:verify` validates report results against it; CI runs it after seeding. DB tests check report numbers on small fixtures of these cases.
 - For historical benchmarking, independently reconstruct monthly salaries and exact percentiles from the dataset. Check month boundaries, partial months, later leavers, snapshot assignments and prior-year data outside the visible range.

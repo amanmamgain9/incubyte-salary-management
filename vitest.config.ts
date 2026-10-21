@@ -19,7 +19,7 @@ export default defineConfig({
           name: "unit",
           include: ["tests/unit/**/*.test.ts"],
           environment: "node",
-          // Placeholder values so modules that import `@/server/env` load; unit tests never reach a DB or network.
+          // Placeholder app env for code that calls getEnv(); unit tests never reach a DB or network.
           env: {
             DATABASE_URL: "postgres://unit:unit@127.0.0.1:1/unit",
             APP_URL: "http://localhost:3000",

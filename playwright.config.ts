@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// e2e runs against a production build (`next start`) on its own port, backed by the seeded DB from `.env`.
+// e2e runs against a production build (`next start`) on its own port.
 const port = 3100;
 const baseURL = `http://localhost:${port}`;
 

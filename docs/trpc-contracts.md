@@ -25,6 +25,17 @@ HistoryView = SalaryHistoryEntry + { changed_by_name: String }
 - No filter means all values. Blank search means no search; search matches name/ID case-insensitively, including partial matches.
 - Unknown country/department/currency codes in filters or writes are `BAD_REQUEST` with `field_errors` keyed by the input field. Known codes with no matches return an empty result (e.g. France + INR).
 
+**Array limits.** Every output array except `Page.items` has a `.max(n)`:
+
+| Arrays | One item per | `.max` |
+| --- | --- | ---: |
+| `lookups.get` countries; commitment `by_country` | Country | 250 |
+| `lookups.get` currencies | Currency | 200 |
+| `lookups.get` departments; department `by_department` | Department | 100 |
+| `by_country` of department, growth and benchmark | Country/currency pair | 500 |
+| Growth `trend` | Pair × last 12 months | 6,000 |
+| Benchmark `trend` | Visible month | 180 |
+
 ## Employee operations
 
 `EmployeeInput`: `id`, `name`, `department_id`, `work_country_code`, `joining_date`, `annual_base_pay`, `salary_currency_code`.
@@ -46,15 +57,16 @@ HistoryView = SalaryHistoryEntry + { changed_by_name: String }
 - `DirectorySummary`: `{ employee_count, active_count, upcoming_count, departed_count, country_count }` over all matching employees, independent of pagination.
 - Creation saves initial history as revision 1 with reason `Initial salary`.
 - Record a departure through `employees.update` by setting `last_working_day`; `null` clears it.
-- Details edits validate against stored values: `last_working_day` ≥ `joining_date`; `joining_date` no later than the UTC date of the first revision after the initial salary. Violations are `BAD_REQUEST` keyed by the submitted field.
+- Details edits validate against stored values: `last_working_day` ≥ `joining_date` and ≥ the UTC date of the latest revision after the initial salary; `joining_date` no later than the UTC date of the first revision after the initial salary. Violations are `BAD_REQUEST` keyed by the submitted field. Clients send only changed fields.
 - `salary_revision` is stored on the employee and equals the latest history revision. Salary updates require it as `expected_revision` and return the new revision after commit.
+- Salary updates need an employee active today (UTC); upcoming or departed is `BAD_REQUEST` with `field_errors.employee_id`. Revisions therefore fall between joining and the last working day.
 - Server assigns history ID, revision, timestamp, actor and country/department snapshots. Details edits preserve existing history.
 
 ## Reports
 
 All are queries. Each returns `{ rows: Page<Row>, summary }`; summaries cover all matching records, independent of pagination. Monetary summaries stay grouped by country and currency.
 
-Chart series live in `summary`: bounded by grouping and month range, never the full row set. Contracts cap them with `.max(n)`. Single-group fields are `null` unless all matching records share one country/currency (benchmark: country/department/currency); charts never combine currencies.
+Chart series live in `summary`: bounded by grouping and month range, never the full row set. Single-group fields are `null` unless all matching records share one country/currency (benchmark: country/department/currency); charts never combine currencies.
 
 Commitment and department reports use employees active on today's UTC calendar date. All filters apply together; empty results return empty rows/groups/series, zero counts and no cursors.
 
@@ -75,7 +87,7 @@ Commitment and department reports use employees active on today's UTC calendar d
 
 ### `reports.salaryGrowth`
 
-- **Input:** Required `from`, `to` dates; optional `work_country_code`, `department_id`; plus `Paging`. Date range is inclusive by UTC calendar date.
+- **Input:** Required `from` ≤ `to` dates, `to` no later than today UTC; optional `work_country_code`, `department_id`; plus `Paging`. Date range is inclusive by UTC calendar date.
 - **Row:** `{ month, work_country_code, salary_currency_code, increases, decreases, net_change, currency_switch_count }`; month is `YYYY-MM` in UTC.
 - **Summary:** `{ by_country: GrowthTotal[], currency_switch_count, trend: GrowthPoint[] }`; `GrowthTotal` has the row fields except `month`; the top-level count totals all groups.
 - **Chart:** `GrowthPoint` is `{ month, work_country_code, salary_currency_code, net_change }` for the last 12 months of the period (ending at `to`), every month for each `by_country` group, zero without revisions. Order: country, currency, month ascending.
@@ -100,7 +112,7 @@ Use [tRPC error codes](https://trpc.io/docs/server/error-handling):
 
 | Code | Meaning |
 | --- | --- |
-| `BAD_REQUEST` | Invalid input, unknown country/department/currency, or invalid cursor; validation includes `error.data.field_errors` |
+| `BAD_REQUEST` | Invalid input, unknown country/department/currency, salary change for a non-active employee, or invalid cursor; validation includes `error.data.field_errors` |
 | `UNAUTHORIZED` | Missing, expired or revoked session |
 | `NOT_FOUND` | Employee does not exist |
 | `CONFLICT` | Employee ID already exists (with `field_errors.id`) or salary revision is stale |

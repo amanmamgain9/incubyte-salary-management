@@ -1,4 +1,5 @@
 // The only reader of `process.env` in src/ and scripts/. Script-safe: no `server-only`.
+// Importing this module never parses anything; each getter validates its own variables on first use.
 import { z } from "zod";
 
 type EnvSource = Readonly<Record<string, string | undefined>>;
@@ -15,16 +16,18 @@ const appEnvSchema = z
   .refine((e) => e.CURSOR_SECRET !== e.BETTER_AUTH_SECRET, {
     path: ["CURSOR_SECRET"],
     message: "must differ from BETTER_AUTH_SECRET",
-  });
+  })
+  // Compare request Origin headers with `appOrigin`, never with the raw APP_URL string.
+  .transform((e) => ({ ...e, appOrigin: new URL(e.APP_URL).origin }));
 
 const ownerEnvSchema = z.object({
   DATABASE_OWNER_URL: z.url(),
 });
 
-export type AppEnv = z.infer<typeof appEnvSchema>;
-export type OwnerEnv = z.infer<typeof ownerEnvSchema>;
+export type AppEnv = z.output<typeof appEnvSchema>;
+export type OwnerEnv = z.output<typeof ownerEnvSchema>;
 
-function parseWith<T>(schema: z.ZodType<T>, source: EnvSource): T {
+function parseWith<T>(schema: z.ZodType<T, EnvSource>, source: EnvSource): T {
   const result = schema.safeParse(source);
   if (!result.success) {
     // prettifyError reports paths and rule messages only, never the submitted values.
@@ -37,9 +40,21 @@ export function parseEnv(source: EnvSource): AppEnv {
   return parseWith(appEnvSchema, source);
 }
 
-/** Owner-role settings for migrate, reset, seed, verify and test setup only. */
-export function ownerEnv(source: EnvSource = process.env): OwnerEnv {
+export function parseOwnerEnv(source: EnvSource): OwnerEnv {
   return parseWith(ownerEnvSchema, source);
 }
 
-export const env: AppEnv = parseEnv(process.env);
+let appEnv: AppEnv | undefined;
+let ownerOnlyEnv: OwnerEnv | undefined;
+
+/** App settings (app role, auth, cursor, demo account). Parsed once, on first call. */
+export function getEnv(): AppEnv {
+  appEnv ??= parseEnv(process.env);
+  return appEnv;
+}
+
+/** Owner-role settings for drizzle-kit, migrate, reset, seed, verify and test setup. Needs only DATABASE_OWNER_URL. */
+export function ownerEnv(): OwnerEnv {
+  ownerOnlyEnv ??= parseOwnerEnv(process.env);
+  return ownerOnlyEnv;
+}

@@ -110,6 +110,6 @@ The unique `(employee_id, revision)` index also supports ordered salary history.
 - Store the initial salary and each revision as separate snapshots; history cannot be edited or deleted.
 - Order history by revision; the preceding entry supplies the previous salary.
 - Lock the employee and compare `salary_revision` with the expected revision; the new entry takes `salary_revision + 1`, and the employee's `salary_revision` is updated in the same transaction.
-- `joining_date` may not be later than the UTC date of the first revision after the initial salary; the initial salary may precede joining.
+- `joining_date` may not be later than the UTC date of the first revision after the initial salary, and `last_working_day` not earlier than that of the latest; the initial salary may precede joining. Only employees active today get new revisions.
 - Create employees with initial history, and update current salary with new history, in one transaction; a failure saves neither.
-- The application database role can only read/insert salary history; migrations use a separate owner role.
+- The application database role can only read/insert salary history; migrations use a separate owner role. Each migration that creates a table grants the app role its privileges on it.

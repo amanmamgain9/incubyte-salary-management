@@ -2,7 +2,7 @@
 
 ## Demo scope
 
-One seeded HR account (`DEMO_HR_EMAIL`, `DEMO_HR_PASSWORD`); show its credentials on the login page. All data is synthetic.
+One seeded HR account (`DEMO_HR_EMAIL`, `DEMO_HR_PASSWORD`), created by `npm run db:seed` with Better Auth's `hashPassword` ([data generation](data-generation.md)); show its credentials on the login page. All data is synthetic.
 
 Signup, password reset and user administration are excluded.
 
@@ -24,5 +24,5 @@ Generate its auth schema and commit Drizzle migrations. Enable email/password; d
 - **Cookie-based authentication:** Browser holds the session token; server checks the PostgreSQL session on every request and rejects expired or revoked sessions. Keep [session cookie caching](https://better-auth.com/docs/concepts/session-management#cookie-cache) disabled.
 - **Cookie protections:** Production cookies use `HttpOnly` (blocks JavaScript access), `Secure` (HTTPS only), `SameSite=Lax` (limits cross-site sending), host-only scope and `Path=/`.
 - Use the library's password hashing: [scrypt by default](https://better-auth.com/docs/authentication/email-password#configuration).
-- Retain the library's [origin and CSRF protections](https://better-auth.com/docs/reference/security); check same-origin requests for tRPC mutations too.
+- Retain the library's [origin and CSRF protections](https://better-auth.com/docs/reference/security); tRPC mutations also require `Origin` to equal `new URL(APP_URL).origin`.
 - Keep private responses uncached; redact submitted credentials and session tokens from logs.

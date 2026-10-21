@@ -1,110 +1,220 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import tseslint from "typescript-eslint";
 
 // ---------------------------------------------------------------------------
-// Import boundaries (AGENTS.md §6). ESLint does not merge options of the same
-// rule across config objects, so each zone below lists every restriction that
-// applies to it; zones are ordered general → specific (last match wins).
+// Import boundaries (AGENTS.md §6). Each boundary is its own rule id (an alias of
+// @typescript-eslint/no-restricted-imports), so boundaries never override each
+// other: a file gets every boundary whose `files` match. Zones of one boundary
+// are disjoint, or ordered general → specific (last match wins).
 // ---------------------------------------------------------------------------
-
-const parentImports = {
-  patterns: [{ regex: "^\\.\\./", message: "Use `@/…` instead of `../` (AGENTS.md §3)." }],
-};
-const docsImports = {
-  patterns: [{ regex: "(^|/)docs(/|$)", message: "Nothing may import from docs/." }],
-};
-const pgImports = {
-  paths: [{ name: "pg", message: "Only src/server/db/connect.ts imports `pg`." }],
-  patterns: [{ regex: "^pg/", message: "Only src/server/db/connect.ts imports `pg`." }],
-};
-const trpcImports = {
-  patterns: [{ regex: "^@trpc/", message: "Operations and queries never import `@trpc/*`." }],
-};
-const employeesModuleImports = {
-  patterns: [
-    {
-      regex: "^@/server/employees(/|$)",
-      message: "Module direction is employees → salaries → lookups; never the reverse.",
-    },
-  ],
-};
-const salariesModuleImports = {
-  patterns: [
-    {
-      regex: "^@/server/salaries(/|$)",
-      message: "Module direction is employees → salaries → lookups; never the reverse.",
-    },
-  ],
-};
-const serverImports = {
-  patterns: [{ regex: "^@/server(/|$)", message: "Frontend code never imports `@/server`." }],
-};
-const componentImports = {
-  patterns: [
-    {
-      regex: "^@/(features|trpc|hooks|contracts)(/|$)",
-      message: "Components import only `@/lib` and other components.",
-    },
-  ],
-};
-
-const baseImports = [parentImports, docsImports, pgImports];
-
-const restrictImports = (files, groups, ignores = []) => ({
-  files,
-  ignores,
-  rules: {
-    "no-restricted-imports": [
-      "error",
-      {
-        paths: groups.flatMap((group) => group.paths ?? []),
-        patterns: groups.flatMap((group) => group.patterns ?? []),
-      },
-    ],
-  },
-});
 
 const allSources = ["**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}"];
-const operationsAndQueries = (dir) => [`${dir}/**/operations.ts`, `${dir}/**/queries.ts`];
+const ban = (regex, message, options = {}) => ({ regex, message, ...options });
 
-const importBoundaries = [
-  restrictImports(allSources, baseImports, ["src/server/db/connect.ts"]),
-  restrictImports(["src/server/db/connect.ts"], [parentImports, docsImports]),
-  restrictImports(operationsAndQueries("src/server"), [...baseImports, trpcImports]),
-  restrictImports(["src/server/salaries/**"], [...baseImports, employeesModuleImports]),
-  restrictImports(operationsAndQueries("src/server/salaries"), [
-    ...baseImports,
-    employeesModuleImports,
-    trpcImports,
-  ]),
-  restrictImports(["src/server/lookups/**"], [...baseImports, employeesModuleImports, salariesModuleImports]),
-  restrictImports(operationsAndQueries("src/server/lookups"), [
-    ...baseImports,
-    employeesModuleImports,
-    salariesModuleImports,
-    trpcImports,
-  ]),
-  restrictImports(["src/{features,hooks,lib}/**"], [...baseImports, serverImports]),
-  restrictImports(["src/components/**"], [...baseImports, serverImports, componentImports]),
+// Server modules importable without `server-only` (scripts, drizzle-kit, unit tests).
+const scriptSafeFiles = [
+  "src/server/env.ts",
+  "src/server/db/{connect,owner}.ts",
+  "src/server/db/schema/**",
+  "src/server/**/queries.ts",
+  "src/server/employees/status.ts",
+  "src/server/reports/filters.ts",
+  "src/server/core/errors.ts",
 ];
+const notScriptSafeServer =
+  "^@/server(?:$|/(?!(?:env|db/connect|db/owner|db/schema(?:/.*)?|.+/queries|employees/status|reports/filters|core/errors)$))";
+
+// Cross-feature imports allowed besides a feature's own folder (AGENTS.md §5).
+const featureImports = { auth: [], workspace: ["auth"], employees: ["salaries"], salaries: [], reports: [] };
+const featureMessage = "Cross-feature imports: only employees → salaries and workspace → auth; share via hooks/lib.";
+
+const boundaries = {
+  "no-parent-imports": [
+    { files: allSources, bans: [ban("^\\.\\./", "Use `@/…` instead of `../` (AGENTS.md §3).")] },
+  ],
+  "no-docs-imports": [{ files: allSources, bans: [ban("(^|/)docs(/|$)", "Nothing may import from docs/.")] }],
+  "pg-site": [
+    {
+      files: allSources,
+      ignores: ["src/server/db/connect.ts"],
+      bans: [ban("^pg(/|$)", "Only src/server/db/connect.ts imports `pg`.")],
+    },
+  ],
+  "chart-library-site": [
+    {
+      files: allSources,
+      ignores: ["src/components/charts/**"],
+      bans: [ban("^recharts(/|$)", "Only src/components/charts/** imports the chart library.")],
+    },
+  ],
+  "icon-library-site": [
+    {
+      files: allSources,
+      ignores: ["src/components/ui/icon.tsx"],
+      bans: [ban("^lucide-react(/|$)", "Only src/components/ui/icon.tsx imports the icon library; use <Icon>.")],
+    },
+  ],
+  "date-picker-library-site": [
+    {
+      files: allSources,
+      ignores: ["src/components/ui/date-picker.tsx"],
+      bans: [
+        ban(
+          "^(react-day-picker|radix-ui|@radix-ui/react-popover)(/|$)",
+          "Only src/components/ui/date-picker.tsx imports DayPicker/Radix; use <DatePicker>.",
+        ),
+      ],
+    },
+  ],
+  "auth-client-site": [
+    {
+      files: allSources,
+      ignores: ["src/features/auth/auth-client.ts"],
+      bans: [ban("^better-auth/(react|client)$", "Only src/features/auth/auth-client.ts creates the auth client.")],
+    },
+  ],
+
+  // Backend ------------------------------------------------------------------
+  "script-safe": [
+    {
+      files: [...scriptSafeFiles, "scripts/**"],
+      bans: [
+        ban("^server-only$", "Script-safe module: never import `server-only` (AGENTS.md §4)."),
+        ban(notScriptSafeServer, "Script-safe code imports only script-safe server modules (AGENTS.md §4)."),
+      ],
+    },
+  ],
+  "operations-no-api": [
+    {
+      files: ["src/server/**/{operations,queries}.ts"],
+      bans: [
+        ban("^@trpc/", "Operations and queries never import `@trpc/*`."),
+        ban("^@/server/api(/|$)", "Operations and queries never import `@/server/api`."),
+      ],
+    },
+  ],
+  "queries-take-executor": [
+    {
+      files: ["src/server/**/queries.ts"],
+      bans: [
+        ban("^@/server/env$", "Queries take the executor and values as arguments; never read env."),
+        ban("^@/server/.+/operations$", "Layering: operations → queries, never the reverse."),
+      ],
+    },
+  ],
+  "thin-routers": [
+    {
+      files: ["src/server/api/routers/**"],
+      bans: [
+        ban("^drizzle-orm(/|$)", "Routers make one operation call; SQL lives in queries.ts."),
+        ban("^@/server/(db(/|$)|.+/queries$)", "Routers make one operation call; SQL lives in queries.ts."),
+      ],
+    },
+  ],
+  "core-is-leaf": [
+    {
+      files: ["src/server/core/**"],
+      bans: [
+        ban("^@/server/(api|auth|lookups|employees|salaries|reports)(/|$)", "core/ is cross-cutting; it never imports modules."),
+      ],
+    },
+  ],
+  "module-direction": [
+    {
+      files: ["src/server/employees/**"],
+      bans: [ban("^@/server/reports(/|$)", "Module direction: employees → salaries → lookups; reports read all.")],
+    },
+    {
+      files: ["src/server/salaries/**"],
+      bans: [
+        ban("^@/server/(employees|reports)(/|$)", "Module direction: employees → salaries → lookups; never the reverse."),
+      ],
+    },
+    {
+      files: ["src/server/lookups/**"],
+      bans: [
+        ban(
+          "^@/server/(employees|salaries|reports)(/|$)",
+          "Module direction: employees → salaries → lookups; never the reverse.",
+        ),
+      ],
+    },
+  ],
+
+  // Frontend -----------------------------------------------------------------
+  "frontend-no-server": [
+    {
+      files: ["src/{features,components,hooks,lib,contracts}/**"],
+      bans: [ban("^@/server(/|$)", "Frontend and shared code never import `@/server`.")],
+    },
+    {
+      files: ["src/trpc/**"],
+      ignores: ["src/trpc/server.tsx"],
+      bans: [
+        ban("^@/server(?:$|/(?!api/root$))", "Client tRPC wiring imports only the `AppRouter` type."),
+        ban("^@/server/api/root$", "Client tRPC wiring imports only the `AppRouter` type (`import type`).", {
+          allowTypeImports: true,
+        }),
+      ],
+    },
+    {
+      files: ["src/trpc/server.tsx"],
+      bans: [ban("^@/server(?:$|/(?!api/))", "trpc/server.tsx wires only `@/server/api` (router, context).")],
+    },
+  ],
+  "shared-layer-direction": [
+    {
+      files: ["src/components/**"],
+      bans: [ban("^@/(features|trpc|hooks|contracts)(/|$)", "Components import only `@/lib` and other components.")],
+    },
+    {
+      files: ["src/{hooks,trpc}/**"],
+      bans: [ban("^@/features(/|$)", "Shared code never imports features.")],
+    },
+    {
+      files: ["src/{lib,contracts}/**"],
+      bans: [
+        ban("^@/(features|components|hooks|trpc)(/|$)", "lib and contracts are pure; no UI, hooks or tRPC wiring."),
+      ],
+    },
+  ],
+  "feature-direction": [
+    // Unlisted features may not import other features at all.
+    { files: ["src/features/**"], bans: [ban("^@/features/", featureMessage)] },
+    ...Object.entries(featureImports).map(([feature, allowed]) => ({
+      files: [`src/features/${feature}/**`],
+      bans: [ban(`^@/features/(?!(?:${[feature, ...allowed].join("|")})(?:/|$))`, featureMessage)],
+    })),
+  ],
+};
+
+const boundaryPlugin = {
+  rules: Object.fromEntries(
+    Object.keys(boundaries).map((name) => [name, tseslint.plugin.rules["no-restricted-imports"]]),
+  ),
+};
+
+const importBoundaries = Object.entries(boundaries).flatMap(([name, zones]) =>
+  zones.map(({ files, ignores = [], bans }) => ({
+    files,
+    ignores,
+    rules: { [`boundaries/${name}`]: ["error", { patterns: bans }] },
+  })),
+);
 
 // ---------------------------------------------------------------------------
 // Syntax bans
 // ---------------------------------------------------------------------------
 
-const colorLiteral = "/#[0-9a-fA-F]{3,8}|\\b(rgb|rgba|hsl|hsla)\\(|\\[#/";
+const colorLiteral = "/#[0-9a-fA-F]{3,8}(?![\\w-])|\\b(rgb|rgba|hsl|hsla)\\(|\\[#/";
+const colorAttribute = "JSXAttribute[name.name=/^(className|style|fill|stroke|stopColor|color)$/]";
 const colorMessage = "Use @theme tokens from src/app/globals.css, not color literals or `[#…]` values.";
 
 const restrictedSyntax = [
-  {
-    selector: `JSXAttribute[name.name='className'] Literal[value=${colorLiteral}]`,
-    message: colorMessage,
-  },
-  {
-    selector: `JSXAttribute[name.name='className'] TemplateElement[value.raw=${colorLiteral}]`,
-    message: colorMessage,
-  },
+  { selector: `${colorAttribute} Literal[value=${colorLiteral}]`, message: colorMessage },
+  { selector: `${colorAttribute} TemplateElement[value.raw=${colorLiteral}]`, message: colorMessage },
   {
     selector: "CallExpression[callee.property.name='invalidateQueries'][arguments.length=0]",
     message: "Invalidate by path key (e.g. trpc.employees.pathKey()), never everything.",
@@ -137,6 +247,7 @@ export default defineConfig([
   ]),
 
   {
+    plugins: { boundaries: boundaryPlugin },
     rules: {
       "no-restricted-properties": [
         "error",

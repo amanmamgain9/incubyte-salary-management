@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { ownerEnv, parseEnv } from "@/server/env";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { parseEnv, parseOwnerEnv } from "@/server/env";
 
 const validSource = {
   DATABASE_URL: "postgres://acme_app:app@127.0.0.1:5432/acme",
@@ -10,9 +10,17 @@ const validSource = {
   DEMO_HR_PASSWORD: "correct-horse-battery",
 };
 
+const ownerUrl = "postgres://acme_owner:owner@127.0.0.1:5432/acme";
+
 describe("parseEnv", () => {
   it("returns the parsed values for a complete environment", () => {
-    expect(parseEnv(validSource)).toEqual(validSource);
+    expect(parseEnv(validSource)).toEqual({ ...validSource, appOrigin: "http://localhost:3000" });
+  });
+
+  it("derives appOrigin from APP_URL without path, trailing slash or default port", () => {
+    expect(parseEnv({ ...validSource, APP_URL: "HTTPS://HR.Acme.test:443/app/" }).appOrigin).toBe(
+      "https://hr.acme.test",
+    );
   });
 
   it("drops variables the app does not read", () => {
@@ -46,14 +54,43 @@ describe("parseEnv", () => {
   });
 });
 
-describe("ownerEnv", () => {
-  it("returns the owner database URL", () => {
-    const url = "postgres://acme_owner:owner@127.0.0.1:5432/acme";
-
-    expect(ownerEnv({ DATABASE_OWNER_URL: url })).toEqual({ DATABASE_OWNER_URL: url });
+describe("parseOwnerEnv", () => {
+  it("returns the owner database URL when it is the only variable set", () => {
+    expect(parseOwnerEnv({ DATABASE_OWNER_URL: ownerUrl })).toEqual({ DATABASE_OWNER_URL: ownerUrl });
   });
 
   it("rejects a missing owner database URL", () => {
-    expect(() => ownerEnv({})).toThrow(/DATABASE_OWNER_URL/);
+    expect(() => parseOwnerEnv({})).toThrow(/DATABASE_OWNER_URL/);
+  });
+});
+
+describe("loading the env module", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  // Owner-only process: what drizzle-kit and the owner scripts see.
+  const loadWithOwnerUrlOnly = async () => {
+    for (const name of Object.keys(validSource)) vi.stubEnv(name, undefined);
+    vi.stubEnv("DATABASE_OWNER_URL", ownerUrl);
+    vi.resetModules();
+    return import("@/server/env");
+  };
+
+  it("does not parse the app environment on import", async () => {
+    await expect(loadWithOwnerUrlOnly()).resolves.toHaveProperty("getEnv");
+  });
+
+  it("reads the owner environment when only the owner URL is set", async () => {
+    const { ownerEnv } = await loadWithOwnerUrlOnly();
+
+    expect(ownerEnv()).toEqual({ DATABASE_OWNER_URL: ownerUrl });
+  });
+
+  it("still validates the app environment when it is first used", async () => {
+    const { getEnv } = await loadWithOwnerUrlOnly();
+
+    expect(() => getEnv()).toThrow(/DATABASE_URL/);
   });
 });

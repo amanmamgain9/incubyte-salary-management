@@ -39,6 +39,6 @@ Procedure inputs, outputs and errors: [tRPC contracts](trpc-contracts.md).
 ## Delivery
 
 - One Next.js Node service + managed PostgreSQL over HTTPS; local PostgreSQL through Docker Compose.
-- Commit migrations; run before release. Reproducibly seed 10,000 employees and salary history.
-- Environment (`src/server/env.ts`, listed in `.env.example`): `DATABASE_URL` (app role), `DATABASE_OWNER_URL` (migrations/seed only), `APP_URL` (auth base URL and mutation origin), `BETTER_AUTH_SECRET` and `CURSOR_SECRET` (≥ 32 characters, distinct), `DEMO_HR_EMAIL`, `DEMO_HR_PASSWORD`.
-- CI: typecheck, lint, build, unit/procedure tests against disposable PostgreSQL and key browser workflows.
+- Commit migrations, each granting the app role on the tables it creates; run before release. Reproducibly seed 10,000 employees and salary history.
+- Environment (`src/server/env.ts`, listed in `.env.example`; parsed lazily, owner URL separately so tooling needs only it): `DATABASE_URL` (app role), `DATABASE_OWNER_URL` (migrations/seed only), `APP_URL` (auth base URL; its origin is the only accepted mutation `Origin`), `BETTER_AUTH_SECRET` and `CURSOR_SECRET` (≥ 32 characters, distinct), `DEMO_HR_EMAIL`, `DEMO_HR_PASSWORD`.
+- CI: typecheck, lint, build, unit/procedure tests against disposable PostgreSQL, seed + `db:verify`, and key browser workflows.
