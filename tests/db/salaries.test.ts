@@ -121,6 +121,27 @@ describe("salaries.update", () => {
     expect(await storedHistory()).toHaveLength(1);
   });
 
+  it("rejects the current amount in the current currency as BAD_REQUEST keyed by annual_base_pay and saves nothing", async () => {
+    await insertEmployee({ id: "E-1" });
+
+    await expect(
+      (await signedIn()).salaries.update({ ...change, annual_base_pay: "1200000", salary_currency_code: "INR" }),
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      cause: { field_errors: { annual_base_pay: "No change from the current salary" } },
+    });
+    expect(await storedPay()).toEqual(unchangedPay);
+    expect(await storedHistory()).toHaveLength(1);
+  });
+
+  it("accepts the current amount in another currency", async () => {
+    await insertEmployee({ id: "E-1" });
+
+    await expect(
+      (await signedIn()).salaries.update({ ...change, annual_base_pay: "1200000.00", salary_currency_code: "USD" }),
+    ).resolves.toMatchObject({ annual_base_pay: "1200000.00", salary_currency_code: "USD", salary_revision: 2 });
+  });
+
   it("rejects a stale expected revision as CONFLICT and saves nothing", async () => {
     await insertEmployee({ id: "E-1" });
     const caller = await signedIn();
