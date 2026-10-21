@@ -107,6 +107,9 @@ src/contracts/
 - Middleware and `error-formatter.ts` never branch on procedure paths, router names or feature-specific errors. A feature need is solved in its operation.
 - Field errors are keyed by full dotted input path. Every input is flat (including `employees.update`), so paths equal form field names.
 
+**Contracts**
+- `src/contracts` holds the Zod schemas and the pure rules both server and client share (e.g. `employmentStatusFor`, `toEmployeeView`, `periodEndError`): no I/O, no SQL, no React. A rule only the server needs stays in its module (`employees/status.ts`); a SQL twin of a contract rule (`employmentStatusOn`) names the contract function it mirrors.
+
 **Validation split**
 - Zod (contracts): shape, format, static limits — 2 dp positive money, ISO dates, `from ≤ to`, first-of-month, ≤ 180 months, non-empty patch.
 - Operations: rules needing the DB or clock — codes exist (`assertKnownCodes` on writes and list/report filters), employment dates against stored dates and salary history, expected revision, salary changes only for employees not departed today (active or upcoming) and only when amount or currency differ from the current pay, `to ≤ today` (growth, benchmark; `periodEndError` in `contracts/reports/filters.ts`, which the filter form also checks) — as `ValidationError` keyed by field, `ConflictError` or `NotFoundError`.
@@ -164,7 +167,7 @@ export async function salaryGrowth(op: OperationContext, input: SalaryGrowthInpu
 **Module ownership** (imports: `employees` → `salaries` → `lookups`; `reports` read all; never the reverse)
 - `lookups` owns countries/departments/currencies.
 - `employees` owns the employee row and its details columns. `createEmployee` inserts the row with initial pay and `salary_revision = 1`, then calls `appendSalaryRevision` (revision 1, `Initial salary`) in the same transaction.
-- `salaries` owns `salary_history` and, after insert, the current-pay columns (`annual_base_pay`, `salary_currency_code`, `salary_revision`). Only `changeSalary` updates them: it locks the row, rejects a departed employee (`employmentStatusFor` from `contracts/employees.ts`; upcoming is allowed), then a stale `expected_revision` (`ConflictError`), then the same amount and currency as now (`ValidationError` on `annual_base_pay`), updates current pay, appends history and returns the committed `EmployeeView`, in one transaction.
+- `salaries` owns `salary_history` and, after insert, the current-pay columns on the `employees` row (`annual_base_pay`, `salary_currency_code`, `salary_revision`) and is their only writer: the row's table belongs to `employees`, but this ownership is by column, documented in `db/schema/employees.ts`, and `salaries` reads and locks the row through its own `queries.ts` (`lockCurrentPay`, `updateCurrentPay`), never through `employees`. Only `changeSalary` updates them: it locks the row, rejects a departed employee (`employmentStatusFor` from `contracts/employees.ts`; upcoming is allowed), then a stale `expected_revision` (`ConflictError`), then the same amount and currency as now (`ValidationError` on `annual_base_pay`), updates current pay, appends history and returns the committed `EmployeeView`, in one transaction.
 - `appendSalaryRevision(tx, op, …)` is the only app code that inserts history; it snapshots the employee's current country/department and stamps `op.actor.id` and `op.now`. The seed bulk-inserts history as owner and is the only other writer.
 - Modules may read any table in their own queries; writes follow this ownership.
 

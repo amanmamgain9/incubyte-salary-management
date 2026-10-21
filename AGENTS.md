@@ -72,13 +72,13 @@ Every folder and file here and in the area guide trees is planned. Create files 
 ## Placement & reuse
 
 - **Search first.** Before creating a component, hook, helper, schema, query or type: check the trees here and in the area guides, then `rg -n "<concept>" src scripts`. If it exists, use it.
-- **Shared things (used by 2+ features) have one home by kind:** UI primitive/chart → `src/components/{ui,charts}`; client hook → `src/hooks`; pure helper (format, money, dates, parsing) → `src/lib`; schema or type crossing the API → `src/contracts`; backend cross-cutting (errors, cursor, pagination) → `src/server/core`; shared by 2+ reports → `src/features/reports/` root (UI) or `src/server/reports/{filters,keyset}.ts` (SQL).
+- **Shared things (used by 2+ features) have one home by kind:** UI primitive/chart → `src/components/{ui,charts}`; client hook → `src/hooks`; pure helper (format, money, dates, parsing) → `src/lib`; schema, type or pure rule crossing the API → `src/contracts` (contracts hold schemas and the pure rules both server and client share, e.g. `employmentStatusFor`, `periodEndError`, `toEmployeeView`); backend cross-cutting (errors, cursor, pagination) → `src/server/core`; shared by 2+ reports → `src/features/reports/` root (UI) or `src/server/reports/{filters,keyset}.ts` (SQL).
 - **Rule of two.** Extract when the second copy is the same concept, not merely the same text: move it to its home in the same change and use it from both call sites. Never leave two versions of one concept.
 - **Mechanism vs policy.** `hooks`, `lib` and `components` hold mechanisms (how dialogs, URL state or forms work); the feature that uses them owns the policy (dialog names, notices, default periods).
 - **Extend, don't fork.** Add a variant, prop or option to the existing helper. If it then needs more than ~4 options or branches on the caller, split it by purpose and name both clearly.
 - **Defined once:**
   - Types come from Zod via `z.infer` in `src/contracts`; no parallel interfaces. Frontend imports named contract types; where one is missing, export a named type from the contract rather than deriving router types.
-  - `EmploymentStatus` and `employmentStatusFor` (one loaded row): `contracts/employees.ts`. Its label/tone: `features/employees/employment-status-badge.tsx`.
+  - `EmploymentStatus`, `employmentStatusFor` (one loaded row) and `toEmployeeView` (the only `EmployeeView` producer): `contracts/employees.ts`. Its label/tone: `features/employees/employment-status-badge.tsx`.
   - "Active on date X": `isActiveOn` in `server/employees/status.ts`, used by the directory status filter and the commitment, department and benchmark reports. The data generator's manifest is deliberately independent.
   - Money arithmetic: `lib/money.ts` (client, scripts) and SQL `NUMERIC` (server). Never `Number` math on amounts.
   - Formatting: `lib/format.ts`. Lookup names and options: `hooks/use-lookups.ts`.
