@@ -32,3 +32,5 @@ export const Decimal = z.string().regex(/^-?\d+\.\d{2}$/);
 export const MAX_COUNTRIES = 250;
 export const MAX_CURRENCIES = 200;
 export const MAX_DEPARTMENTS = 100;
+/** Country/currency pairs in a report summary (`by_country` of the department, growth and benchmark reports). */
+export const MAX_COUNTRY_CURRENCY_PAIRS = 500;
