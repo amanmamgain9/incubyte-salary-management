@@ -40,3 +40,17 @@ export function formatInitials(name: string): string {
     .join("");
   return initials || "?";
 }
+
+const dates = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
+/** A UTC calendar date (`YYYY-MM-DD` or an ISO timestamp's date), e.g. "2024-01-15" → "15 Jan 2024"; null → "—". */
+export function formatDate(date: string | null): string {
+  if (!date) return "—";
+  return dates.format(new Date(`${date.slice(0, 10)}T00:00:00Z`));
+}
+
+/** An ISO UTC timestamp as date and minute, e.g. "2024-01-15T10:05:00.000Z" → "15 Jan 2024 · 10:05 UTC". */
+export function formatTimestamp(timestamp: string): string {
+  const time = new Date(timestamp).toISOString().slice(11, 16);
+  return `${formatDate(timestamp)} · ${time} UTC`;
+}

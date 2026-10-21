@@ -11,13 +11,13 @@ src/app/
 ├── layout.tsx                     # <html>, Inter via next/font/local, globals.css, <TRPCReactProvider>
 ├── globals.css                    # Tailwind v4 import + the single @theme token set (colors, radius, shadow, font)
 ├── fonts/                         # inter-latin.woff2 + Inter-LICENSE.txt
-├── not-found.tsx                  # 404 via <EmptyState>
+├── not-found.tsx                  # 404 via <EmptyState> (inside the workspace shell for a missing record)
 ├── login/page.tsx                 # signed in → redirect('/employees'); else <LoginScreen demo={env demo credentials}>
 ├── (workspace)/
 │   ├── layout.tsx                 # getSessionUser once → redirect('/login') if absent; <WorkspaceShell user>
 │   ├── loading.tsx / error.tsx    # <LoadingState> / <ErrorState retry> for every workspace page
 │   ├── employees/page.tsx                     # prefetch employees.list + lookups → <EmployeeDirectory> (create dialog)
-│   ├── employees/[id]/page.tsx                # employees.get (404 → notFound()) + salaries.history + lookups → <EmployeeProfile> (edit/salary dialogs)
+│   ├── employees/[id]/page.tsx                # prefetchOrNotFound(employees.get) (malformed or unknown ID → 404) + salaries.history + lookups → <EmployeeProfile> (edit/salary dialogs)
 │   └── reports/<report>/page.tsx              # one per report folder name; prefetch report + lookups → <…Report>
 └── api/
     ├── trpc/[trpc]/route.ts       # fetchRequestHandler(appRouter, createContext); Cache-Control: no-store
@@ -42,6 +42,7 @@ src/features/
 │   ├── use-employee-mutations.ts  # employees.create/update + their invalidation
 │   ├── employee-fields.tsx        # field group shared by create and edit forms
 │   ├── employment-status-badge.tsx  # EmploymentStatus → <Badge> label/tone (only mapping)
+│   ├── saved-alert.tsx            # `?saved=` → one success <Alert> (directory and profile)
 │   ├── create-employee-form.tsx   # employees.create form (ID, details, initial pay + currency); onSaved/onCancel, no dialog code
 │   ├── edit-employee-form.tsx     # employees.update form ({ id, ...changes }; submit disabled until a change); ID locked; set/clear last working day
 │   ├── directory/
@@ -57,7 +58,8 @@ src/features/
 │       ├── edit-employee-dialog.tsx   # `?dialog=edit` <Dialog> around <EditEmployeeForm>
 │       ├── change-salary-dialog.tsx   # `?dialog=salary` <Dialog> around salaries' <ChangeSalaryForm>
 │       ├── employee-details.tsx   # details list
-│       └── current-pay.tsx        # amount, currency, revision
+│       ├── current-pay.tsx        # amount, currency, revision
+│       └── search-params.ts       # profile URL (history cursor) → salaries.history input
 ├── salaries/
 │   ├── use-salary-mutations.ts    # salaries.update + its invalidation
 │   ├── change-salary-form.tsx     # current pay/revision, new amount/currency, reason, conflict reload; onSaved/onCancel, no dialog code
@@ -79,8 +81,8 @@ src/components/
 ├── ui/                            # primitives, built before any feature screen
 │   ├── button.tsx                 # variants: primary | secondary | ghost | danger; size; `pending`
 │   ├── alert.tsx                  # info | success | error notices (role="alert" for errors, "status" otherwise)
-│   ├── page-header.tsx            # title + optional back link + one primary action
-│   ├── card.tsx                   # white data surface (no nesting)
+│   ├── page-header.tsx            # title + optional back link, leading avatar and meta line + actions (one primary)
+│   ├── card.tsx                   # white data surface (no nesting) + CardHeader title row
 │   ├── overview.tsx / stat.tsx    # overview block: scope line + 2–4 measures + optional visual slot
 │   ├── table.tsx                  # Table/Head/Row/Cell, local horizontal scroller, numeric alignment, sticky first column
 │   ├── pagination.tsx             # Previous/Next over opaque cursors + "x–y of total"
@@ -91,7 +93,7 @@ src/components/
 │   ├── dialog.tsx                 # the one modal: native <dialog> + showModal, focus trap/return, Esc and backdrop close; no close while `pending`
 │   ├── amount.tsx                 # tabular right-aligned money with visible currency
 │   ├── badge.tsx                  # neutral/semantic tones; no domain knowledge
-│   ├── avatar.tsx                 # initials tile (account footer, directory rows); one tint, no decorative colors
+│   ├── avatar.tsx                 # initials tile (account footer, directory rows, profile `lg`); one tint, no decorative colors
 │   ├── brand.tsx                  # ACME mark + wordmark; a link only on signed-in pages (a prefetched link on /login caches its redirect)
 │   └── icon.tsx                   # 18px icon wrapper; the only icon-library import site
 └── charts/                        # the only chart-library import site
@@ -106,7 +108,7 @@ src/hooks/
 └── use-lookups.ts                 # lookups.get + countryName/departmentName/currencyName + select options
 
 src/lib/
-├── format.ts                      # formatMoney, formatCount, formatDate, formatMonth, formatPercent, formatInitials (the only Intl use)
+├── format.ts                      # formatMoney, formatCount, formatDate, formatTimestamp, formatMonth, formatPercent, formatInitials (the only Intl use)
 ├── money.ts                       # decimal string ↔ bigint minor units; divideRounded (half away from zero); compare/diff exactly on the units
 ├── dates.ts                       # todayUtc, addDays, daysBetween, addMonths, month start/end, monthsBetween (UTC)
 ├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState; patchSearchParams (cursor rule)
@@ -117,7 +119,7 @@ src/lib/
 src/trpc/
 ├── query-client.ts                # makeQueryClient: the only QueryClient factory; defaults, dehydrate, global UNAUTHORIZED handler
 ├── client.tsx                     # client: TRPCReactProvider, useTRPC
-├── server.tsx                     # server-only: options proxy, cached getQueryClient, prefetch, HydrateClient
+├── server.tsx                     # server-only: options proxy, cached getQueryClient, prefetch, prefetchOrNotFound, HydrateClient
 └── router-types.ts                # RouterInputs / RouterOutputs (the only place they are derived)
 ```
 

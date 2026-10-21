@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { Amount } from "@/components/ui/amount";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Icon } from "@/components/ui/icon";
 import { Pagination } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { ListEmployeesOutput } from "@/contracts/employees";
@@ -47,6 +49,9 @@ export function EmployeeTable({
           <TableHeader>Work country</TableHeader>
           <TableHeader>Status</TableHeader>
           <TableHeader numeric>Annual base pay</TableHeader>
+          <TableHeader>
+            <span className="sr-only">Open</span>
+          </TableHeader>
         </TableHead>
         <TableBody>
           {rows.items.map((employee) => (
@@ -55,7 +60,9 @@ export function EmployeeTable({
                 <div className="flex items-center gap-2">
                   <Avatar name={employee.name} />
                   <div>
-                    <span className="block font-[550] text-ink">{employee.name}</span>
+                    <Link href={`/employees/${employee.id}`} className="block font-[550] text-ink hover:text-accent-ink">
+                      {employee.name}
+                    </Link>
                     <small className="mt-0.75 block text-label text-muted">{employee.id}</small>
                   </div>
                 </div>
@@ -72,6 +79,16 @@ export function EmployeeTable({
               </TableCell>
               <TableCell numeric>
                 <Amount value={employee.annual_base_pay} currency={employee.salary_currency_code} />
+              </TableCell>
+              <TableCell>
+                <Link
+                  href={`/employees/${employee.id}`}
+                  aria-label={`View ${employee.name}`}
+                  tabIndex={-1}
+                  className="inline-grid size-7.5 place-items-center rounded-control text-muted hover:bg-rail-hover hover:text-accent-ink"
+                >
+                  <Icon name="open" size={16} />
+                </Link>
               </TableCell>
             </TableRow>
           ))}

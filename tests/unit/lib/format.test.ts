@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCount, formatInitials, formatMoney, formatRange } from "@/lib/format";
+import { formatCount, formatDate, formatInitials, formatMoney, formatRange, formatTimestamp } from "@/lib/format";
 
 describe("formatCount", () => {
   it.each([
@@ -52,5 +52,29 @@ describe("formatInitials", () => {
     ["   ", "?"],
   ])("formats %j as %j", (name, initials) => {
     expect(formatInitials(name)).toBe(initials);
+  });
+});
+
+describe("formatDate", () => {
+  it.each([
+    ["2024-01-15", "15 Jan 2024"],
+    ["2024-12-31", "31 Dec 2024"],
+    ["2026-10-21T23:59:59.000Z", "21 Oct 2026"],
+  ])("formats %j as %j", (date, text) => {
+    expect(formatDate(date)).toBe(text);
+  });
+
+  it("shows a missing date as a dash", () => {
+    expect(formatDate(null)).toBe("—");
+  });
+});
+
+describe("formatTimestamp", () => {
+  it("shows the UTC date and minute", () => {
+    expect(formatTimestamp("2024-01-15T10:05:59.999Z")).toBe("15 Jan 2024 · 10:05 UTC");
+  });
+
+  it("keeps the UTC date just before midnight", () => {
+    expect(formatTimestamp("2024-02-29T23:59:00.000Z")).toBe("29 Feb 2024 · 23:59 UTC");
   });
 });
