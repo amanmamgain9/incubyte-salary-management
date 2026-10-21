@@ -9,6 +9,7 @@ import { detailsValues, toDetailsPatch } from "@/features/employees/details-patc
 import { EmployeeFields } from "@/features/employees/employee-fields";
 import { useEmployeeMutations } from "@/features/employees/use-employee-mutations";
 import { useForm } from "@/hooks/use-form";
+import type { LookupOptions } from "@/hooks/use-lookups";
 
 /**
  * employees.update: edits details and employment dates, sending only changed fields (Save stays disabled until
@@ -18,10 +19,12 @@ import { useForm } from "@/hooks/use-form";
  */
 export function EditEmployeeForm({
   employee,
+  options,
   onSaved,
   onCancel,
 }: {
   employee: EmployeeView;
+  options: LookupOptions;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -56,7 +59,7 @@ export function EditEmployeeForm({
           <FormField label="Employee ID" hint="Fixed ID; cannot be reused.">
             <Input value={employee.id} readOnly />
           </FormField>
-          <EmployeeFields form={form} countryHint="Salary currency stays unchanged." />
+          <EmployeeFields form={form} options={options} countryHint="Salary currency stays unchanged." />
           <FormField label="Last working day · optional" hint="Blank while employed." error={form.errors.last_working_day}>
             <Input {...form.inputProps("last_working_day")} type="date" />
           </FormField>

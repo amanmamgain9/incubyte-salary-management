@@ -47,19 +47,20 @@ export function EmployeeDirectory({ today }: { today: string }) {
         }
       />
       <SavedAlert />
-      <DirectoryFilters search={search} onChange={patch} />
+      <DirectoryFilters search={search} options={lookups} onChange={patch} />
       <DeferredContent stale={loading}>
         <DirectoryOverview summary={data.summary} scope={directoryScope(input, lookups)} />
         <Card label="Employees">
           <EmployeeTable
             rows={data.rows}
+            names={lookups}
             filtered={hasDirectoryFilters(input)}
             onPage={(cursor) => patch({ cursor })}
             onClearFilters={() => patch(clearedFilters)}
           />
         </Card>
       </DeferredContent>
-      <CreateEmployeeDialog today={today} />
+      <CreateEmployeeDialog today={today} options={lookups} />
     </>
   );
 }

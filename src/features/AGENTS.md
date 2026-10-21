@@ -113,7 +113,7 @@ src/hooks/
 ├── use-url-state.ts               # useUrlState(schema): read/patch search params (the only history.replaceState); patching any key except `cursor`, `dialog`, `saved` drops `cursor`
 ├── use-dialog.ts                  # dialogParams(dialogs, notices) → URL schema; useDialog(schema): `?dialog=` via useUrlState, open(name), close(saved?) sets `?saved=`; names belong to the feature
 ├── use-form.ts                    # values, `changes` vs the baseline (`initial` at mount; `outdated` when `initial` moves, `reset()` adopts it), field errors, submit via onSubmit promise, toFieldErrors, focus first error, inputProps(name)
-└── use-lookups.ts                 # lookups.get + countryName/departmentName + country/department/currency select options
+└── use-lookups.ts                 # lookups.get → LookupNames (countryName/departmentName) + LookupOptions (select options); called once per screen, passed down as `names`/`options`
 
 src/lib/
 ├── format.ts                      # formatMoney, formatCompact (exact, overview figures), formatCount, formatDate, formatTimestamp, formatMonth, formatPercent, formatInitials (the only Intl use)

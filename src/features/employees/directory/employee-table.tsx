@@ -12,21 +12,23 @@ import { Pagination } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { ListEmployeesOutput } from "@/contracts/employees";
 import { EmploymentStatusBadge } from "@/features/employees/employment-status-badge";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupNames } from "@/hooks/use-lookups";
 
 /** One page of matching employees with Previous/Next, or the empty state. */
 export function EmployeeTable({
   rows,
+  names,
   filtered,
   onPage,
   onClearFilters,
 }: {
   rows: ListEmployeesOutput["rows"];
+  names: LookupNames;
   filtered: boolean;
   onPage: (cursor: string) => void;
   onClearFilters: () => void;
 }) {
-  const { countryName, departmentName } = useLookups();
+  const { countryName, departmentName } = names;
   if (rows.items.length === 0) {
     return filtered ? (
       <EmptyState

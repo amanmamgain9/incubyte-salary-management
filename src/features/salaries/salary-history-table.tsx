@@ -9,14 +9,22 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { SalaryHistoryInput } from "@/contracts/salaries";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupNames } from "@/hooks/use-lookups";
 import { formatTimestamp } from "@/lib/format";
 import { useTRPC } from "@/trpc/client";
 
 /** One page of an employee's read-only salary history, newest revision first, with Previous/Next. */
-export function SalaryHistoryTable({ input, onPage }: { input: SalaryHistoryInput; onPage: (cursor: string) => void }) {
+export function SalaryHistoryTable({
+  input,
+  names,
+  onPage,
+}: {
+  input: SalaryHistoryInput;
+  names: LookupNames;
+  onPage: (cursor: string) => void;
+}) {
   const trpc = useTRPC();
-  const { countryName, departmentName } = useLookups();
+  const { countryName, departmentName } = names;
   // While another page loads, keep showing (dimmed) the current one instead of the route's loading state.
   const deferred = useDeferredValue(input);
   const { data } = useSuspenseQuery(trpc.salaries.history.queryOptions(deferred));

@@ -16,6 +16,7 @@ import { historyInput, profileSearch } from "@/features/employees/profile/search
 import { SavedAlert } from "@/features/employees/saved-alert";
 import { SalaryHistoryTable } from "@/features/salaries/salary-history-table";
 import { useEmployeeDialog } from "@/features/employees/use-employee-dialog";
+import { useLookups } from "@/hooks/use-lookups";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useTRPC } from "@/trpc/client";
 
@@ -23,6 +24,7 @@ import { useTRPC } from "@/trpc/client";
 export function EmployeeProfile({ id }: { id: string }) {
   const trpc = useTRPC();
   const { data: employee } = useSuspenseQuery(trpc.employees.get.queryOptions({ id }));
+  const lookups = useLookups();
   const dialog = useEmployeeDialog();
   const [{ cursor }, patch] = useUrlState(profileSearch);
   // Stable while only `?dialog=`/`?saved=` change, so the history does not re-defer (dim) on those.
@@ -54,16 +56,16 @@ export function EmployeeProfile({ id }: { id: string }) {
       <SavedAlert />
       <Card label="Employee details and current pay">
         <div className="flex flex-wrap items-center justify-between gap-5 p-4.5 sm:p-6">
-          <EmployeeDetails employee={employee} />
+          <EmployeeDetails employee={employee} names={lookups} />
           <CurrentPay employee={employee} />
         </div>
       </Card>
       <Card label="Salary history">
         <CardHeader title="Salary history" aside={<Badge tone="neutral">Read only</Badge>} />
-        <SalaryHistoryTable input={history} onPage={(cursor) => patch({ cursor })} />
+        <SalaryHistoryTable input={history} names={lookups} onPage={(cursor) => patch({ cursor })} />
       </Card>
-      <EditEmployeeDialog employee={employee} />
-      <ChangeSalaryDialog employee={employee} />
+      <EditEmployeeDialog employee={employee} options={lookups} />
+      <ChangeSalaryDialog employee={employee} options={lookups} />
     </>
   );
 }

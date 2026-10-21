@@ -1,6 +1,7 @@
 import type { DirectorySummary, EmploymentStatus } from "@/contracts/employees";
 import type { DirectorySearch } from "@/features/employees/directory/search-params";
 import { employmentStatusLabel, employmentStatuses } from "@/features/employees/employment-status-badge";
+import type { LookupNames } from "@/hooks/use-lookups";
 
 export type MixSegment = { status: EmploymentStatus; label: string; count: number; percent: number };
 
@@ -26,7 +27,7 @@ export function hasDirectoryFilters(search: DirectorySearch): boolean {
 /** The overview's scope line: "All employees", or the active filters, e.g. `India · Engineering · Active · “sha”`. */
 export function directoryScope(
   search: DirectorySearch,
-  names: { countryName: (code: string) => string; departmentName: (id: string) => string },
+  names: LookupNames,
 ): string {
   if (!hasDirectoryFilters(search)) return "All employees";
   return [

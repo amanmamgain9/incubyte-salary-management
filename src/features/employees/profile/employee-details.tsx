@@ -1,10 +1,10 @@
 import type { EmployeeView } from "@/contracts/employees";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupNames } from "@/hooks/use-lookups";
 import { formatDate } from "@/lib/format";
 
 /** Department, work country and employment dates. */
-export function EmployeeDetails({ employee }: { employee: EmployeeView }) {
-  const { countryName, departmentName } = useLookups();
+export function EmployeeDetails({ employee, names }: { employee: EmployeeView; names: LookupNames }) {
+  const { countryName, departmentName } = names;
   const facts = [
     ["Department", departmentName(employee.department_id)],
     ["Work country", countryName(employee.work_country_code)],

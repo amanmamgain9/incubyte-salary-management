@@ -8,20 +8,21 @@ import { Select } from "@/components/ui/select";
 import { EmployeeFields } from "@/features/employees/employee-fields";
 import { useEmployeeMutations } from "@/features/employees/use-employee-mutations";
 import { useForm } from "@/hooks/use-form";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupOptions } from "@/hooks/use-lookups";
 
 /** employees.create: permanent ID, details and the initial salary (saved as revision 1). Knows nothing about dialogs. */
 export function CreateEmployeeForm({
   today,
+  options,
   onSaved,
   onCancel,
 }: {
   today: string;
+  options: LookupOptions;
   onSaved: () => void;
   onCancel: () => void;
 }) {
   const { create } = useEmployeeMutations();
-  const lookups = useLookups();
   const form = useForm({
     initial: {
       id: "",
@@ -46,7 +47,7 @@ export function CreateEmployeeForm({
           <FormField label="Employee ID" hint="Fixed ID; cannot be reused." error={form.errors.id}>
             <Input {...form.inputProps("id")} required maxLength={32} autoComplete="off" placeholder="e.g. E-10001" />
           </FormField>
-          <EmployeeFields form={form} />
+          <EmployeeFields form={form} options={options} />
         </FormGrid>
       </FormSection>
       <FormSection title="Initial salary">
@@ -59,7 +60,7 @@ export function CreateEmployeeForm({
               {...form.inputProps("salary_currency_code")}
               required
               emptyLabel="Select a currency"
-              options={lookups.currencyOptions}
+              options={options.currencyOptions}
             />
           </FormField>
         </FormGrid>

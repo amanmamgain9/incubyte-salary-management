@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { salaryDeltaNote } from "@/features/salaries/salary-delta";
 import { useSalaryMutations } from "@/features/salaries/use-salary-mutations";
 import { useForm } from "@/hooks/use-form";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupOptions } from "@/hooks/use-lookups";
 import { cn } from "@/lib/cn";
 import { isConflict } from "@/lib/mutation-errors";
 import { useTRPC } from "@/trpc/client";
@@ -26,10 +26,12 @@ const noteTone = { positive: "text-positive", negative: "text-negative", neutral
  */
 export function ChangeSalaryForm({
   employeeId,
+  options,
   onSaved,
   onCancel,
 }: {
   employeeId: string;
+  options: LookupOptions;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -38,7 +40,6 @@ export function ChangeSalaryForm({
   const employee = employeeQuery.data;
   const [expectedRevision, setExpectedRevision] = useState(employee.salary_revision);
   const { update } = useSalaryMutations();
-  const lookups = useLookups();
   const form = useForm({
     initial: { annual_base_pay: "", salary_currency_code: employee.salary_currency_code, reason: "" },
     onSubmit: async (values) => {
@@ -86,7 +87,7 @@ export function ChangeSalaryForm({
             <Input {...form.inputProps("annual_base_pay")} required inputMode="decimal" placeholder="0.00" />
           </FormField>
           <FormField label="Salary currency" hint="No automatic conversion." error={form.errors.salary_currency_code}>
-            <Select {...form.inputProps("salary_currency_code")} required options={lookups.currencyOptions} />
+            <Select {...form.inputProps("salary_currency_code")} required options={options.currencyOptions} />
           </FormField>
           <FormField label="Reason for change" error={form.errors.reason} wide>
             <Textarea {...form.inputProps("reason")} required maxLength={500} placeholder="e.g. Annual salary review or promotion" />

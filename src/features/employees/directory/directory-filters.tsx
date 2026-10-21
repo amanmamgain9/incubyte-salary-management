@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { DirectorySearch } from "@/features/employees/directory/search-params";
 import { employmentStatuses } from "@/features/employees/employment-status-badge";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupOptions } from "@/hooks/use-lookups";
 
 type FilterPatch = Partial<Record<"search" | "department_id" | "work_country_code" | "employment_status", string>>;
 
@@ -16,8 +16,15 @@ const halfRowFilter = "flex-[1_1_40%] sm:flex-[0_1_145px]";
 const statusOptions = employmentStatuses.map(({ status, label }) => ({ value: status, label }));
 
 /** Search (applied after a short pause in typing) and the country, department and status filters. */
-export function DirectoryFilters({ search, onChange }: { search: DirectorySearch; onChange: (patch: FilterPatch) => void }) {
-  const lookups = useLookups();
+export function DirectoryFilters({
+  search,
+  options,
+  onChange,
+}: {
+  search: DirectorySearch;
+  options: LookupOptions;
+  onChange: (patch: FilterPatch) => void;
+}) {
   const applied = search.search ?? "";
   const [text, setText] = useState(applied);
   const [lastApplied, setLastApplied] = useState(applied);
@@ -52,7 +59,7 @@ export function DirectoryFilters({ search, onChange }: { search: DirectorySearch
           name="work_country_code"
           aria-label="Work country"
           emptyLabel="All countries"
-          options={lookups.countryOptions}
+          options={options.countryOptions}
           value={search.work_country_code ?? ""}
           onChange={(event) => onChange({ work_country_code: event.target.value })}
         />
@@ -62,7 +69,7 @@ export function DirectoryFilters({ search, onChange }: { search: DirectorySearch
           name="department_id"
           aria-label="Department"
           emptyLabel="All departments"
-          options={lookups.departmentOptions}
+          options={options.departmentOptions}
           value={search.department_id ?? ""}
           onChange={(event) => onChange({ department_id: event.target.value })}
         />
