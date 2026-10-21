@@ -1,0 +1,113 @@
+/*
+ * The single design-token set (docs/design-language.md, ported from docs/screens/styles.input.css).
+ * This is the only file allowed to contain color literals; components use the generated utilities
+ * (e.g. bg-canvas, text-muted, border-line, shadow-surface, rounded-surface).
+ */
+@import "tailwindcss";
+
+@theme {
+  /* Only these colors exist: Tailwind's default palette is removed on purpose. */
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Surfaces */
+  --color-canvas: #f8f9fc;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f9fafc;
+  --color-surface-muted: #f6f7fa;
+  --color-surface-hover: #fafaff;
+
+  /* Text */
+  --color-ink: #202431;
+  --color-ink-soft: #3e4352;
+  --color-ink-secondary: #525767;
+  --color-muted: #737a89;
+  --color-muted-soft: #a0a5b2;
+
+  /* Lines */
+  --color-line: #e9ebf1;
+  --color-line-soft: #f0f1f6;
+  --color-line-control: #e1e4ec;
+  --color-line-strong: #dfe2eb;
+
+  /* Action and selection (blue-violet) */
+  --color-accent: #6253d8;
+  --color-accent-hover: #5546c7;
+  --color-accent-ink: #5b4dcd;
+  --color-accent-soft: #f0edfc;
+  --color-accent-ring: #a396eb;
+
+  /* Navigation rail */
+  --color-rail: #fcfcfe;
+  --color-rail-ink: #757a8a;
+  --color-rail-line: #e6e8ef;
+  --color-rail-hover: #f1f2f7;
+  --color-rail-active: #eeecfc;
+  --color-rail-active-line: #e8e4fc;
+
+  /* Meaning: positive / negative values and notices */
+  --color-positive: #207b62;
+  --color-positive-soft: #edf5f0;
+  --color-positive-ink: #39775e;
+  --color-negative: #b24e59;
+  --color-negative-soft: #fff0ee;
+  --color-negative-ink: #a24546;
+
+  /* Employment status badges */
+  --color-status-active: #318265;
+  --color-status-active-soft: #edf8f2;
+  --color-status-departed: #747b89;
+  --color-status-departed-soft: #f1f2f5;
+  --color-status-upcoming: #7865b8;
+  --color-status-upcoming-soft: #f0edff;
+  --color-status-neutral: #77748e;
+  --color-status-neutral-soft: #f3f2f8;
+
+  /* Charts */
+  --color-chart-primary: #a69add;
+  --color-chart-secondary: #7390ba;
+  --color-chart-increase: #8ab6a4;
+  --color-chart-decrease: #c37b70;
+  --color-chart-track: #eeedf6;
+  --color-chart-axis: #7e8594;
+  --color-chart-baseline: #c5d3cc;
+
+  /* Radius */
+  --radius-control: 8px;
+  --radius-surface: 12px;
+  --radius-panel: 16px;
+
+  /* Shadows (minimal) */
+  --shadow-control: 0 1px 2px #20243103;
+  --shadow-button: 0 2px 3px #20243109;
+  --shadow-surface: 0 2px 6px #20243103;
+  --shadow-panel: 0 10px 40px #20243106;
+  --shadow-focus: 0 0 0 3px #6253d80a;
+
+  /* Typography */
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
+  --text-title: 28px;
+  --text-title--line-height: 1.3;
+  --text-title--letter-spacing: -0.9px;
+  --text-title--font-weight: 650;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background: var(--color-canvas);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+}
