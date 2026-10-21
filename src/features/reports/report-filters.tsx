@@ -67,7 +67,16 @@ export function ReportFilters({
       ) : null}
       {fields.includes("months") ? (
         <FormField label="From month" error={errors.from}>
-          <Input type="month" name="from" defaultValue={values.from?.slice(0, 7)} max={today.slice(0, 7)} required />
+          {/* Browsers without a month control render a text field: the placeholder and pattern show the format. */}
+          <Input
+            type="month"
+            name="from"
+            defaultValue={values.from?.slice(0, 7)}
+            max={today.slice(0, 7)}
+            placeholder="YYYY-MM"
+            pattern="[0-9]{4}-[0-9]{2}"
+            required
+          />
         </FormField>
       ) : null}
       {fields.includes("dates") || fields.includes("months") ? (
