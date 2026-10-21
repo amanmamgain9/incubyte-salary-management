@@ -39,7 +39,7 @@ export function Icon({ name, size = 18, className }: { name: IconName; size?: nu
     <Glyph
       aria-hidden="true"
       size={size}
-      strokeWidth={1.6}
+      strokeWidth={name === "brand" ? 3 : 1.6}
       className={cn("shrink-0", name === "spinner" && "animate-spin motion-reduce:animate-none", className)}
     />
   );

@@ -1,0 +1,10 @@
+import type { Route } from "next";
+import type { IconName } from "@/components/ui/icon";
+
+export type NavItem = { href: Route; label: string; icon: IconName };
+
+/** Ordered rail links per section. A report joins `reports` when its route exists; unbuilt routes are never linked. */
+export const navSections: ReadonlyArray<{ label: string; items: readonly NavItem[] }> = [
+  { label: "People", items: [{ href: "/employees", label: "Employees", icon: "employees" }] },
+  { label: "Reports", items: [] },
+];

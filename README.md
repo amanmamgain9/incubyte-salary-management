@@ -2,7 +2,7 @@
 
 HR salary management app (Next.js + tRPC + PostgreSQL). Scope and design live in [`docs/`](docs/); contributor rules in [`AGENTS.md`](AGENTS.md).
 
-> Status: backend foundation. Migrations create the lookup and Better Auth tables; `npm run db:seed` adds the lookups (7 countries, 6 currencies, 5 departments) and the demo HR account. Better Auth serves `/api/auth/*` (email/password sign-in, sign-up disabled) and tRPC serves `/api/trpc` with session-guarded `lookups.get`, `employees.list/get/create/update` (creation saves the initial salary as history revision 1) and `salaries.update/history` (salary changes checked against the expected revision; history newest first). There are no employees in the seed and no UI yet; the app serves a placeholder `/employees` page (`/` redirects there).
+> Status: backend foundation. Migrations create the lookup and Better Auth tables; `npm run db:seed` adds the lookups (7 countries, 6 currencies, 5 departments) and the demo HR account. Better Auth serves `/api/auth/*` (email/password sign-in, sign-up disabled) and tRPC serves `/api/trpc` with session-guarded `lookups.get`, `employees.list/get/create/update` (creation saves the initial salary as history revision 1) and `salaries.update/history` (salary changes checked against the expected revision; history newest first). The UI has the sign-in page (`/login`, showing the demo credentials) and the signed-in workspace shell with sign-out; `/employees` is still a placeholder (`/` redirects there). There are no employees in the seed.
 
 ## Prerequisites
 

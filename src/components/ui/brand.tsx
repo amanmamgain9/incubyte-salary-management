@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
+import { cn } from "@/lib/cn";
 
-/** The ACME mark and wordmark, linking to the directory. `compact` hides the tagline (mobile bar). */
-export function Brand({ compact = false }: { compact?: boolean }) {
+/** The ACME mark and wordmark, linking to the directory. `tagline="desktop"` hides the tagline in the mobile bar. */
+export function Brand({ tagline = "always" }: { tagline?: "always" | "desktop" }) {
   return (
     <Link
       href="/employees"
@@ -14,9 +15,14 @@ export function Brand({ compact = false }: { compact?: boolean }) {
       </span>
       <span>
         acme
-        {compact ? null : (
-          <small className="mt-0.5 block text-label font-normal tracking-normal text-muted">People &amp; pay</small>
-        )}
+        <small
+          className={cn(
+            "mt-0.5 text-label font-normal tracking-normal text-muted",
+            tagline === "always" ? "block" : "hidden md:block",
+          )}
+        >
+          People &amp; pay
+        </small>
       </span>
     </Link>
   );

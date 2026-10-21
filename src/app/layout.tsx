@@ -12,7 +12,7 @@ const inter = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "ACME Salary Management",
+  title: { template: "%s · ACME", default: "ACME Salary Management" },
   description: "Employee records, salary history and pay reports for HR.",
 };
 

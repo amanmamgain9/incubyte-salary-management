@@ -35,7 +35,7 @@ src/features/
 │   └── sign-out-button.tsx        # client: signOut → queryClient.clear() → /login
 ├── workspace/
 │   ├── workspace-shell.tsx        # nav rail + content column
-│   ├── nav-items.ts               # ordered links: Employees + 4 reports, with icon names
+│   ├── nav-items.ts               # ordered links: Employees + 4 reports, with icon names; a link is added with its route
 │   ├── mobile-nav.tsx             # client: labelled collapsible menu
 │   └── account-footer.tsx         # signed-in user + <SignOutButton>
 ├── employees/
