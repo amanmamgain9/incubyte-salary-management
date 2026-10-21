@@ -59,3 +59,12 @@ Procedure inputs, outputs and errors: [tRPC contracts](trpc-contracts.md).
 
 - The benchmark builds its month-end snapshot once per request into a transaction-scoped temporary table (36 snapshot months × ~7,400 active employees ≈ 266,000 rows for the default range): per-entry integer month ranges, one hash aggregation over both grouping sets, and exact percentiles from per-group sorted cents. `EXPLAIN (ANALYZE, BUFFERS)` (`npm run bench -- --explain`): ~130 ms expanding entries into snapshot rows, ~120 ms aggregating and sorting, all from shared buffers. JIT is off and `work_mem` is 256MB for that transaction only: JIT compilation alone cost ~700 ms, and the default `work_mem` spilled the aggregation to disk.
 - The default benchmark range sits just above the ~300 ms goal and 15 years take ~0.6 s; every other report is under 100 ms. No plan showed a missing index (the benchmark needs every history entry for its validity windows), so no index was added. A month-end snapshot table maintained by salary and details writes is the next step if the benchmark must get faster.
+
+### Production (Vercel iad1 + Neon free tier)
+
+Same 10,000-employee seed on PostgreSQL 18.6, app and database both in us-east (~1–2 ms apart):
+
+- The benchmark's snapshot build takes ~700 ms of server-side execution on Neon (`EXPLAIN ANALYZE`, 24 months) against ~250 ms on local PostgreSQL 17: the free tier's compute is small.
+- Expected per request: commitment, department and growth well under 100 ms of database time; the benchmark ~0.8–0.9 s; the first request after Neon scales to zero adds ~1 s of cold start. Timings from a remote machine are dominated by ~310 ms round trips and are not representative.
+- Requirements: the app role needs the `TEMP` privilege (Neon's default); `work_mem` 256MB is a per-transaction ceiling for benchmark requests only (~12 MB used).
+- Accepted for this scope. If the benchmark must get faster: larger compute, or the month-end snapshot table above.
