@@ -2,10 +2,11 @@
 
 import { MiniBars } from "@/components/charts/mini-bars";
 import { Amount } from "@/components/ui/amount";
+import { Caption } from "@/components/ui/caption";
 import { Overview } from "@/components/ui/overview";
 import { Stat } from "@/components/ui/stat";
 import type { DepartmentBreakdownInput, DepartmentBreakdownSummary as Summary } from "@/contracts/reports/department-breakdown";
-import { CountryTotals, GroupDetail, GroupTotal } from "@/features/reports/country-totals";
+import { CountryTotals, GroupTotal } from "@/features/reports/country-totals";
 import { DepartmentBreakdownChart } from "@/features/reports/department-breakdown/department-breakdown-chart";
 import { countryCount, departmentBars, singleGroup } from "@/features/reports/department-breakdown/department-breakdown-data";
 import { reportScope } from "@/features/reports/report-scope";
@@ -58,10 +59,10 @@ export function DepartmentBreakdownSummary({ summary, input }: { summary: Summar
               <GroupTotal>
                 <Amount value={group.total_annual_base_pay} currency={group.salary_currency_code} />
               </GroupTotal>
-              <GroupDetail>
+              <Caption>
                 {formatCount(group.employee_count)} employees · Avg{" "}
                 {formatMoney(group.average_annual_base_pay, group.salary_currency_code)}
-              </GroupDetail>
+              </Caption>
             </>
           )}
         </CountryTotals>

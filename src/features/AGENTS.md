@@ -96,6 +96,7 @@ src/components/
 │   ├── amount.tsx                 # tabular right-aligned money with visible currency
 │   ├── country-label.tsx          # country code marker + name (table cells)
 │   ├── badge.tsx                  # neutral/semantic tones; no domain knowledge
+│   ├── caption.tsx                # muted secondary line (ID, timestamp, revision, group detail); `under` spaces it below a primary line
 │   ├── avatar.tsx                 # initials tile (account footer, directory rows, profile `lg`); one tint, no decorative colors
 │   ├── brand.tsx                  # ACME mark + wordmark; a link only on signed-in pages (a prefetched link on /login caches its redirect)
 │   └── icon.tsx                   # 18px icon wrapper; the only icon-library import site

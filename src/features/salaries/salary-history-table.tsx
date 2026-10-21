@@ -3,6 +3,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useDeferredValue } from "react";
 import { Amount } from "@/components/ui/amount";
+import { Caption } from "@/components/ui/caption";
 import { DeferredContent } from "@/components/ui/deferred-content";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
@@ -38,7 +39,7 @@ export function SalaryHistoryTable({ input, onPage }: { input: SalaryHistoryInpu
             <TableRow key={entry.id}>
               <TableCell>
                 <strong className="font-semibold">{entry.revision}</strong>
-                <small className="mt-0.75 block text-label text-muted">{formatTimestamp(entry.changed_at)}</small>
+                <Caption under>{formatTimestamp(entry.changed_at)}</Caption>
               </TableCell>
               <TableCell numeric>
                 <Amount value={entry.annual_base_pay} currency={entry.currency_code} />

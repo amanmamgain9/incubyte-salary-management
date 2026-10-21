@@ -2,6 +2,7 @@
 
 import { ChartLegend } from "@/components/charts/chart-legend";
 import { LineChart } from "@/components/charts/line-chart";
+import { Caption } from "@/components/ui/caption";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import type { BenchmarkPoint } from "@/contracts/reports/historical-salary-benchmark";
 import { payRangeTrend } from "@/features/reports/historical-salary-benchmark/historical-salary-benchmark-data";
@@ -18,7 +19,7 @@ export function HistoricalSalaryBenchmarkChart({ trend, group }: { trend: readon
   const scope = `${countryName(group.work_country_code)} · ${departmentName(group.department_id)} · ${currency}`;
   return (
     <Card label="Salary trend">
-      <CardHeader title="Salary trend" aside={<span className="text-label text-muted">{scope}</span>} />
+      <CardHeader title="Salary trend" aside={<Caption>{scope}</Caption>} />
       <CardBody>
         <LineChart
           points={points}

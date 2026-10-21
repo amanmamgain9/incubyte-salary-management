@@ -1,6 +1,7 @@
 "use client";
 
 import { BarChart } from "@/components/charts/bar-chart";
+import { Caption } from "@/components/ui/caption";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import type { GrowthPoint } from "@/contracts/reports/salary-growth";
 import { trendGroups } from "@/features/reports/salary-growth/salary-growth-data";
@@ -14,7 +15,7 @@ export function SalaryGrowthChart({ trend }: { trend: readonly GrowthPoint[] }) 
   if (groups.length === 0) return null;
   return (
     <Card label="Net change trend">
-      <CardHeader title="Net change trend" aside={<span className="text-label text-muted">Latest 12 months</span>} />
+      <CardHeader title="Net change trend" aside={<Caption>Latest 12 months</Caption>} />
       <CardBody>
         <div className={cn("grid gap-x-8 gap-y-5", groups.length > 1 && "xl:grid-cols-2")}>
           {groups.map((group) => {

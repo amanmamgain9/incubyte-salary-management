@@ -1,4 +1,5 @@
 import { Amount } from "@/components/ui/amount";
+import { Caption } from "@/components/ui/caption";
 import type { EmployeeView } from "@/contracts/employees";
 
 /** Current annual base pay with its currency and the salary revision it comes from. */
@@ -9,7 +10,7 @@ export function CurrentPay({ employee }: { employee: EmployeeView }) {
       <strong className="my-1.5 block text-metric">
         <Amount value={employee.annual_base_pay} currency={employee.salary_currency_code} />
       </strong>
-      <small className="block text-label text-muted">Revision {employee.salary_revision}</small>
+      <Caption>Revision {employee.salary_revision}</Caption>
     </div>
   );
 }

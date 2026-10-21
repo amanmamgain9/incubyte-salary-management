@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Amount } from "@/components/ui/amount";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Caption } from "@/components/ui/caption";
 import { CountryLabel } from "@/components/ui/country-label";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icon } from "@/components/ui/icon";
@@ -64,7 +65,7 @@ export function EmployeeTable({
                     <Link href={`/employees/${employee.id}`} className="block font-[550] text-ink hover:text-accent-ink">
                       {employee.name}
                     </Link>
-                    <small className="mt-0.75 block text-label text-muted">{employee.id}</small>
+                    <Caption under>{employee.id}</Caption>
                   </div>
                 </div>
               </TableCell>

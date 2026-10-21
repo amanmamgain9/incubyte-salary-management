@@ -2,13 +2,14 @@
 
 import { LineChart } from "@/components/charts/line-chart";
 import { Amount } from "@/components/ui/amount";
+import { Caption } from "@/components/ui/caption";
 import { Overview } from "@/components/ui/overview";
 import { Stat } from "@/components/ui/stat";
 import type {
   HistoricalSalaryBenchmarkInput,
   HistoricalSalaryBenchmarkOutput,
 } from "@/contracts/reports/historical-salary-benchmark";
-import { CountryTotals, GroupDetail, GroupTotal } from "@/features/reports/country-totals";
+import { CountryTotals, GroupTotal } from "@/features/reports/country-totals";
 import { HistoricalSalaryBenchmarkChart } from "@/features/reports/historical-salary-benchmark/historical-salary-benchmark-chart";
 import { finalMedian, headcountTrend } from "@/features/reports/historical-salary-benchmark/historical-salary-benchmark-data";
 import { reportScope } from "@/features/reports/report-scope";
@@ -74,7 +75,7 @@ export function HistoricalSalaryBenchmarkSummary({
               <GroupTotal>
                 <Amount value={total.total_annual_base_pay} currency={total.salary_currency_code} />
               </GroupTotal>
-              <GroupDetail>{formatCount(total.employee_count)} employees</GroupDetail>
+              <Caption>{formatCount(total.employee_count)} employees</Caption>
             </>
           )}
         </CountryTotals>

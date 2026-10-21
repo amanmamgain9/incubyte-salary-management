@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Caption } from "@/components/ui/caption";
 import { useLookups } from "@/hooks/use-lookups";
 import { cn } from "@/lib/cn";
 
@@ -29,9 +30,9 @@ export function CountryTotals<G extends Group>({
           key={`${group.work_country_code}-${group.salary_currency_code}`}
           className={cn("flex-none border-r border-line px-4 py-3 last:border-r-0", wide ? "min-w-77.5" : "min-w-61.25")}
         >
-          <span className="block text-label text-muted">
+          <Caption>
             {countryName(group.work_country_code)} · {group.salary_currency_code}
-          </span>
+          </Caption>
           {children(group)}
         </div>
       ))}
@@ -42,9 +43,4 @@ export function CountryTotals<G extends Group>({
 /** A group's headline amount. */
 export function GroupTotal({ children }: { children: ReactNode }) {
   return <strong className="my-1.25 block text-heading tabular-nums">{children}</strong>;
-}
-
-/** A group's secondary line, e.g. headcount and average. */
-export function GroupDetail({ children }: { children: ReactNode }) {
-  return <small className="block text-label text-muted">{children}</small>;
 }

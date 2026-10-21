@@ -1,4 +1,5 @@
 import { Avatar } from "@/components/ui/avatar";
+import { Caption } from "@/components/ui/caption";
 import { SignOutButton } from "@/features/auth/sign-out-button";
 
 /** The signed-in HR user and the sign-out control, at the foot of the rail. */
@@ -8,7 +9,7 @@ export function AccountFooter({ name }: { name: string }) {
       <Avatar name={name} shape="square" />
       <div className="min-w-0">
         <strong className="block truncate text-body font-medium text-ink-soft">{name}</strong>
-        <small className="mt-0.75 block text-label text-muted">HR workspace</small>
+        <Caption under>HR workspace</Caption>
       </div>
       <SignOutButton />
     </div>

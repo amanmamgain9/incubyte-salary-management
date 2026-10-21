@@ -11,6 +11,8 @@ import { useLookups } from "@/hooks/use-lookups";
 type FilterPatch = Partial<Record<"search" | "department_id" | "work_country_code" | "employment_status", string>>;
 
 const SEARCH_DELAY_MS = 300;
+// Country and department share a row on small screens; status then takes a full row.
+const halfRowFilter = "flex-[1_1_40%] sm:flex-[0_1_145px]";
 const statusOptions = employmentStatuses.map(({ status, label }) => ({ value: status, label }));
 
 /** Search (applied after a short pause in typing) and the country, department and status filters. */
@@ -45,7 +47,7 @@ export function DirectoryFilters({ search, onChange }: { search: DirectorySearch
           leading={<Icon name="search" size={16} />}
         />
       </div>
-      <div className="flex-[1_1_40%] sm:flex-[0_1_145px]">
+      <div className={halfRowFilter}>
         <Select
           name="work_country_code"
           aria-label="Work country"
@@ -55,7 +57,7 @@ export function DirectoryFilters({ search, onChange }: { search: DirectorySearch
           onChange={(event) => onChange({ work_country_code: event.target.value })}
         />
       </div>
-      <div className="flex-[1_1_40%] sm:flex-[0_1_145px]">
+      <div className={halfRowFilter}>
         <Select
           name="department_id"
           aria-label="Department"
