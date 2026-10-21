@@ -2,7 +2,7 @@
 
 HR salary management app for 10,000 employees: one Next.js app (UI + tRPC) on PostgreSQL. Scope and design live in [`docs/`](docs/); contributor rules in [`AGENTS.md`](AGENTS.md).
 
-- Live demo: TBD
+- Live demo: https://incubyte-salary-management-cyan.vercel.app (the demo login is shown on the sign-in page)
 - Video: TBD
 
 ## What works today
@@ -45,6 +45,12 @@ npm run db:reset && npm run db:seed    # db:reset empties every app and auth tab
 ```
 
 `npm run db:seed -- --seed <text> --as-of YYYY-MM-DD` reproduces a specific dataset. `db:verify` reads `as_of` from the seeded history unless you pass `--as-of`.
+
+## Deployment
+
+- Vercel runs the app and deploys `main` on every push; Neon hosts PostgreSQL (free tier, us-east). Variables: [architecture › Delivery](docs/architecture.md#delivery).
+- The production database was prepared from a workstation with the owner URL: `db:migrate`, then `db:seed` (seed `acme`, `as_of` 2026-10-21: 10,000 employees, 41,826 salary entries), then `db:verify` (22/22 checks passed). The app connects as the restricted app role.
+- Production timings: [report performance](docs/architecture.md#production-vercel-iad1--neon-free-tier).
 
 ## Checks
 
