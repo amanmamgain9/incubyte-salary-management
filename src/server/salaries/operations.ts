@@ -1,4 +1,5 @@
 import "server-only";
+import type { UpdateSalaryInput } from "@/contracts/salaries";
 import { NotFoundError } from "@/server/core/errors";
 import type { OperationContext } from "@/server/core/operation-context";
 import type { Executor } from "@/server/db/connect";
@@ -26,4 +27,12 @@ export async function appendSalaryRevision(tx: Executor, op: OperationContext, r
     changed_by: op.actor.id,
     changed_at: op.now,
   });
+}
+
+/**
+ * The only way current pay changes: locks the employee, rejects a departed employee or a stale `expected_revision`,
+ * then updates current pay to the next revision and appends its history entry, in one transaction.
+ */
+export async function changeSalary(_op: OperationContext, _input: UpdateSalaryInput): Promise<void> {
+  throw new Error("not implemented");
 }
