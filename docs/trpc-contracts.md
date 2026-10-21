@@ -21,7 +21,7 @@ HistoryView = SalaryHistoryEntry + { changed_by_name: String }
 
 - Default page size 50; maximum 100. Cursors are opaque and signed; reset when filters change. A cursor reused with different filters, or altered, is `BAD_REQUEST` (invalid cursor).
 - `next_cursor`/`prev_cursor` fetch the following/preceding page; `null` at either end. `range_start` is the 1-based position of the first item (0 when empty); screens show `range_start`–`range_start + items.length - 1` of `total_count`.
-- Employees sort by ID ascending; history by revision descending. Report ordering is specified below. `total_count` counts matching rows before pagination.
+- Employees sort by ID ascending; history by revision descending; `lookups.get` lists by name ascending. Report ordering is specified below. `total_count` counts matching rows before pagination.
 - No filter means all values. Blank search means no search; search matches name/ID case-insensitively, including partial matches.
 - Unknown country/department/currency codes in filters or writes are `BAD_REQUEST` with `field_errors` keyed by the input field. Known codes with no matches return an empty result (e.g. France + INR).
 

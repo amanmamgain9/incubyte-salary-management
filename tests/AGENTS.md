@@ -25,6 +25,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── constraints.test.ts / grants.test.ts  # FKs, checks, unique revision; app role cannot UPDATE/DELETE history
 │   ├── employees.test.ts          # list filters/search/status boundaries, create (+ revision 1), duplicate ID, details edit
 │   ├── salaries.test.ts           # change, stale revision, upcoming allowed, departed rejected, rollback, history paging
+│   ├── lookups.test.ts            # lookups.get: name order, empty lists, session required
 │   ├── procedures.test.ts         # createCaller: auth, same-origin, error codes, field_errors, invalid cursor
 │   └── reports/<report>.test.ts   # report numbers on small fixtures (known cases in docs/data-generation.md)
 └── e2e/

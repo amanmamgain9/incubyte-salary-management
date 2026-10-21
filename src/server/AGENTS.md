@@ -10,7 +10,7 @@ Read before changing `src/server/`, `src/contracts/`, a migration in `drizzle/` 
 src/server/
 ├── env.ts                         # THE env module: lazy `getEnv()` (app, incl. `appOrigin`) + `ownerEnv()` (owner URL only); script-safe
 ├── db/
-│   ├── connect.ts                 # `createDb(url)`: the only file that imports `pg` / creates a Pool; script-safe
+│   ├── connect.ts                 # `createDb(url)`: the only file that imports `pg` / creates a Pool; `Database`, `Executor` (db or tx, what queries take) types; script-safe
 │   ├── client.ts                  # server-only: app-role `db` = createDb(getEnv().DATABASE_URL)
 │   ├── owner.ts                   # owner-role `ownerDb` = createDb(ownerEnv().DATABASE_OWNER_URL) for migrate, reset, seed, verify, db tests; script-safe
 │   └── schema/
