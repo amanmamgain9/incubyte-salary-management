@@ -21,7 +21,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── fixtures.ts                # minimal builders: lookups, HR user, employee + history
 │   ├── constraints.test.ts / grants.test.ts  # FKs, checks, unique revision; app role cannot UPDATE/DELETE history
 │   ├── employees.test.ts          # list filters/search/status boundaries, create (+ revision 1), duplicate ID, details edit
-│   ├── salaries.test.ts           # change, stale revision, non-active employee, rollback, history paging
+│   ├── salaries.test.ts           # change, stale revision, upcoming allowed, departed rejected, rollback, history paging
 │   ├── procedures.test.ts         # createCaller: auth, same-origin, error codes, field_errors, invalid cursor
 │   └── reports/<report>.test.ts   # report numbers on small fixtures (known cases in docs/data-generation.md)
 └── e2e/

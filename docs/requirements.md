@@ -25,7 +25,7 @@ HR users sign in with email/password and can use all operations and reports. Sal
 
 ### Maintain salaries
 
-- Update active employees' annual base pay and currency; changes apply immediately. Require a positive amount with at most two decimal places; changing currency does not convert it.
+- Update active and upcoming employees' annual base pay and currency; changes apply immediately. Require a positive amount with at most two decimals; no currency conversion.
 - Preserve the initial salary and every revision in read-only history, including after departure.
 - Record each salary version with amount, currency, country and department at change, HR user, time and reason.
 - Save salary and history together; failed saves change neither. Show errors and preserve entered values.

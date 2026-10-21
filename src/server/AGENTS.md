@@ -105,7 +105,7 @@ src/contracts/
 
 **Validation split**
 - Zod (contracts): shape, format, static limits — 2 dp positive money, ISO dates, `from ≤ to`, first-of-month, ≤ 180 months, non-empty patch.
-- Operations: rules needing the DB or clock — codes exist (`assertKnownCodes` on writes and list/report filters), employment dates against stored dates and salary history, expected revision, salary changes only for employees active today, `to ≤ today` (growth, benchmark) — as `ValidationError` keyed by field, `ConflictError` or `NotFoundError`.
+- Operations: rules needing the DB or clock — codes exist (`assertKnownCodes` on writes and list/report filters), employment dates against stored dates and salary history, expected revision, salary changes only for employees not departed today (active or upcoming), `to ≤ today` (growth, benchmark) — as `ValidationError` keyed by field, `ConflictError` or `NotFoundError`.
 - Duplicate employee ID: no pre-check SELECT; translate the primary-key violation to `ConflictError` with `field_errors.id`. Never leak SQL errors or constraint names.
 
 **Pagination**
@@ -155,7 +155,7 @@ export async function salaryGrowth(op: OperationContext, input: SalaryGrowthInpu
 **Module ownership** (imports: `employees` → `salaries` → `lookups`; `reports` read all; never the reverse)
 - `lookups` owns countries/departments/currencies.
 - `employees` owns the employee row and its details columns. `createEmployee` inserts the row with initial pay and `salary_revision = 1`, then calls `appendSalaryRevision` (revision 1, `Initial salary`) in the same transaction.
-- `salaries` owns `salary_history` and, after insert, the current-pay columns (`annual_base_pay`, `salary_currency_code`, `salary_revision`). Only `changeSalary` updates them: it locks the row, checks `expected_revision` and that the employee is active today, updates current pay and appends history in one transaction.
+- `salaries` owns `salary_history` and, after insert, the current-pay columns (`annual_base_pay`, `salary_currency_code`, `salary_revision`). Only `changeSalary` updates them: it locks the row, checks `expected_revision` and that the employee is not departed today (`employmentStatusOn`; upcoming is allowed), updates current pay and appends history in one transaction.
 - `appendSalaryRevision(tx, …)` is the only app code that inserts history; it snapshots the employee's current country/department. The seed bulk-inserts history as owner and is the only other writer.
 - Modules may read any table in their own queries; writes follow this ownership.
 

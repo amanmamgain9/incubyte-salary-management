@@ -98,7 +98,7 @@ Fix the code to satisfy it; never disable a rule or add an `eslint-disable` comm
 ## Testing essentials
 
 - TDD for business logic: failing test, pass, refactor. Test behavior, not markup.
-- Core rules land as a red → green pair. Red: `test(scope): <behavior>` with the failing test (unit or db) plus a stub that throws `new Error("not implemented")`, so typecheck and lint pass and only the new test fails. Green: `feat(scope): …` replaces the stub. Red commits are the only ones where `npm test`/`test:db` may fail. Core rules: cursor codec, `paginateKeyset`, domain-error mapping, salary revision (expected revision, conflict, history append, active only), employment-date validation, salary delta, each report's numbers. All other changes commit tests with the implementation.
+- Core rules land as a red → green pair. Red: `test(scope): <behavior>` with the failing test (unit or db) plus a stub that throws `new Error("not implemented")`, so typecheck and lint pass and only the new test fails. Green: `feat(scope): …` replaces the stub. Red commits are the only ones where `npm test`/`test:db` may fail. Core rules: cursor codec, `paginateKeyset`, domain-error mapping, salary revision (expected revision, conflict, history append, departed rejected), employment-date validation, salary delta, each report's numbers. All other changes commit tests with the implementation.
 - Test layout, harness, fixtures and required coverage: `tests/AGENTS.md`.
 
 ## Definition of done (every change)

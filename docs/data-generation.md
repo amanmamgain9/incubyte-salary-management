@@ -55,7 +55,7 @@ At `as_of`, distribute the 9,000 active employees by completed service:
 - Every employee has an initial salary entry (revision 1). Upcoming joiners have one entry; most employees under one year have one, with a few early raises.
 - Salary entry counts generally grow with tenure: 1–3 years → 2–4 entries; 3–5 → 3–6; 5–10 → 5–10; 10+ → 8–15. Vary review frequency and include skipped reviews and promotions.
 - Retain salary history from joining, spanning up to 15 years. Include distinct monthly patterns throughout the latest 24 months. Revision numbers increase per employee; timestamps follow that order.
-- Subsequent revisions occur on/after joining and no later than the last working day or `as_of`. Upcoming joiners have an initial entry recorded at `as_of`, with no future history events.
+- Subsequent revisions occur on/after joining (except the revised-offer known case) and no later than the last working day or `as_of`. Upcoming joiners have an initial entry recorded at `as_of`, with no future history events.
 - Include raises, reductions/corrections, unchanged-pay employees and a few currency switches. Give each revision a matching reason.
 - Capture country/department at each revision; include a few employees whose current assignment differs from earlier snapshots.
 
@@ -72,7 +72,7 @@ Salary review profiles: India has a broad review spike; the US has staggered qua
 
 ## Known cases and checks
 
-- Include known cases within the 10,000: multiple revisions in one day, month-boundary changes, a predecessor outside the selected period, a later leaver with earlier raises, assignment changes and currency switches.
+- Include known cases within the 10,000: multiple revisions in one day, month-boundary changes, a predecessor outside the selected period, a later leaver with earlier raises, a revised offer before joining, assignment changes and currency switches.
 - Example arithmetic: EUR 100,000 → 110,000 → 108,000 gives increases 10,000, decreases 2,000 and net 8,000. Initial salaries and currency switches contribute no growth amount.
 - Preserve valid empty filters, such as France + INR; unknown codes are rejected, not empty. Compare paginated results with summaries over the full matching population.
 - Generate a manifest of expected headcounts, country/department/currency totals and monthly deltas using independent exact arithmetic. `npm run db:verify` validates report results against it; CI runs it after seeding. DB tests check report numbers on small fixtures of these cases.

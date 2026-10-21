@@ -57,9 +57,9 @@ HistoryView = SalaryHistoryEntry + { changed_by_name: String }
 - `DirectorySummary`: `{ employee_count, active_count, upcoming_count, departed_count, country_count }` over all matching employees, independent of pagination.
 - Creation saves initial history as revision 1 with reason `Initial salary`.
 - Record a departure through `employees.update` by setting `last_working_day`; `null` clears it.
-- Details edits validate against stored values: `last_working_day` ≥ `joining_date` and ≥ the UTC date of the latest revision after the initial salary; `joining_date` no later than the UTC date of the first revision after the initial salary. Violations are `BAD_REQUEST` keyed by the submitted field. Clients send only changed fields.
+- Details edits validate against stored values: `last_working_day` ≥ `joining_date` and ≥ the UTC date of the latest revision after the initial salary. `joining_date` is not checked against history: revisions may precede joining. Violations are `BAD_REQUEST` keyed by the submitted field. Clients send only changed fields.
 - `salary_revision` is stored on the employee and equals the latest history revision. Salary updates require it as `expected_revision` and return the new revision after commit.
-- Salary updates need an employee active today (UTC); upcoming or departed is `BAD_REQUEST` with `field_errors.employee_id`. Revisions therefore fall between joining and the last working day.
+- Salary updates need an employee active or upcoming today (UTC); a pre-start revision (e.g. a revised offer) is a normal revision. Departed (last working day before today) is `BAD_REQUEST` with `field_errors.employee_id`. Revisions therefore never fall after the last working day.
 - Server assigns history ID, revision, timestamp, actor and country/department snapshots. Details edits preserve existing history.
 
 ## Reports
@@ -92,7 +92,7 @@ Commitment and department reports use employees active on today's UTC calendar d
 - **Summary:** `{ by_country: GrowthTotal[], currency_switch_count, trend: GrowthPoint[] }`; `GrowthTotal` has the row fields except `month`; the top-level count totals all groups.
 - **Chart:** `GrowthPoint` is `{ month, work_country_code, salary_currency_code, net_change }` for the last 12 months of the period (ending at `to`), every month for each `by_country` group, zero without revisions. Order: country, currency, month ascending.
 - **Order:** Month, country, currency ascending. Increases/decreases are positive magnitudes; `net_change = increases - decreases`, in annual base pay.
-- Find each employee's preceding revision before filtering by period/country/department. Skip initial salaries; use country/department at revision time, including later leavers.
+- Find each employee's preceding revision before filtering by period/country/department. Skip initial salaries; use country/department at revision time, including later leavers. A revision counts in its own month, even before joining.
 - Compare amounts only within the same currency. Count currency switches separately under the new currency; exclude them from growth amounts.
 
 ### `reports.historicalSalaryBenchmark`
@@ -102,7 +102,7 @@ Commitment and department reports use employees active on today's UTC calendar d
 - **Summary:** `{ snapshot_date: to, employee_count, by_country: SnapshotTotal[], trend: BenchmarkPoint[] }`; `SnapshotTotal` is `{ work_country_code, salary_currency_code, employee_count, total_annual_base_pay }` for the final selected snapshot only.
 - **Chart:** `BenchmarkPoint` is `{ month, employee_count, p10_annual_base_pay, median_annual_base_pay, p90_annual_base_pay, country_median_annual_base_pay }`, one per visible month (≤ 180), month ascending. `employee_count` covers all matching groups; amounts are single-group fields (pay-range trend).
 - **Order:** Month, country, department, currency ascending. Percentages are signed decimal strings with two places; `median_yoy_percent` is null without a matching prior-year month/group.
-- Select employees active at each month end (or `to` for the final partial month). Use the latest revision before the next UTC midnight and its stored country/department/currency.
+- Select employees active at each month end (or `to` for the final partial month). Use the latest revision before the next UTC midnight and its stored country/department/currency. A pre-joining revision first appears at the first snapshot after joining.
 - P10/median/P90 use exact numeric interpolation. `median_gap_percent = (department median / country median - 1) × 100`; year-over-year change uses the same department/country/currency 12 months earlier. Round final amounts/percentages to two places.
 - Calculate country medians across all departments; apply the department filter to displayed rows and summary membership afterward. Read 12 extra months before `from` for year-over-year comparisons. Summaries cover all matching departments, independent of pagination.
 
@@ -112,7 +112,7 @@ Use [tRPC error codes](https://trpc.io/docs/server/error-handling):
 
 | Code | Meaning |
 | --- | --- |
-| `BAD_REQUEST` | Invalid input, unknown country/department/currency, salary change for a non-active employee, or invalid cursor; validation includes `error.data.field_errors` |
+| `BAD_REQUEST` | Invalid input, unknown country/department/currency, salary change for a departed employee, or invalid cursor; validation includes `error.data.field_errors` |
 | `UNAUTHORIZED` | Missing, expired or revoked session |
 | `NOT_FOUND` | Employee does not exist |
 | `CONFLICT` | Employee ID already exists (with `field_errors.id`) or salary revision is stale |
