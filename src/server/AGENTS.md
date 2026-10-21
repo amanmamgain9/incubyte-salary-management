@@ -53,7 +53,8 @@ src/server/
 │   ├── queries.ts                 # employee assignment snapshot, lock employee row, insert history, update current pay + salary_revision (returning the row), history page/count
 │   └── operations.ts              # appendSalaryRevision, changeSalary, listSalaryHistory
 └── reports/
-    ├── filters.ts                 # SQL shared by reports: matchesFilters (country/department/currency, current or at-change columns), pastKey/keyOrder keyset paging
+    ├── filters.ts                 # SQL shared by reports: matchesFilters (country/department/currency, current or at-change columns), activeAndMatching
+    ├── keyset.ts                  # SQL shared by reports: pastKey/keyOrder keyset comparison and ordering over a sort key
     ├── salary-commitment/
     │   ├── queries.ts             # active-today rows by country/currency + headcount summary
     │   └── operations.ts          # salaryCommitment(op, input)
@@ -88,7 +89,7 @@ src/contracts/
 
 ## Backend rules
 
-- **Backend file kinds.** SQL → `queries.ts`; rules and transactions → `operations.ts`; wiring → `api/routers/`. Only `employees/status.ts` and `reports/filters.ts` are extra.
+- **Backend file kinds.** SQL → `queries.ts`; rules and transactions → `operations.ts`; wiring → `api/routers/`. Only `employees/status.ts`, `reports/filters.ts` and `reports/keyset.ts` are extra.
 
 **Layering** (each layer imports only those to its right): `api/routers` → `<module>/operations.ts` → `<module>/queries.ts` → `db/schema`; `contracts` and `core` usable by all.
 
@@ -96,7 +97,7 @@ src/contracts/
 - An operation owns its whole use case and returns the procedure's result, built inside its transaction (`changeSalary` returns the `EmployeeView` it committed).
 - Operations take `op: OperationContext` and parsed input, own transactions, throw `core/errors.ts` errors, and never import `@trpc/*` or `api/`.
 - A function that relies on running inside a transaction takes `tx: Tx`, never `Executor`: row locks (`lockCurrentPay`, `lockEmploymentDates`), lock-then-write sequences (`appendSalaryRevision`), `SET LOCAL` and `ON COMMIT DROP` tables (the benchmark's queries). The type checker then proves every caller opened one.
-- Script-safe modules (no `server-only`; importable by scripts and unit tests): `src/contracts/*`, `env.ts`, `db/connect.ts`, `db/owner.ts`, `db/schema/*`, every `queries.ts`, `employees/status.ts`, `reports/filters.ts`, `core/errors.ts`. They and `scripts/` import only each other (`core/cursor.ts` and `core/pagination.ts` are server-only). Queries take the executor as an argument and never import `db/client` or `env`.
+- Script-safe modules (no `server-only`; importable by scripts and unit tests): `src/contracts/*`, `env.ts`, `db/connect.ts`, `db/owner.ts`, `db/schema/*`, every `queries.ts`, `employees/status.ts`, `reports/filters.ts`, `reports/keyset.ts`, `core/errors.ts`. They and `scripts/` import only each other (`core/cursor.ts` and `core/pagination.ts` are server-only). Queries take the executor as an argument and never import `db/client` or `env`.
 - Every other server module starts with `import "server-only"`; no dynamic `await import()` to dodge it. No Server Actions: every read and write is a tRPC procedure.
 
 **Middleware and procedures**

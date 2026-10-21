@@ -20,11 +20,11 @@ const scriptSafeFiles = [
   "src/server/db/schema/**",
   "src/server/**/queries.ts",
   "src/server/employees/status.ts",
-  "src/server/reports/filters.ts",
+  "src/server/reports/{filters,keyset}.ts",
   "src/server/core/errors.ts",
 ];
 const notScriptSafeServer =
-  "^@/server(?:$|/(?!(?:env|db/connect|db/owner|db/schema(?:/.*)?|.+/queries|employees/status|reports/filters|core/errors)$))";
+  "^@/server(?:$|/(?!(?:env|db/connect|db/owner|db/schema(?:/.*)?|.+/queries|employees/status|reports/filters|reports/keyset|core/errors)$))";
 
 // Cross-feature imports allowed besides a feature's own folder (src/features/AGENTS.md › Boundaries).
 const featureImports = { auth: [], workspace: ["auth"], employees: ["salaries"], salaries: [], reports: [] };

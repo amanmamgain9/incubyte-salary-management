@@ -5,7 +5,8 @@ import { GROWTH_TREND_MONTHS } from "@/contracts/primitives";
 import type { GrowthPoint, GrowthTotal, SalaryGrowthInput, SalaryGrowthRow } from "@/contracts/reports/salary-growth";
 import type { Executor } from "@/server/db/connect";
 import { salaryHistory } from "@/server/db/schema";
-import { assignmentAtChange, keyOrder, matchesFilters, pastKey } from "@/server/reports/filters";
+import { assignmentAtChange, matchesFilters } from "@/server/reports/filters";
+import { keyOrder, pastKey } from "@/server/reports/keyset";
 
 // Each revision after the initial salary, compared with the employee's preceding entry (revision - 1, wherever it
 // falls), grouped by its UTC month and the country and currency saved with it. A currency switch is counted under the

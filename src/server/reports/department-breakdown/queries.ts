@@ -9,7 +9,8 @@ import type {
 import type { ReportFilters } from "@/contracts/reports/filters";
 import type { Executor } from "@/server/db/connect";
 import { employees } from "@/server/db/schema";
-import { activeAndMatching, keyOrder, pastKey } from "@/server/reports/filters";
+import { activeAndMatching } from "@/server/reports/filters";
+import { keyOrder, pastKey } from "@/server/reports/keyset";
 
 // Employees active today with their current pay, grouped by work country, department and salary currency.
 

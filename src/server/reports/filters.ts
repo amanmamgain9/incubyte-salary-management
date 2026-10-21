@@ -1,7 +1,6 @@
-// SQL shared by 2+ report queries: the country/department/currency filter predicate and keyset paging over a report's
-// sort key. Script-safe: no `server-only`.
-import { type AnyColumn, and, asc, desc, eq, type SQL, sql } from "drizzle-orm";
-import type { KeysetFrom } from "@/contracts/paging";
+// SQL filters shared by 2+ report queries: the country/department/currency predicate over current or at-change
+// columns, and the active-today predicate. Script-safe: no `server-only`.
+import { type AnyColumn, and, eq, type SQL, sql } from "drizzle-orm";
 import type { ReportFilters } from "@/contracts/reports/filters";
 import { employees, salaryHistory } from "@/server/db/schema";
 import { isActiveOn } from "@/server/employees/status";
@@ -35,25 +34,4 @@ export function matchesFilters(filters: ReportFilters, columns: FilterColumns): 
 /** SQL: the employee is active on `today` and matches the filters by current assignment (commitment, departments). */
 export function activeAndMatching(filters: ReportFilters, today: string): SQL {
   return sql`${isActiveOn(today)} and ${matchesFilters(filters, currentAssignment)}`;
-}
-
-type KeyPart = AnyColumn | SQL;
-
-/** SQL: the row's sort key comes after `from.key` (before it when `from.before`); `true` on the first page. */
-export function pastKey(key: readonly KeyPart[], from: KeysetFrom<readonly (string | number)[]>): SQL {
-  if (from === null) return sql`true`;
-  const columns = sql.join([...key], sql`, `);
-  const values = sql.join(
-    from.key.map((value) => sql`${value}`),
-    sql`, `,
-  );
-  return from.before ? sql`(${columns}) < (${values})` : sql`(${columns}) > (${values})`;
-}
-
-/** ORDER BY for a keyset page: the sort key ascending, or descending when reading backwards from a cursor. */
-export function keyOrder(key: readonly KeyPart[], from: KeysetFrom<unknown>): SQL {
-  return sql.join(
-    key.map((part) => (from?.before ? desc(part) : asc(part))),
-    sql`, `,
-  );
 }

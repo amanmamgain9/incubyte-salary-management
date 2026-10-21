@@ -72,7 +72,7 @@ Every folder and file here and in the area guide trees is planned. Create files 
 ## Placement & reuse
 
 - **Search first.** Before creating a component, hook, helper, schema, query or type: check the trees here and in the area guides, then `rg -n "<concept>" src scripts`. If it exists, use it.
-- **Shared things (used by 2+ features) have one home by kind:** UI primitive/chart → `src/components/{ui,charts}`; client hook → `src/hooks`; pure helper (format, money, dates, parsing) → `src/lib`; schema or type crossing the API → `src/contracts`; backend cross-cutting (errors, cursor, pagination) → `src/server/core`; shared by 2+ reports → `src/features/reports/` root (UI) or `src/server/reports/filters.ts` (SQL).
+- **Shared things (used by 2+ features) have one home by kind:** UI primitive/chart → `src/components/{ui,charts}`; client hook → `src/hooks`; pure helper (format, money, dates, parsing) → `src/lib`; schema or type crossing the API → `src/contracts`; backend cross-cutting (errors, cursor, pagination) → `src/server/core`; shared by 2+ reports → `src/features/reports/` root (UI) or `src/server/reports/{filters,keyset}.ts` (SQL).
 - **Rule of two.** The second copy of logic, markup or a class string is extracted to its home in the same change, and both call sites use it. Never leave two versions.
 - **Extend, don't fork.** Add a variant, prop or option to the existing helper. If it then needs more than ~4 options or branches on the caller, split it by purpose and name both clearly.
 - **Defined once:**

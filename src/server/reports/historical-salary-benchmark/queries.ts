@@ -11,7 +11,8 @@ import type {
 import type { Tx } from "@/server/db/connect";
 import { employees, salaryHistory } from "@/server/db/schema";
 import { isActiveOn } from "@/server/employees/status";
-import { assignmentAtChange, type FilterColumns, keyOrder, matchesFilters, pastKey } from "@/server/reports/filters";
+import { assignmentAtChange, type FilterColumns, matchesFilters } from "@/server/reports/filters";
+import { keyOrder, pastKey } from "@/server/reports/keyset";
 
 export type BenchmarkRange = Omit<HistoricalSalaryBenchmarkInput, "cursor" | "limit">;
 export type BenchmarkKey = readonly [month: string, work_country_code: string, department_id: string, currency: string];
