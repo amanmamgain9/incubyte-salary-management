@@ -4,7 +4,7 @@ import { toMinorUnits } from "@/lib/money";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/core/errors";
 import type { OperationContext } from "@/server/core/operation-context";
 import { paginateKeyset } from "@/server/core/pagination";
-import type { Executor } from "@/server/db/connect";
+import type { Tx } from "@/server/db/connect";
 import { assertKnownCodes } from "@/server/lookups/operations";
 import {
   countHistory,
@@ -27,7 +27,7 @@ export type NewRevision = {
  * The only app code that writes salary history. Runs inside the caller's transaction (`tx`), snapshots the employee's
  * current country and department, and stamps the acting HR user and the request time from `op`.
  */
-export async function appendSalaryRevision(tx: Executor, op: OperationContext, revision: NewRevision): Promise<void> {
+export async function appendSalaryRevision(tx: Tx, op: OperationContext, revision: NewRevision): Promise<void> {
   const assignment = await selectAssignment(tx, revision.employee_id);
   if (!assignment) throw new NotFoundError("Employee not found");
   await insertHistoryEntry(tx, {

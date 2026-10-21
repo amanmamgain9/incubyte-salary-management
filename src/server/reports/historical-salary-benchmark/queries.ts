@@ -8,7 +8,7 @@ import type {
   HistoricalSalaryBenchmarkSummary,
   SnapshotTotal,
 } from "@/contracts/reports/historical-salary-benchmark";
-import type { Executor } from "@/server/db/connect";
+import type { Tx } from "@/server/db/connect";
 import { employees, salaryHistory } from "@/server/db/schema";
 import { isActiveOn } from "@/server/employees/status";
 import { assignmentAtChange, type FilterColumns, keyOrder, matchesFilters, pastKey } from "@/server/reports/filters";
@@ -74,15 +74,15 @@ function percentile(sorted: SQL, size: SQL, fraction: "0.1" | "0.5" | "0.9"): SQ
  * department and currency. Country and currency filters apply here; the department filter applies on read, so
  * country medians span every department. Runs inside the caller's transaction, which owns the temporary table.
  */
-export async function createBenchmarkGroups(db: Executor, range: BenchmarkRange): Promise<void> {
-  await applySnapshotSettings(db);
-  await db.execute(benchmarkGroupsStatement(range));
+export async function createBenchmarkGroups(tx: Tx, range: BenchmarkRange): Promise<void> {
+  await applySnapshotSettings(tx);
+  await tx.execute(benchmarkGroupsStatement(range));
 }
 
 /** `EXPLAIN (ANALYZE, BUFFERS)` of `createBenchmarkGroups` (which it runs), for scripts/bench-reports.ts. */
-export async function explainBenchmarkGroups(db: Executor, range: BenchmarkRange): Promise<string[]> {
-  await applySnapshotSettings(db);
-  const { rows } = await db.execute<{ "QUERY PLAN": string }>(
+export async function explainBenchmarkGroups(tx: Tx, range: BenchmarkRange): Promise<string[]> {
+  await applySnapshotSettings(tx);
+  const { rows } = await tx.execute<{ "QUERY PLAN": string }>(
     sql`explain (analyze, buffers) ${benchmarkGroupsStatement(range)}`,
   );
   return rows.map((row) => row["QUERY PLAN"]);
@@ -90,9 +90,9 @@ export async function explainBenchmarkGroups(db: Executor, range: BenchmarkRange
 
 // Planner settings for the caller's transaction only: the snapshot's row estimates trip JIT compilation, which costs
 // more than the query, and hash-aggregating the amount arrays needs more than the default work_mem.
-async function applySnapshotSettings(db: Executor): Promise<void> {
-  await db.execute(sql`set local jit = off`);
-  await db.execute(sql`set local work_mem = '256MB'`);
+async function applySnapshotSettings(tx: Tx): Promise<void> {
+  await tx.execute(sql`set local jit = off`);
+  await tx.execute(sql`set local work_mem = '256MB'`);
 }
 
 function benchmarkGroupsStatement(range: BenchmarkRange): SQL {
@@ -183,12 +183,12 @@ function benchmarkGroupsStatement(range: BenchmarkRange): SQL {
 
 /** One page of month/country/department/currency rows after (or before) `from`, in key order. */
 export function selectBenchmarkRows(
-  db: Executor,
+  tx: Tx,
   range: BenchmarkRange,
   from: KeysetFrom<BenchmarkKey>,
   take: number,
 ): Promise<HistoricalSalaryBenchmarkRow[]> {
-  return db
+  return tx
     .select()
     .from(benchmarkGroups)
     .where(and(matchesFilters(range, groupColumns), pastKey(benchmarkKey, from)))
@@ -196,8 +196,8 @@ export function selectBenchmarkRows(
     .limit(take);
 }
 
-export async function countBenchmarkRows(db: Executor, range: BenchmarkRange): Promise<number> {
-  const [row] = await db.select({ total: count() }).from(benchmarkGroups).where(matchesFilters(range, groupColumns));
+export async function countBenchmarkRows(tx: Tx, range: BenchmarkRange): Promise<number> {
+  const [row] = await tx.select({ total: count() }).from(benchmarkGroups).where(matchesFilters(range, groupColumns));
   return row?.total ?? 0;
 }
 
@@ -206,13 +206,13 @@ export async function countBenchmarkRows(db: Executor, range: BenchmarkRange): P
  * group when all matching rows share one.
  */
 export async function selectBenchmarkSummary(
-  db: Executor,
+  tx: Tx,
   range: BenchmarkRange,
 ): Promise<HistoricalSalaryBenchmarkSummary> {
   const g = benchmarkGroups;
   const matching = matchesFilters(range, groupColumns);
   const [byCountry, trend, groups] = await Promise.all([
-    db
+    tx
       .select({
         work_country_code: g.work_country_code,
         salary_currency_code: g.salary_currency_code,
@@ -223,8 +223,8 @@ export async function selectBenchmarkSummary(
       .where(and(matching, sql`${g.month} = to_char(${range.to}::date, 'YYYY-MM')`))
       .groupBy(g.work_country_code, g.salary_currency_code)
       .orderBy(g.work_country_code, g.salary_currency_code),
-    selectBenchmarkTrend(db, range, matching),
-    db
+    selectBenchmarkTrend(tx, range, matching),
+    tx
       .selectDistinct({
         work_country_code: g.work_country_code,
         department_id: g.department_id,
@@ -244,12 +244,12 @@ export async function selectBenchmarkSummary(
  * One point per visible month (none when nothing matches): headcount of every matching group, and the pay range of the
  * only matching group when all matching rows share one country, department and currency.
  */
-async function selectBenchmarkTrend(db: Executor, range: BenchmarkRange, matching: SQL): Promise<BenchmarkPoint[]> {
+async function selectBenchmarkTrend(tx: Tx, range: BenchmarkRange, matching: SQL): Promise<BenchmarkPoint[]> {
   const g = benchmarkGroups;
   const single = sql`(select count(distinct (${g.work_country_code}, ${g.department_id}, ${g.salary_currency_code}))
     from ${g} where ${matching}) = 1`;
   const onlyGroup = (amount: AnyColumn) => sql`case when ${single} then max(${amount})::text end`;
-  const { rows } = await db.execute<BenchmarkPoint>(sql`
+  const { rows } = await tx.execute<BenchmarkPoint>(sql`
     with months as (
       select to_char(start, 'YYYY-MM') as month
       from generate_series(${range.from}::timestamp, ${range.to}::timestamp, interval '1 month') as start

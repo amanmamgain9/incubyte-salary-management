@@ -6,7 +6,7 @@ import { parseArgs } from "node:util";
 import { DEFAULT_LIMIT } from "@/contracts/paging";
 import type { ReportFilters } from "@/contracts/reports/filters";
 import { addMonths, monthStart, todayUtc } from "@/lib/dates";
-import { createDb, type Executor } from "@/server/db/connect";
+import { createDb } from "@/server/db/connect";
 import { getEnv } from "@/server/env";
 import {
   countDepartmentRows,
@@ -72,7 +72,7 @@ function benchmark(range: BenchmarkRange): Request {
   return {
     name: `historicalSalaryBenchmark ${JSON.stringify(range)}`,
     run: (db) =>
-      db.transaction(async (tx: Executor) => {
+      db.transaction(async (tx) => {
         await createBenchmarkGroups(tx, range);
         await Promise.all([selectBenchmarkRows(tx, range, null, take), countBenchmarkRows(tx, range)]);
         return selectBenchmarkSummary(tx, range);
@@ -120,7 +120,7 @@ if (import.meta.main) {
     }
     if (values.explain) {
       const range = { from: monthsBack(24), to: today };
-      const plan = await db.transaction((tx: Executor) => explainBenchmarkGroups(tx, range));
+      const plan = await db.transaction((tx) => explainBenchmarkGroups(tx, range));
       console.log(`\nEXPLAIN (ANALYZE, BUFFERS) benchmark snapshot build ${JSON.stringify(range)}\n${plan.join("\n")}`);
     }
   } finally {

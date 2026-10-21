@@ -1,7 +1,7 @@
 import { and, asc, count, desc, eq, gt, lt } from "drizzle-orm";
 import type { KeysetFrom } from "@/contracts/paging";
 import type { HistoryView } from "@/contracts/salaries";
-import type { Executor } from "@/server/db/connect";
+import type { Executor, Tx } from "@/server/db/connect";
 import { employees, salaryHistory, user } from "@/server/db/schema";
 
 /** The employee's current work country and department, snapshotted onto each history entry. */
@@ -26,7 +26,7 @@ export async function insertHistoryEntry(db: Executor, entry: Omit<typeof salary
  * salary change is checked against. Undefined when the employee does not exist.
  */
 export async function lockCurrentPay(
-  db: Executor,
+  tx: Tx,
   employee_id: string,
 ): Promise<
   | {
@@ -37,7 +37,7 @@ export async function lockCurrentPay(
     }
   | undefined
 > {
-  const [row] = await db
+  const [row] = await tx
     .select({
       salary_revision: employees.salary_revision,
       last_working_day: employees.last_working_day,

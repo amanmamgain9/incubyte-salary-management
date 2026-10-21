@@ -1,7 +1,7 @@
 import { and, asc, count, countDistinct, desc, eq, gt, ilike, lt, or, type SQL, sql } from "drizzle-orm";
 import type { DetailsPatch, DirectorySummary, EmployeeFilters, EmployeeView } from "@/contracts/employees";
 import type { KeysetFrom } from "@/contracts/paging";
-import type { Executor } from "@/server/db/connect";
+import type { Executor, Tx } from "@/server/db/connect";
 import { employees, salaryHistory } from "@/server/db/schema";
 import { employmentStatusOn, isActiveOn, type StoredEmploymentDates } from "@/server/employees/status";
 
@@ -92,14 +92,14 @@ export async function insertEmployee(db: Executor, row: typeof employees.$inferI
  * Locks the employee row (as salary changes do) and reads the dates a details edit is checked against, including
  * the UTC date of the latest revision after the initial salary. Undefined when the employee does not exist.
  */
-export async function lockEmploymentDates(db: Executor, id: string): Promise<StoredEmploymentDates | undefined> {
-  const [employee] = await db
+export async function lockEmploymentDates(tx: Tx, id: string): Promise<StoredEmploymentDates | undefined> {
+  const [employee] = await tx
     .select({ joining_date: employees.joining_date, last_working_day: employees.last_working_day })
     .from(employees)
     .where(eq(employees.id, id))
     .for("update");
   if (!employee) return undefined;
-  const [latest] = await db
+  const [latest] = await tx
     .select({ date: sql<string>`to_char(${salaryHistory.changed_at} at time zone 'UTC', 'YYYY-MM-DD')` })
     .from(salaryHistory)
     .where(and(eq(salaryHistory.employee_id, id), gt(salaryHistory.revision, 1)))
