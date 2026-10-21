@@ -87,20 +87,20 @@ Commitment and department reports use employees active on today's UTC calendar d
 
 ### `reports.salaryGrowth`
 
-- **Input:** Required `from` ≤ `to` dates, `to` no later than today UTC; optional `work_country_code`, `department_id`; plus `Paging`. Date range is inclusive by UTC calendar date.
+- **Input:** Required `from` ≤ `to` dates (error keyed by `to`), `to` no later than today UTC; optional `work_country_code`, `department_id`; plus `Paging`. Date range is inclusive by UTC calendar date.
 - **Row:** `{ month, work_country_code, salary_currency_code, increases, decreases, net_change, currency_switch_count }`; month is `YYYY-MM` in UTC.
 - **Summary:** `{ by_country: GrowthTotal[], currency_switch_count, trend: GrowthPoint[] }`; `GrowthTotal` has the row fields except `month`; the top-level count totals all groups.
-- **Chart:** `GrowthPoint` is `{ month, work_country_code, salary_currency_code, net_change }` for the last 12 months of the period (ending at `to`), every month for each `by_country` group, zero without revisions. Order: country, currency, month ascending.
+- **Chart:** `GrowthPoint` is `{ month, work_country_code, salary_currency_code, net_change }` for the last 12 months of the period (ending at `to`; all of its months when shorter), every month for each `by_country` group, zero without revisions. Order: country, currency, month ascending.
 - **Order:** Month, country, currency ascending. Increases/decreases are positive magnitudes; `net_change = increases - decreases`, in annual base pay.
 - Find each employee's preceding revision before filtering by period/country/department. Skip initial salaries; use country/department at revision time, including later leavers. A revision counts in its own month, even before joining.
 - Compare amounts only within the same currency. Count currency switches separately under the new currency; exclude them from growth amounts.
 
 ### `reports.historicalSalaryBenchmark`
 
-- **Input:** Required `from` (first day of a month), `to` (inclusive snapshot end date, no later than today UTC); at most 180 visible months. Optional `work_country_code`, `department_id`, `salary_currency_code`; plus `Paging`.
+- **Input:** Required `from` (first day of a month), `to` (inclusive snapshot end date, no later than today UTC, not before `from`); at most 180 visible months (errors keyed by `from`/`to`). Optional `work_country_code`, `department_id`, `salary_currency_code`; plus `Paging`.
 - **Row:** `{ month, work_country_code, department_id, salary_currency_code, employee_count, total_annual_base_pay, p10_annual_base_pay, median_annual_base_pay, p90_annual_base_pay, country_median_annual_base_pay, median_gap_percent, median_yoy_percent }`.
 - **Summary:** `{ snapshot_date: to, employee_count, by_country: SnapshotTotal[], trend: BenchmarkPoint[] }`; `SnapshotTotal` is `{ work_country_code, salary_currency_code, employee_count, total_annual_base_pay }` for the final selected snapshot only.
-- **Chart:** `BenchmarkPoint` is `{ month, employee_count, p10_annual_base_pay, median_annual_base_pay, p90_annual_base_pay, country_median_annual_base_pay }`, one per visible month (≤ 180), month ascending. `employee_count` covers all matching groups; amounts are single-group fields (pay-range trend).
+- **Chart:** `BenchmarkPoint` is `{ month, employee_count, p10_annual_base_pay, median_annual_base_pay, p90_annual_base_pay, country_median_annual_base_pay }`, one per visible month (≤ 180), month ascending; empty when no rows match. `employee_count` covers all matching groups (0 in months without any); amounts are single-group fields (pay-range trend): set only when every matching row in the range shares one country/department/currency, null in months without it.
 - **Order:** Month, country, department, currency ascending. Percentages are signed decimal strings with two places; `median_yoy_percent` is null without a matching prior-year month/group.
 - Select employees active at each month end (or `to` for the final partial month). Use the latest revision before the next UTC midnight and its stored country/department/currency. A pre-joining revision first appears at the first snapshot after joining.
 - P10/median/P90 use exact numeric interpolation. `median_gap_percent = (department median / country median - 1) × 100`; year-over-year change uses the same department/country/currency 12 months earlier. Round final amounts/percentages to two places.

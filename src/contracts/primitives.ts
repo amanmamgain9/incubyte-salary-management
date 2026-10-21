@@ -40,3 +40,5 @@ export const MAX_COUNTRY_CURRENCY_PAIRS = 500;
 /** Months in the salary growth trend, per country/currency pair. */
 export const GROWTH_TREND_MONTHS = 12;
 export const MAX_GROWTH_TREND_POINTS = MAX_COUNTRY_CURRENCY_PAIRS * GROWTH_TREND_MONTHS;
+/** Visible months of the historical salary benchmark (15 years): its input range and trend. */
+export const MAX_BENCHMARK_MONTHS = 180;
