@@ -4,7 +4,7 @@ import nextTs from "eslint-config-next/typescript";
 import tseslint from "typescript-eslint";
 
 // ---------------------------------------------------------------------------
-// Import boundaries (AGENTS.md §6). Each boundary is its own rule id (an alias of
+// Import boundaries (AGENTS.md › Lint). Each boundary is its own rule id (an alias of
 // @typescript-eslint/no-restricted-imports), so boundaries never override each
 // other: a file gets every boundary whose `files` match. Zones of one boundary
 // are disjoint, or ordered general → specific (last match wins).
@@ -26,13 +26,13 @@ const scriptSafeFiles = [
 const notScriptSafeServer =
   "^@/server(?:$|/(?!(?:env|db/connect|db/owner|db/schema(?:/.*)?|.+/queries|employees/status|reports/filters|core/errors)$))";
 
-// Cross-feature imports allowed besides a feature's own folder (AGENTS.md §5).
+// Cross-feature imports allowed besides a feature's own folder (src/features/AGENTS.md › Boundaries).
 const featureImports = { auth: [], workspace: ["auth"], employees: ["salaries"], salaries: [], reports: [] };
 const featureMessage = "Cross-feature imports: only employees → salaries and workspace → auth; share via hooks/lib.";
 
 const boundaries = {
   "no-parent-imports": [
-    { files: allSources, bans: [ban("^\\.\\./", "Use `@/…` instead of `../` (AGENTS.md §3).")] },
+    { files: allSources, bans: [ban("^\\.\\./", "Use `@/…` instead of `../` (AGENTS.md › Placement & reuse).")] },
   ],
   "no-docs-imports": [{ files: allSources, bans: [ban("(^|/)docs(/|$)", "Nothing may import from docs/.")] }],
   "pg-site": [
@@ -81,8 +81,8 @@ const boundaries = {
     {
       files: [...scriptSafeFiles, "scripts/**"],
       bans: [
-        ban("^server-only$", "Script-safe module: never import `server-only` (AGENTS.md §4)."),
-        ban(notScriptSafeServer, "Script-safe code imports only script-safe server modules (AGENTS.md §4)."),
+        ban("^server-only$", "Script-safe module: never import `server-only` (src/server/AGENTS.md › Layering)."),
+        ban(notScriptSafeServer, "Script-safe code imports only script-safe server modules (src/server/AGENTS.md › Layering)."),
       ],
     },
   ],

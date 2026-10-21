@@ -1,0 +1,61 @@
+# Testing guide: `tests/` and `scripts/`
+
+Read before changing `tests/` or `scripts/`. TDD and the red → green rule are in the root `AGENTS.md` (Testing essentials).
+
+## File structure
+
+### `tests/` and `scripts/`
+
+```text
+tests/                             # tests only: no benchmarks, seeders or one-off scripts
+├── unit/                          # mirrors src/ and scripts/ paths; pure code; no DB, network or real clock
+│   ├── server/core/{cursor,pagination,errors}.test.ts
+│   ├── server/api/{error-formatter,map-domain-errors}.test.ts
+│   ├── contracts/*.test.ts        # money/decimal, dates, first-of-month, 180 months, non-empty DetailsPatch
+│   ├── lib/*.test.ts              # format, money, dates, search-params, mutation-errors, product-defaults
+│   ├── features/**/*.test.ts      # every *-data.ts, salary-delta, search-params builders
+│   └── scripts/data-generation/*.test.ts  # determinism, quotas, tenure, history rules, manifest arithmetic
+├── db/                            # integration against a disposable PostgreSQL database
+│   ├── global-setup.ts            # drop/create `<db>_test`, migrate once as owner
+│   ├── harness.ts                 # resetTables(), callerFor(user) (see Database and e2e harness below)
+│   ├── fixtures.ts                # minimal builders: lookups, HR user, employee + history
+│   ├── constraints.test.ts / grants.test.ts  # FKs, checks, unique revision; app role cannot UPDATE/DELETE history
+│   ├── employees.test.ts          # list filters/search/status boundaries, create (+ revision 1), duplicate ID, details edit
+│   ├── salaries.test.ts           # change, stale revision, non-active employee, rollback, history paging
+│   ├── procedures.test.ts         # createCaller: auth, same-origin, error codes, field_errors, invalid cursor
+│   └── reports/<report>.test.ts   # report numbers on small fixtures (known cases in docs/data-generation.md)
+└── e2e/
+    ├── global-setup.ts            # drop/create, migrate and seed `<db>_e2e`
+    ├── auth.spec.ts               # login error, login, sign out
+    ├── employees.spec.ts          # directory search/filter/paging, create, edit, departure
+    ├── salaries.spec.ts           # salary change incl. conflict reload
+    └── reports.spec.ts            # each report renders and filters
+
+scripts/
+├── db/
+│   ├── init-roles.sql             # local/CI only: owner and app roles
+│   ├── migrate.ts                 # apply drizzle/ as owner
+│   ├── reset.ts                   # explicit wipe before reseeding
+│   ├── seed.ts                    # HR account first (better-auth/crypto hashPassword), then employees + history in bulk (--seed, --as-of)
+│   └── verify.ts                  # run report queries and compare with the manifest (CI, after seeding)
+├── data-generation/
+│   ├── generate.ts                # pure deterministic generator (seed, as_of) → rows
+│   ├── random.ts                  # seeded PRNG
+│   ├── profiles.ts                # population, tenure, pay bands, review profiles from the doc
+│   └── manifest.ts                # independent exact-arithmetic expected totals/percentiles
+└── bench-reports.ts               # time each report on the seeded DB
+```
+
+## Testing rules
+
+- No unit tests for JSX, layout, Tailwind, routers or `page.tsx`; e2e covers them.
+- `npm test` runs `tests/unit` only: fast, deterministic, no DB, network or real clock (pass `today`/`now` in).
+- Required unit coverage: cursor codec, `paginateKeyset` (next/previous pages, range_start, fingerprint mismatch, tampering), error formatter and domain-error mapping, contract edge cases, every `lib/*` module, every `*-data.ts`, `salary-delta.ts`, data generator determinism/quotas and manifest arithmetic.
+- Report numbers are tested in `tests/db/reports/<report>.test.ts` on small hand-built fixtures. Only `npm run db:verify` uses the 10,000-row seed (report queries vs the generator manifest); CI runs it after `db:seed`.
+- One behavior per test, named as a sentence. Assert through public functions or procedures. Fixtures are minimal and built in the test.
+
+**Database and e2e harness**
+- `npm run test:db`: the vitest `db` project points both URLs at `<db>_test` (dev database name + `_test`); `tests/db/global-setup.ts` drops and recreates it as owner and migrates once per run.
+- `tests/db/harness.ts`: `resetTables()` truncates app and auth tables (`TRUNCATE … RESTART IDENTITY CASCADE`) in each file's `beforeEach`; `callerFor(user | null, { now?, origin? })` signs the fixture user in through Better Auth and returns `appRouter.createCaller({ ...(await createContext({ headers })), now })` with cookie and Origin headers.
+- `npm run test:e2e`: `tests/e2e/global-setup.ts` drops/recreates, migrates and seeds `<db>_e2e`; the web server's `DATABASE_URL` points at it. Neither suite ever touches the dev database.
+- Benchmarks, verifiers and seed tools live in `scripts/`, never in `tests/`.
