@@ -1,8 +1,6 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { Caption } from "@/components/ui/caption";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupNames } from "@/hooks/use-lookups";
 import { cn } from "@/lib/cn";
 
 type Group = { work_country_code: string; salary_currency_code: string };
@@ -14,15 +12,16 @@ type Group = { work_country_code: string; salary_currency_code: string };
 export function CountryTotals<G extends Group>({
   label,
   groups,
+  names,
   wide = false,
   children,
 }: {
   label: string;
   groups: readonly G[];
+  names: LookupNames;
   wide?: boolean;
   children: (group: G) => ReactNode;
 }) {
-  const { countryName } = useLookups();
   return (
     <section aria-label={label} className="mb-4 flex overflow-x-auto rounded-surface border border-line bg-surface">
       {groups.map((group) => (
@@ -31,7 +30,7 @@ export function CountryTotals<G extends Group>({
           className={cn("flex-none border-r border-line px-4 py-3 last:border-r-0", wide ? "min-w-77.5" : "min-w-61.25")}
         >
           <Caption>
-            {countryName(group.work_country_code)} · {group.salary_currency_code}
+            {names.countryName(group.work_country_code)} · {group.salary_currency_code}
           </Caption>
           {children(group)}
         </div>

@@ -16,8 +16,10 @@ export function SalaryCommitmentReport({ today }: { today: string }) {
       search={reportFilterSearch}
       filters={["country", "department", "currency"]}
       queryOptions={(input) => trpc.reports.salaryCommitment.queryOptions(input)}
-      summary={(output, input) => <SalaryCommitmentSummary output={output} input={input} today={today} />}
-      table={(rows) => <SalaryCommitmentTable rows={rows} />}
+      summary={(output, input, names) => (
+        <SalaryCommitmentSummary output={output} input={input} today={today} names={names} />
+      )}
+      table={(rows, _input, names) => <SalaryCommitmentTable rows={rows} names={names} />}
     />
   );
 }

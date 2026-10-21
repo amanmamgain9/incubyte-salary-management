@@ -1,15 +1,21 @@
-"use client";
-
 import { Amount } from "@/components/ui/amount";
 import { CountryLabel } from "@/components/ui/country-label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { SalaryGrowthInput, SalaryGrowthRow } from "@/contracts/reports/salary-growth";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupNames } from "@/hooks/use-lookups";
 import { formatCount, formatMonth } from "@/lib/format";
 
 /** One row per month, country and (new) currency: increases, decreases, net change and currency switches. */
-export function SalaryGrowthTable({ rows, input }: { rows: readonly SalaryGrowthRow[]; input: SalaryGrowthInput }) {
-  const { countryName } = useLookups();
+export function SalaryGrowthTable({
+  rows,
+  input,
+  names,
+}: {
+  rows: readonly SalaryGrowthRow[];
+  input: SalaryGrowthInput;
+  names: LookupNames;
+}) {
+  const { countryName } = names;
   const showCountry = !input.work_country_code;
   return (
     <Table label="Monthly salary changes">

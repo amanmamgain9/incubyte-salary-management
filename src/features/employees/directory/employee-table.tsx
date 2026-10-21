@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { Amount } from "@/components/ui/amount";
 import { Avatar } from "@/components/ui/avatar";

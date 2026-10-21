@@ -1,16 +1,14 @@
-"use client";
-
 import { BarChart } from "@/components/charts/bar-chart";
 import { Caption } from "@/components/ui/caption";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import type { GrowthPoint } from "@/contracts/reports/salary-growth";
 import { trendGroups } from "@/features/reports/salary-growth/salary-growth-data";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupNames } from "@/hooks/use-lookups";
 import { cn } from "@/lib/cn";
 
 /** Monthly net change over the period's last 12 months, one chart per country/currency (never combined). */
-export function SalaryGrowthChart({ trend }: { trend: readonly GrowthPoint[] }) {
-  const { countryName } = useLookups();
+export function SalaryGrowthChart({ trend, names }: { trend: readonly GrowthPoint[]; names: LookupNames }) {
+  const { countryName } = names;
   const groups = trendGroups(trend);
   if (groups.length === 0) return null;
   return (

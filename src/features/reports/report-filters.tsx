@@ -11,7 +11,7 @@ import {
   type PeriodErrors,
   type ReportFilterField,
 } from "@/features/reports/search-params";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupOptions } from "@/hooks/use-lookups";
 import { cn } from "@/lib/cn";
 
 // One column per control, then Apply and Reset; two columns on small screens.
@@ -29,16 +29,17 @@ export function ReportFilters({
   fields,
   values,
   today,
+  options,
   onApply,
   onReset,
 }: {
   fields: readonly ReportFilterField[];
   values: FilterValues;
   today: string;
+  options: LookupOptions;
   onApply: (patch: FilterValues) => void;
   onReset: () => void;
 }) {
-  const lookups = useLookups();
   const [errors, setErrors] = useState<PeriodErrors>({});
   const controls = fields.reduce((count, field) => count + (field === "dates" || field === "months" ? 2 : 1), 0);
 
@@ -89,7 +90,7 @@ export function ReportFilters({
           <Select
             name="work_country_code"
             emptyLabel="All countries"
-            options={lookups.countryOptions}
+            options={options.countryOptions}
             defaultValue={values.work_country_code ?? ""}
           />
         </FormField>
@@ -99,7 +100,7 @@ export function ReportFilters({
           <Select
             name="department_id"
             emptyLabel="All departments"
-            options={lookups.departmentOptions}
+            options={options.departmentOptions}
             defaultValue={values.department_id ?? ""}
           />
         </FormField>
@@ -109,7 +110,7 @@ export function ReportFilters({
           <Select
             name="salary_currency_code"
             emptyLabel="All currencies"
-            options={lookups.currencyOptions}
+            options={options.currencyOptions}
             defaultValue={values.salary_currency_code ?? ""}
           />
         </FormField>

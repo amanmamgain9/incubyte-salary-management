@@ -17,13 +17,14 @@ import {
   type FilterValues,
   type ReportFilterField,
 } from "@/features/reports/search-params";
+import { type LookupNames, useLookups } from "@/hooks/use-lookups";
 import { useUrlState } from "@/hooks/use-url-state";
 
 type ReportParams = Partial<Record<FilterParam | "cursor", unknown>>;
 
 /**
  * The report screen shell: title → filters → summary (overview, group totals, charts) → table with pagination. It
- * owns the URL state, the deferred query and the cursor wiring; each report only supplies its parts.
+ * owns the URL state, the deferred query, the cursor wiring and the lookups; each report only supplies its parts.
  */
 export function ReportPage<
   I extends Paging & FilterValues,
@@ -46,9 +47,11 @@ export function ReportPage<
   filters: readonly ReportFilterField[];
   /** e.g. `(input) => trpc.reports.salaryGrowth.queryOptions(input)` */
   queryOptions: (input: I) => UseSuspenseQueryOptions<O, E, O, K>;
-  summary: (output: O, input: I) => ReactNode;
-  table: (items: O["rows"]["items"], input: I) => ReactNode;
+  /** `names` resolves lookup codes; fetched once here for every part of the report. */
+  summary: (output: O, input: I, names: LookupNames) => ReactNode;
+  table: (items: O["rows"]["items"], input: I, names: LookupNames) => ReactNode;
 }) {
+  const lookups = useLookups();
   const [params, patch] = useUrlState(search);
   // While the next page or filter result loads, keep showing (dimmed) results instead of the loading state.
   const input = useDeferredValue(params);
@@ -70,11 +73,12 @@ export function ReportPage<
         fields={filters}
         values={applied}
         today={today}
+        options={lookups}
         onApply={patch}
         onReset={reset}
       />
       <DeferredContent stale={input !== params}>
-        {summary(data, input)}
+        {summary(data, input, lookups)}
         <Card label={`${title} results`}>
           {data.rows.items.length === 0 ? (
             <EmptyState
@@ -88,7 +92,7 @@ export function ReportPage<
             />
           ) : (
             <>
-              {table(data.rows.items, input)}
+              {table(data.rows.items, input, lookups)}
               <Pagination
                 rangeStart={data.rows.range_start}
                 itemCount={data.rows.items.length}

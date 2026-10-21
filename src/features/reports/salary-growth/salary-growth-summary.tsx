@@ -1,5 +1,3 @@
-"use client";
-
 import { Amount } from "@/components/ui/amount";
 import { Overview } from "@/components/ui/overview";
 import { Stat } from "@/components/ui/stat";
@@ -7,12 +5,19 @@ import type { SalaryGrowthInput, SalaryGrowthSummary as Summary } from "@/contra
 import { CountryTotals } from "@/features/reports/country-totals";
 import { reportScope } from "@/features/reports/report-scope";
 import { SalaryGrowthChart } from "@/features/reports/salary-growth/salary-growth-chart";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupNames } from "@/hooks/use-lookups";
 import { formatCompact, formatCount, formatDate } from "@/lib/format";
 
 /** Period increases, decreases, net change and currency switches (per group when several), then the net trend. */
-export function SalaryGrowthSummary({ summary, input }: { summary: Summary; input: SalaryGrowthInput }) {
-  const lookups = useLookups();
+export function SalaryGrowthSummary({
+  summary,
+  input,
+  names,
+}: {
+  summary: Summary;
+  input: SalaryGrowthInput;
+  names: LookupNames;
+}) {
   const single = summary.by_country.length === 1 ? summary.by_country[0] : undefined;
   const money = (label: string, amount: string, currency: string) => (
     <Stat
@@ -23,7 +28,7 @@ export function SalaryGrowthSummary({ summary, input }: { summary: Summary; inpu
   );
   return (
     <>
-      <Overview scope={`${reportScope(input, lookups)} · ${formatDate(input.from)} – ${formatDate(input.to)}`}>
+      <Overview scope={`${reportScope(input, names)} · ${formatDate(input.from)} – ${formatDate(input.to)}`}>
         {single ? (
           <>
             {money("Increases", single.increases, single.salary_currency_code)}
@@ -36,7 +41,7 @@ export function SalaryGrowthSummary({ summary, input }: { summary: Summary; inpu
         <Stat label="Currency switches" value={formatCount(summary.currency_switch_count)} />
       </Overview>
       {!single && summary.by_country.length > 0 ? (
-        <CountryTotals label="Period totals by country and currency" groups={summary.by_country} wide>
+        <CountryTotals label="Period totals by country and currency" groups={summary.by_country} names={names} wide>
           {(group) => (
             <dl className="mt-2.5 grid grid-cols-2 gap-x-5 gap-y-2.5">
               {[
@@ -54,7 +59,7 @@ export function SalaryGrowthSummary({ summary, input }: { summary: Summary; inpu
           )}
         </CountryTotals>
       ) : null}
-      <SalaryGrowthChart trend={summary.trend} />
+      <SalaryGrowthChart trend={summary.trend} names={names} />
     </>
   );
 }

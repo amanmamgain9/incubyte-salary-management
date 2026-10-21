@@ -18,8 +18,8 @@ export function SalaryGrowthReport({ today }: { today: string }) {
       search={search}
       filters={["dates", "country", "department"]}
       queryOptions={(input) => trpc.reports.salaryGrowth.queryOptions(input)}
-      summary={(output, input) => <SalaryGrowthSummary summary={output.summary} input={input} />}
-      table={(rows, input) => <SalaryGrowthTable rows={rows} input={input} />}
+      summary={(output, input, names) => <SalaryGrowthSummary summary={output.summary} input={input} names={names} />}
+      table={(rows, input, names) => <SalaryGrowthTable rows={rows} input={input} names={names} />}
     />
   );
 }

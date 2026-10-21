@@ -1,5 +1,3 @@
-"use client";
-
 import { LineChart } from "@/components/charts/line-chart";
 import { Amount } from "@/components/ui/amount";
 import { Caption } from "@/components/ui/caption";
@@ -13,7 +11,7 @@ import { CountryTotals, GroupTotal } from "@/features/reports/country-totals";
 import { HistoricalSalaryBenchmarkChart } from "@/features/reports/historical-salary-benchmark/historical-salary-benchmark-chart";
 import { headcountTrend, singleGroup } from "@/features/reports/historical-salary-benchmark/historical-salary-benchmark-data";
 import { reportScope } from "@/features/reports/report-scope";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupNames } from "@/hooks/use-lookups";
 import { formatCompact, formatCount, formatDate } from "@/lib/format";
 
 /**
@@ -23,18 +21,19 @@ import { formatCompact, formatCount, formatDate } from "@/lib/format";
 export function HistoricalSalaryBenchmarkSummary({
   output,
   input,
+  names,
 }: {
   output: HistoricalSalaryBenchmarkOutput;
   input: HistoricalSalaryBenchmarkInput;
+  names: LookupNames;
 }) {
-  const lookups = useLookups();
   const { summary } = output;
   const single = singleGroup(summary);
   const snapshot = summary.by_country.length === 1 ? summary.by_country[0] : undefined;
   return (
     <>
       <Overview
-        scope={`${reportScope(input, lookups)} · Final snapshot ${formatDate(summary.snapshot_date)}`}
+        scope={`${reportScope(input, names)} · Final snapshot ${formatDate(summary.snapshot_date)}`}
         visualCaption="Employees at month end"
         visual={
           !single && summary.trend.length > 1 ? (
@@ -67,7 +66,7 @@ export function HistoricalSalaryBenchmarkSummary({
         )}
       </Overview>
       {summary.by_country.length > 1 ? (
-        <CountryTotals label="Final snapshot by country and currency" groups={summary.by_country}>
+        <CountryTotals label="Final snapshot by country and currency" groups={summary.by_country} names={names}>
           {(total) => (
             <>
               <GroupTotal>
@@ -78,7 +77,7 @@ export function HistoricalSalaryBenchmarkSummary({
           )}
         </CountryTotals>
       ) : null}
-      {single ? <HistoricalSalaryBenchmarkChart trend={summary.trend} group={single.group} /> : null}
+      {single ? <HistoricalSalaryBenchmarkChart trend={summary.trend} group={single.group} names={names} /> : null}
     </>
   );
 }

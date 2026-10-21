@@ -1,16 +1,22 @@
-"use client";
-
 import { ChartLegend } from "@/components/charts/chart-legend";
 import { LineChart } from "@/components/charts/line-chart";
 import { Caption } from "@/components/ui/caption";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import type { BenchmarkGroup, BenchmarkPoint } from "@/contracts/reports/historical-salary-benchmark";
 import { payRangeTrend } from "@/features/reports/historical-salary-benchmark/historical-salary-benchmark-data";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupNames } from "@/hooks/use-lookups";
 
 /** Department median, country median and the P10–P90 band per month, for the one matching group only. */
-export function HistoricalSalaryBenchmarkChart({ trend, group }: { trend: readonly BenchmarkPoint[]; group: BenchmarkGroup }) {
-  const { countryName, departmentName } = useLookups();
+export function HistoricalSalaryBenchmarkChart({
+  trend,
+  group,
+  names,
+}: {
+  trend: readonly BenchmarkPoint[];
+  group: BenchmarkGroup;
+  names: LookupNames;
+}) {
+  const { countryName, departmentName } = names;
   const points = payRangeTrend(trend);
   if (!points) return null;
   const currency = group.salary_currency_code;

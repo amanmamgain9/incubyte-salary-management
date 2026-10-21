@@ -1,14 +1,20 @@
-"use client";
-
 import { BarChart } from "@/components/charts/bar-chart";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import type { DepartmentPoint } from "@/contracts/reports/department-breakdown";
 import { departmentComparison } from "@/features/reports/department-breakdown/department-breakdown-data";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupNames } from "@/hooks/use-lookups";
 
 /** Annual base pay per department, drawn only when the API gives the single-group totals (one currency). */
-export function DepartmentBreakdownChart({ points, currency }: { points: readonly DepartmentPoint[]; currency: string }) {
-  const { departmentName } = useLookups();
+export function DepartmentBreakdownChart({
+  points,
+  currency,
+  names,
+}: {
+  points: readonly DepartmentPoint[];
+  currency: string;
+  names: LookupNames;
+}) {
+  const { departmentName } = names;
   const bars = departmentComparison(points, departmentName, currency);
   if (!bars) return null;
   return (

@@ -1,15 +1,13 @@
-"use client";
-
 import { Amount } from "@/components/ui/amount";
 import { CountryLabel } from "@/components/ui/country-label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { SalaryCommitmentRow } from "@/contracts/reports/salary-commitment";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupNames } from "@/hooks/use-lookups";
 import { formatCount } from "@/lib/format";
 
 /** One row per work country and salary currency: active headcount and a full year at current pay. */
-export function SalaryCommitmentTable({ rows }: { rows: readonly SalaryCommitmentRow[] }) {
-  const { countryName } = useLookups();
+export function SalaryCommitmentTable({ rows, names }: { rows: readonly SalaryCommitmentRow[]; names: LookupNames }) {
+  const { countryName } = names;
   return (
     <Table label="Salary commitment by country and currency">
       <TableHead>

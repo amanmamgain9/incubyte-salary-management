@@ -68,7 +68,7 @@ src/features/
 │   ├── salary-delta.ts            # pure: exact change and % vs current (via lib/money); null across currencies or for an invalid new amount; salaryDeltaNote for the form
 │   └── salary-history-table.tsx   # read-only paginated history (rendered by employees/profile)
 └── reports/
-    ├── report-page.tsx            # shell: header → filters → overview/trends → table; owns query + cursor wiring
+    ├── report-page.tsx            # shell: header → filters → overview/trends → table; owns query + cursor wiring and the one useLookups call
     ├── report-filters.tsx         # country/department/currency/date/month controls, configured per report; Apply checks the period, Reset → defaults
     ├── country-totals.tsx         # by-country/currency summary group strip (department, growth, benchmark); commitment's rows are its groups
     ├── report-scope.ts            # pure: overview scope line from the filters ("All countries · …")
@@ -210,7 +210,7 @@ export function ReportPage<I extends Paging & FilterValues, O extends { rows: Pa
   search: z.ZodType<I, ReportParams>;       // from the report's search-params.ts, built with `today` (useMemo it)
   filters: readonly ReportFilterField[];    // controls <ReportFilters> shows, e.g. ["dates", "country"]
   queryOptions: (input: I) => UseSuspenseQueryOptions<O, E, O, K>; // (i) => trpc.reports.salaryGrowth.queryOptions(i)
-  summary: (output: O, input: I) => ReactNode;            // overview + group totals + chart
-  table: (items: O["rows"]["items"], input: I) => ReactNode; // columns only; <Pagination> and the empty state belong to the shell
+  summary: (output: O, input: I, names: LookupNames) => ReactNode;            // overview + group totals + chart
+  table: (items: O["rows"]["items"], input: I, names: LookupNames) => ReactNode; // columns only; <Pagination> and the empty state belong to the shell
 }): ReactNode;
 ```

@@ -1,5 +1,3 @@
-"use client";
-
 import { Amount } from "@/components/ui/amount";
 import { CountryLabel } from "@/components/ui/country-label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,7 +5,7 @@ import type {
   HistoricalSalaryBenchmarkInput,
   HistoricalSalaryBenchmarkRow,
 } from "@/contracts/reports/historical-salary-benchmark";
-import { useLookups } from "@/hooks/use-lookups";
+import type { LookupNames } from "@/hooks/use-lookups";
 import { formatCount, formatMonth, formatPercent } from "@/lib/format";
 
 /** A signed percentage in its meaning's color; "—" when there is no comparison group. */
@@ -26,11 +24,13 @@ function Change({ percent }: { percent: string | null }) {
 export function HistoricalSalaryBenchmarkTable({
   rows,
   input,
+  names,
 }: {
   rows: readonly HistoricalSalaryBenchmarkRow[];
   input: HistoricalSalaryBenchmarkInput;
+  names: LookupNames;
 }) {
-  const { countryName, departmentName } = useLookups();
+  const { countryName, departmentName } = names;
   return (
     <Table label="Monthly salary benchmarks" wide>
       <TableHead>

@@ -18,8 +18,10 @@ export function HistoricalSalaryBenchmarkReport({ today }: { today: string }) {
       search={search}
       filters={["months", "country", "department", "currency"]}
       queryOptions={(input) => trpc.reports.historicalSalaryBenchmark.queryOptions(input)}
-      summary={(output, input) => <HistoricalSalaryBenchmarkSummary output={output} input={input} />}
-      table={(rows, input) => <HistoricalSalaryBenchmarkTable rows={rows} input={input} />}
+      summary={(output, input, names) => (
+        <HistoricalSalaryBenchmarkSummary output={output} input={input} names={names} />
+      )}
+      table={(rows, input, names) => <HistoricalSalaryBenchmarkTable rows={rows} input={input} names={names} />}
     />
   );
 }

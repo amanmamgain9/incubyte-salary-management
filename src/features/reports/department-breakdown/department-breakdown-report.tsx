@@ -16,8 +16,10 @@ export function DepartmentBreakdownReport({ today }: { today: string }) {
       search={reportFilterSearch}
       filters={["country", "department", "currency"]}
       queryOptions={(input) => trpc.reports.departmentBreakdown.queryOptions(input)}
-      summary={(output, input) => <DepartmentBreakdownSummary summary={output.summary} input={input} />}
-      table={(rows, input) => <DepartmentBreakdownTable rows={rows} input={input} />}
+      summary={(output, input, names) => (
+        <DepartmentBreakdownSummary summary={output.summary} input={input} names={names} />
+      )}
+      table={(rows, input, names) => <DepartmentBreakdownTable rows={rows} input={input} names={names} />}
     />
   );
 }
