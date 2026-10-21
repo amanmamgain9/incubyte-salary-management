@@ -46,7 +46,7 @@ src/features/
 │   ├── edit-employee-form.tsx     # employees.update form ({ id, ...changes }; submit disabled until a change); ID locked; set/clear last working day
 │   ├── directory/
 │   │   ├── employee-directory.tsx # title/action → filters → overview → table
-│   │   ├── create-employee-dialog.tsx # <Dialog name="create"> around <CreateEmployeeForm>
+│   │   ├── create-employee-dialog.tsx # `?dialog=create` <Dialog> around <CreateEmployeeForm>
 │   │   ├── directory-filters.tsx  # search, country, department, status
 │   │   ├── directory-overview.tsx # 2–4 measures from API data, never from the current page
 │   │   ├── employee-table.tsx     # rows + <Pagination>
@@ -54,8 +54,8 @@ src/features/
 │   │   └── search-params.ts       # directory input schema from EmployeeFilters + Paging, with .catch defaults
 │   └── profile/
 │       ├── employee-profile.tsx   # name/status/actions → details + current pay → history; saved notice
-│       ├── edit-employee-dialog.tsx   # <Dialog name="edit"> around <EditEmployeeForm>
-│       ├── change-salary-dialog.tsx   # <Dialog name="salary"> around salaries' <ChangeSalaryForm>
+│       ├── edit-employee-dialog.tsx   # `?dialog=edit` <Dialog> around <EditEmployeeForm>
+│       ├── change-salary-dialog.tsx   # `?dialog=salary` <Dialog> around salaries' <ChangeSalaryForm>
 │       ├── employee-details.tsx   # details list
 │       └── current-pay.tsx        # amount, currency, revision
 ├── salaries/

@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Users,
   Wallet,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -28,6 +29,7 @@ const icons = {
   add: Plus,
   open: ArrowUpRight,
   spinner: LoaderCircle,
+  close: X,
 } as const;
 
 export type IconName = keyof typeof icons;
