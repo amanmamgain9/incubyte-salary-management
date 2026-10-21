@@ -23,6 +23,8 @@ flowchart LR
 - `src/app`: pages, layouts, `/api/trpc` and `/api/auth/[...all]` handlers.
 - `src/server`: auth, employees, salaries, reports and database modules. Procedures validate/authenticate; feature functions own operations and transactions.
 
+Procedure inputs, outputs and errors: [tRPC contracts](trpc-contracts.md).
+
 ## Runtime rules
 
 - Money: `NUMERIC(18,2)` in PostgreSQL; decimal strings in JSON. SQL handles salary calculations, filtering and stable pagination.
