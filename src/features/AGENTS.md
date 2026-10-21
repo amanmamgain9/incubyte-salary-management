@@ -124,11 +124,11 @@ src/trpc/
 **App Router and data**
 - **`src/app` is routing only:** page/layout/loading/error/not-found/route. A page parses params, prefetches and renders one feature component.
 - `(workspace)/layout.tsx` and `login/page.tsx` are the only callers of `getSessionUser`. The layout redirect is UX only; procedures are the security boundary.
-- Server pages: `await props.searchParams` (`PageProps<'/route'>`), build the input with the feature's `search-params.ts`, `prefetch(trpc.x.queryOptions(input))`, render `<HydrateClient><Feature /></HydrateClient>`.
+- Server pages: `await props.searchParams` (`PageProps<'/route'>`), build the input with the feature's `search-params.ts`, `prefetch(trpc.x.queryOptions(input))`, render `<HydrateClient><Feature /></HydrateClient>`. Prefetch every query the client tree suspends on: SSR never calls `/api/trpc`.
 - The client component builds its query input with the same `search-params.ts` function and the same `today` (passed from the page as a prop), so it hits the prefetched cache.
 - Data-reading components use `useSuspenseQuery(trpc.x.queryOptions(input))`. `"use client"` goes on the component that needs hooks; keep its children presentational.
 - Every route renders real content; no redirect-only or placeholder pages (redirects go in `next.config.ts`).
-- UNAUTHORIZED is handled once in `trpc/query-client.ts` (clear cache, go to `/login`); pages and components never check for it.
+- UNAUTHORIZED is handled once in `trpc/query-client.ts` (clear cache, refresh the route so the workspace layout redirects to `/login`); pages and components never check for it.
 
 **UI and styling**
 - Build screens from `src/components/ui`. Never paste Tailwind class strings for buttons, alerts, headers, cards, tables or fields; add a variant instead.
