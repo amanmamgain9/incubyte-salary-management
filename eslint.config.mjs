@@ -56,18 +56,6 @@ const boundaries = {
       bans: [ban("^lucide-react(/|$)", "Only src/components/ui/icon.tsx imports the icon library; use <Icon>.")],
     },
   ],
-  "date-picker-library-site": [
-    {
-      files: allSources,
-      ignores: ["src/components/ui/date-picker.tsx"],
-      bans: [
-        ban(
-          "^(react-day-picker|radix-ui|@radix-ui/react-popover)(/|$)",
-          "Only src/components/ui/date-picker.tsx imports DayPicker/Radix; use <DatePicker>.",
-        ),
-      ],
-    },
-  ],
   "auth-client-site": [
     {
       files: allSources,

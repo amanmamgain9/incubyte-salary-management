@@ -5,7 +5,7 @@ Synthetic demonstration data; salary bands and review patterns are fictional.
 ## Reproducibility
 
 - Generate from a `seed` and UTC `as_of` date (default: the run's UTC date): `npm run db:seed -- --seed <text> --as-of YYYY-MM-DD` (seed default `acme`). Identical `seed` + `as_of` reproduce employees and salary histories. Tests freeze both.
-- Use stable employee/history IDs: `E-00001`… in joining-date order; history `<employee ID>-<revision>`. Seed a fresh database; reseeding requires an explicit reset. Each deploy reseeds or records the `as_of` it used in the README, since reports use today's UTC date.
+- Use stable employee/history IDs: `E-00001`… in joining-date order; history `<employee ID>-<revision>`. Seed a fresh database; reseeding requires an explicit reset. Reports use today's UTC date, so a deploy reseeds when its data should be current; the README's Seed date section shows how.
 - Seed the demo HR account (`DEMO_HR_EMAIL`, `DEMO_HR_PASSWORD`) first as owner: a `user` row plus a credential `account` row whose password is hashed with Better Auth's `hashPassword` (`better-auth/crypto`), so normal sign-in verifies it; signup stays disabled. All history entries reference it. Each employee's `salary_revision` equals its latest entry.
 - Lookups have no migration data: the seed inserts the 7 countries, 6 currencies and 5 departments below as owner before employees (the app role only reads them). Department IDs are lowercase names (`engineering`, `sales`, `operations`, `finance`, `people`).
 - The HR account and lookups are upserted, so re-running the seed is safe for them; employees go only into an empty `employees` table, so a reseed needs `npm run db:reset` first.

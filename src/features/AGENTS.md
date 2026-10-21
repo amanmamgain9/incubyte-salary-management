@@ -91,8 +91,7 @@ src/components/
 │   ├── deferred-content.tsx       # dims (aria-busy) results kept on screen while the deferred next result loads
 │   ├── empty-state.tsx / loading-state.tsx / error-state.tsx  # standard states (error has retry)
 │   ├── form-field.tsx             # label + control slot + hint + error, wires aria-describedby (`wide` spans both columns); FormSection/FormGrid/FormActions layout
-│   ├── input.tsx / select.tsx / textarea.tsx  # 38px controls; select takes `options`
-│   ├── date-picker.tsx            # the one DayPicker + Radix popover (dates and months, clearable)
+│   ├── input.tsx / select.tsx / textarea.tsx  # 38px controls; select takes `options`; dates and months are native `type="date"`/`type="month"` inputs
 │   ├── dialog.tsx                 # the one modal: native <dialog> + showModal, focus trap/return, Esc and backdrop close; no close while `pending`
 │   ├── amount.tsx                 # tabular right-aligned money with visible currency
 │   ├── country-label.tsx          # country code marker + name (table cells)
@@ -146,6 +145,7 @@ src/trpc/
 **UI and styling**
 - Build screens from `src/components/ui`. Never paste Tailwind class strings for buttons, alerts, headers, cards, tables or fields; add a variant instead.
 - Colors, radii and shadows come only from `@theme` tokens in `src/app/globals.css`, ported once from `docs/screens/styles.input.css`. No hex/rgb/hsl values or arbitrary color classes (`bg-[#…]`) in components.
+- Dates and months use native `<Input type="date">` / `<Input type="month">` with ISO values; no date-picker library. A month input also carries `placeholder="YYYY-MM"` for browsers that render it as text.
 - Every amount renders through `<Amount>` with its currency. Currencies are never summed or charted together.
 - Every form is a modal: `<Dialog>` (`components/ui/dialog.tsx`) opened and closed only through `useDialog()` (`?dialog=`). Dialog files wrap a dialog-agnostic form (`onSaved`/`onCancel` props) and pass `pending` from `useIsMutating({ mutationKey })`. Never copy dialog plumbing (`showModal`, backdrop, focus, `replaceState`) anywhere else.
 

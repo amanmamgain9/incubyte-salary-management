@@ -23,7 +23,7 @@ Sign in → Employees → Employee profile. Forms open as modal dialogs, never a
 
 ## Shared behavior
 
-- One DayPicker/Radix calendar for employee dates and report dates/months; ISO date strings, year/month jumps, optional departure clearing and form reset support.
+- Employee dates and report dates use native date inputs, report months a native month input (`YYYY-MM` placeholder where a browser shows it as text); values are ISO strings and the last working day can be cleared.
 - Country and salary currency stay separate. Pay comparisons/charts never combine currencies.
 - Report summaries cover the complete matching population, independent of table pagination. Historical country medians retain all departments.
 - Tables scroll horizontally on smaller screens; wide historical tables keep the month visible. Keyboard focus, labels, status text and form errors remain visible.
