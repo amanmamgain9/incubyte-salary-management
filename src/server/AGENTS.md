@@ -83,7 +83,7 @@ src/contracts/
     ├── salary-commitment.ts       # input, Row, CountryCount, Summary, output
     ├── department-breakdown.ts    # input, Row, CountrySummary, DepartmentPoint, output
     ├── salary-growth.ts           # input (from ≤ to), Row, GrowthTotal, GrowthPoint, output
-    └── historical-salary-benchmark.ts  # input (first-of-month from, ≤ 180 months), Row, SnapshotTotal, BenchmarkPoint, output
+    └── historical-salary-benchmark.ts  # input (first-of-month from, ≤ 180 months), Row, SnapshotTotal, BenchmarkGroup, BenchmarkPoint, output (summary names the single matching group)
 ```
 
 ## Backend rules

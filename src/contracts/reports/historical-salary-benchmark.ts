@@ -59,6 +59,14 @@ export const SnapshotTotal = z.object({
 });
 export type SnapshotTotal = z.infer<typeof SnapshotTotal>;
 
+/** One benchmark group: a country, department and salary currency. */
+export const BenchmarkGroup = z.object({
+  work_country_code: CountryCode,
+  department_id: DepartmentId,
+  salary_currency_code: CurrencyCode,
+});
+export type BenchmarkGroup = z.infer<typeof BenchmarkGroup>;
+
 /**
  * Pay-range trend point for one visible month. `employee_count` covers every matching group; the amounts are null
  * unless all matching rows share one country, department and currency.
@@ -73,11 +81,15 @@ export const BenchmarkPoint = z.object({
 });
 export type BenchmarkPoint = z.infer<typeof BenchmarkPoint>;
 
-/** The final snapshot (`to`) by country and currency (ascending), and the trend (month ascending; empty without rows). */
+/**
+ * The final snapshot (`to`) by country and currency (ascending), the trend (month ascending; empty without rows) and
+ * the only matching group when every matching row in the range shares one (the trend's amounts are then its), else null.
+ */
 export const HistoricalSalaryBenchmarkSummary = z.object({
   snapshot_date: IsoDate,
   employee_count: z.int().min(0),
   by_country: z.array(SnapshotTotal).max(MAX_COUNTRY_CURRENCY_PAIRS),
+  group: BenchmarkGroup.nullable(),
   trend: z.array(BenchmarkPoint).max(MAX_BENCHMARK_MONTHS),
 });
 export type HistoricalSalaryBenchmarkSummary = z.infer<typeof HistoricalSalaryBenchmarkSummary>;

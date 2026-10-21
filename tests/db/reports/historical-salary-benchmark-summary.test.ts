@@ -65,6 +65,7 @@ describe("reports.historicalSalaryBenchmark summary", () => {
         { work_country_code: "IN", salary_currency_code: "INR", employee_count: 2, total_annual_base_pay: "400.00" },
         { work_country_code: "IN", salary_currency_code: "USD", employee_count: 1, total_annual_base_pay: "50.00" },
       ],
+      group: null,
       trend: undefined,
     });
   });
@@ -103,6 +104,17 @@ describe("reports.historicalSalaryBenchmark summary", () => {
       { month: "2026-08", employee_count: 1, ...amounts("100.00", "100.00", "100.00", "300.00") },
       { month: "2026-09", employee_count: 2, ...amounts("120.00", "200.00", "280.00", "300.00") },
     ]);
+    expect(summary.group).toEqual({ work_country_code: "IN", department_id: "engineering", salary_currency_code: "INR" });
+  });
+
+  it("names the only matching group even when the filters leave department and currency open", async () => {
+    await hire("100.00");
+    await hire("70.00", { work_country_code: "FR", department_id: "finance", salary_currency_code: "EUR" });
+
+    const { rows, summary } = await benchmark({ work_country_code: "FR", limit: 1 });
+
+    expect(rows.next_cursor).not.toBeNull();
+    expect(summary.group).toEqual({ work_country_code: "FR", department_id: "finance", salary_currency_code: "EUR" });
   });
 
   it("counts zero without amounts in visible months before anyone matches", async () => {
@@ -124,7 +136,7 @@ describe("reports.historicalSalaryBenchmark summary", () => {
 
     expect(result).toEqual({
       rows: { items: [], next_cursor: null, prev_cursor: null, total_count: 0, range_start: 0 },
-      summary: { snapshot_date: "2026-10-15", employee_count: 0, by_country: [], trend: [] },
+      summary: { snapshot_date: "2026-10-15", employee_count: 0, by_country: [], group: null, trend: [] },
     });
   });
 

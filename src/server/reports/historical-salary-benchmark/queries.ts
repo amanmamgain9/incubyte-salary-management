@@ -201,14 +201,17 @@ export async function countBenchmarkRows(db: Executor, range: BenchmarkRange): P
   return row?.total ?? 0;
 }
 
-/** The final snapshot (`to`) by country and currency, and the pay-range trend over the visible months. */
+/**
+ * The final snapshot (`to`) by country and currency, the pay-range trend over the visible months, and the only matching
+ * group when all matching rows share one.
+ */
 export async function selectBenchmarkSummary(
   db: Executor,
   range: BenchmarkRange,
 ): Promise<HistoricalSalaryBenchmarkSummary> {
   const g = benchmarkGroups;
   const matching = matchesFilters(range, groupColumns);
-  const [byCountry, trend] = await Promise.all([
+  const [byCountry, trend, groups] = await Promise.all([
     db
       .select({
         work_country_code: g.work_country_code,
@@ -221,10 +224,20 @@ export async function selectBenchmarkSummary(
       .groupBy(g.work_country_code, g.salary_currency_code)
       .orderBy(g.work_country_code, g.salary_currency_code),
     selectBenchmarkTrend(db, range, matching),
+    db
+      .selectDistinct({
+        work_country_code: g.work_country_code,
+        department_id: g.department_id,
+        salary_currency_code: g.salary_currency_code,
+      })
+      .from(g)
+      .where(matching)
+      .limit(2),
   ]);
   const snapshot: SnapshotTotal[] = byCountry;
   const employee_count = snapshot.reduce((total, pair) => total + pair.employee_count, 0);
-  return { snapshot_date: range.to, employee_count, by_country: snapshot, trend };
+  const group = groups.length === 1 ? (groups[0] ?? null) : null;
+  return { snapshot_date: range.to, employee_count, by_country: snapshot, group, trend };
 }
 
 /**

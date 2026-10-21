@@ -181,7 +181,16 @@ function expectedBenchmark(manifest: Manifest, range: BenchmarkRange) {
     total_annual_base_pay: sumOf(group, (row) => row.total_annual_base_pay),
   }));
   const employee_count = countOf(finalRows, (row) => row.employee_count);
-  return { rows, total_count: rows.length, summary: { snapshot_date: range.to, employee_count, by_country, trend } };
+  const only = singleGroup ? rows[0] : undefined;
+  const group = only
+    ? {
+        work_country_code: only.work_country_code,
+        department_id: only.department_id,
+        salary_currency_code: only.salary_currency_code,
+      }
+    : null;
+  const summary = { snapshot_date: range.to, employee_count, by_country, group, trend };
+  return { rows, total_count: rows.length, summary };
 }
 
 const describe = (filters: object) => JSON.stringify(filters);
