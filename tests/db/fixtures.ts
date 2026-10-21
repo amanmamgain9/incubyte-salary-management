@@ -113,3 +113,15 @@ export async function insertSalaryRevision(
     .where(eq(employees.id, employee.id));
   return next;
 }
+
+/**
+ * Edits the employee's stored details as owner (e.g. a transfer or moved joining date), keeping history as it is;
+ * later revisions snapshot the new assignment.
+ */
+export async function updateEmployee(
+  employee: EmployeeRow,
+  patch: Partial<Pick<EmployeeRow, "department_id" | "work_country_code" | "joining_date" | "last_working_day">>,
+): Promise<EmployeeRow> {
+  await ownerDb.update(employees).set(patch).where(eq(employees.id, employee.id));
+  return { ...employee, ...patch };
+}

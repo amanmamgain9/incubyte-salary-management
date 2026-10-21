@@ -14,6 +14,9 @@ export const EmployeeId = z
 /** A calendar date, `YYYY-MM-DD` (impossible dates such as 2025-02-30 are rejected). */
 export const IsoDate = z.iso.date("Use a valid date (YYYY-MM-DD)");
 
+/** A calendar month, `YYYY-MM` (UTC). */
+export const Month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Use a month (YYYY-MM)");
+
 /** An instant as an ISO 8601 UTC string, e.g. `2026-10-21T12:00:00.000Z`. */
 export const Timestamp = z.iso.datetime();
 
@@ -34,3 +37,6 @@ export const MAX_CURRENCIES = 200;
 export const MAX_DEPARTMENTS = 100;
 /** Country/currency pairs in a report summary (`by_country` of the department, growth and benchmark reports). */
 export const MAX_COUNTRY_CURRENCY_PAIRS = 500;
+/** Months in the salary growth trend, per country/currency pair. */
+export const GROWTH_TREND_MONTHS = 12;
+export const MAX_GROWTH_TREND_POINTS = MAX_COUNTRY_CURRENCY_PAIRS * GROWTH_TREND_MONTHS;

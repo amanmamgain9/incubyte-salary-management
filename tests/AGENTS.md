@@ -24,7 +24,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── harness.ts                 # resetTables() (refuses non-`_test` databases); signIn(user) → Cookie header; contextFor/callerFor(user | null, { now?, origin? })
 │   ├── auth.test.ts               # getSessionUser: no cookie, signed in, signed out, expired; sign-up disabled; seeded demo HR signs in
 │   ├── harness.test.ts            # app role reaches `<db>_test`; resetTables empties public tables and restarts identities
-│   ├── fixtures.ts                # minimal builders: lookups, HR user, employee + history
+│   ├── fixtures.ts                # minimal builders: lookups, HR user, employee + history, revisions, details edits
 │   ├── constraints.test.ts / grants.test.ts  # FKs, checks, unique revision; app role cannot UPDATE/DELETE history
 │   ├── employees.test.ts          # list filters/search/status boundaries/paging/summary, get
 │   ├── employee-writes.test.ts    # create (+ revision 1 history), duplicate ID, unknown codes, details edit and date rules
@@ -33,7 +33,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── lookups.test.ts            # lookups.get: name order, seeded lookups, empty lists, session required; assertKnownCodes
 │   ├── seed.test.ts               # seedEmployees: the full generated dataset passes every constraint; refuses a non-empty table
 │   ├── procedures.test.ts         # createCaller: auth, same-origin, error codes, field_errors, invalid cursor
-│   └── reports/<report>.test.ts   # report numbers on small fixtures (known cases in docs/data-generation.md)
+│   └── reports/<report>[-<topic>].test.ts  # report numbers on small fixtures (known cases in docs/data-generation.md); split by topic past 300 lines
 └── e2e/
     ├── global-setup.ts            # `setup` project (runs before the specs): drop/create, migrate and seed `<db>_e2e`
     ├── session.ts                 # signIn (login form), callMutation, and `test` with one HR session per worker + `api.mutate`
