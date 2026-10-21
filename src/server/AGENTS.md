@@ -12,7 +12,7 @@ src/server/
 ├── db/
 │   ├── connect.ts                 # `createDb(url)`: the only file that imports `pg` / creates a Pool; `Database`, `Executor` (db or tx, what queries take) types; script-safe
 │   ├── client.ts                  # server-only: app-role `db` = createDb(getEnv().DATABASE_URL)
-│   ├── owner.ts                   # owner-role `ownerDb` = createDb(ownerEnv().DATABASE_OWNER_URL) for migrate, reset, seed, verify, db tests; script-safe
+│   ├── owner.ts                   # owner-role `ownerDb` = createDb(ownerEnv().DATABASE_OWNER_URL) for migrate, reset, seed, verify, db tests; `truncatePublicTables()` (db:reset, resetTables); script-safe
 │   └── schema/
 │       ├── index.ts               # re-exports all tables (the only barrel file in src/)
 │       ├── auth.ts                # Better Auth generated tables (user, account, session, verification)

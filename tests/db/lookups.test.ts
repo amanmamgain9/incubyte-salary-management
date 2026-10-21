@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { ownerDb } from "@/server/db/owner";
+import { seedLookups } from "@scripts/db/seed";
 import { insertHrUser, insertLookups } from "./fixtures";
 import { callerFor, resetTables } from "./harness";
 
@@ -42,6 +44,24 @@ describe("lookups.get", () => {
         { code: "USD", name: "US Dollar" },
       ],
     });
+  });
+
+  it("returns the seeded 7 countries, 5 departments and 6 currencies, unchanged by re-seeding", async () => {
+    await seedLookups(ownerDb);
+    await seedLookups(ownerDb);
+    const caller = await callerFor(await insertHrUser());
+
+    const lookups = await caller.lookups.get();
+
+    expect(lookups.countries.map((country) => country.code)).toEqual(["CA", "FR", "DE", "IN", "SG", "GB", "US"]);
+    expect(lookups.departments.map((department) => department.id)).toEqual([
+      "engineering",
+      "finance",
+      "operations",
+      "people",
+      "sales",
+    ]);
+    expect(lookups.currencies.map((currency) => currency.code)).toEqual(["GBP", "CAD", "EUR", "INR", "SGD", "USD"]);
   });
 
   it("returns empty lists when no lookups exist", async () => {

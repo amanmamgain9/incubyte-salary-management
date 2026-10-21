@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { auth } from "@/server/auth/auth";
 import { getSessionUser } from "@/server/auth/session";
 import { ownerDb } from "@/server/db/owner";
-import { session } from "@/server/db/schema";
+import { session, user } from "@/server/db/schema";
+import { getEnv } from "@/server/env";
+import { DEMO_HR_ID, seedDemoHrAccount } from "@scripts/db/seed";
 import { insertHrUser } from "./fixtures";
 import { resetTables, signIn } from "./harness";
 
@@ -43,5 +45,24 @@ describe("sign-up", () => {
     });
 
     expect(response.ok).toBe(false);
+  });
+});
+
+describe("seeded demo HR account", () => {
+  const signInAsDemo = () =>
+    auth.api.signInEmail({ body: { email: getEnv().DEMO_HR_EMAIL, password: getEnv().DEMO_HR_PASSWORD } });
+
+  it("signs in with DEMO_HR_EMAIL and DEMO_HR_PASSWORD", async () => {
+    await seedDemoHrAccount(ownerDb);
+
+    await expect(signInAsDemo()).resolves.toMatchObject({ user: { id: DEMO_HR_ID } });
+  });
+
+  it("stays a single account that signs in when the seed runs again", async () => {
+    await seedDemoHrAccount(ownerDb);
+    await seedDemoHrAccount(ownerDb);
+
+    await expect(ownerDb.select({ id: user.id }).from(user)).resolves.toEqual([{ id: DEMO_HR_ID }]);
+    await expect(signInAsDemo()).resolves.toMatchObject({ user: { id: DEMO_HR_ID } });
   });
 });

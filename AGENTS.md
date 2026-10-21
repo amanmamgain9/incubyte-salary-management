@@ -44,7 +44,7 @@ Every folder and file here and in the area guide trees is planned. Create files 
 ├── BRIEF.md                  # assignment brief (read-only)
 ├── README.md                 # setup, run, test, seed and deploy steps that work today
 ├── package.json              # scripts: dev, build, start, typecheck, lint, test, test:db, test:e2e, db:generate, db:migrate, db:reset, db:seed, db:verify, bench
-├── tsconfig.json             # strict, noUncheckedIndexedAccess; `@/*` → `src/*`
+├── tsconfig.json             # strict, noUncheckedIndexedAccess; `@/*` → `src/*`, `@scripts/*` → `scripts/*`
 ├── next.config.ts            # typedRoutes; `/` → `/employees` redirect (config, not a page)
 ├── eslint.config.mjs         # flat config: eslint-config-next + the boundary rules (see Lint)
 ├── postcss.config.mjs        # @tailwindcss/postcss only
@@ -88,7 +88,7 @@ Every folder and file here and in the area guide trees is planned. Create files 
 - **Split a file when** a `.tsx` passes 200 lines or a `.ts` passes 300; it mixes data shaping with JSX (move shaping to `*-data.ts`); it has two unrelated exports; or a part needs its own unit test.
 - **Naming.** kebab-case files named after their main export (`employee-table.tsx` → `EmployeeTable`). One name per concept across contract, router key, server folder, frontend folder and route: `lookups` (never "reference data"); `salaryGrowth` ↔ `salary-growth`; `historicalSalaryBenchmark` ↔ `historical-salary-benchmark`. No generic exported names (`data`, `count`, `month`).
 - **Fields** use the contract's snake_case names end-to-end: DB columns, Drizzle keys, Zod schemas, form field names. Locals are camelCase. Better Auth tables keep their generated names.
-- **Imports.** `./x` for same-folder siblings; everything else `@/…`. No `../`. Named exports only, except Next route files and config files. No barrel files except `db/schema/index.ts`.
+- **Imports.** `./x` for same-folder siblings; everything else `@/…` (or `@scripts/…` for `scripts/`, from scripts and tests only). No `../`. Named exports only, except Next route files and config files. No barrel files except `db/schema/index.ts`.
 - **No dead code.** Delete unused files, exports and commented-out code in the change that orphans them.
 
 ## Lint

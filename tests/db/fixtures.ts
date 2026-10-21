@@ -1,7 +1,7 @@
-import { hashPassword } from "better-auth/crypto";
 import type { Country, Currency, Department } from "@/contracts/lookups";
 import { ownerDb } from "@/server/db/owner";
-import { account, countries, currencies, departments, user } from "@/server/db/schema";
+import { countries, currencies, departments } from "@/server/db/schema";
+import { type HrAccount, upsertHrAccount } from "@scripts/db/seed";
 
 type LookupRows = { countries: Country[]; departments: Department[]; currencies: Currency[] };
 
@@ -31,18 +31,11 @@ export async function insertLookups(rows: Partial<LookupRows> = {}): Promise<Loo
   return lookups;
 }
 
-export type HrUserFixture = { id: string; name: string; email: string; password: string };
+export type HrUserFixture = HrAccount;
 
-/** An HR user with a credential account, inserted as owner the way the seed does it. */
+/** An HR user with a credential account, inserted as owner by the seed's own helper. */
 export async function insertHrUser(overrides: Partial<HrUserFixture> = {}): Promise<HrUserFixture> {
   const hr = { id: "hr-1", name: "Hannah Reyes", email: "hannah@acme.test", password: "fixture-password-1", ...overrides };
-  await ownerDb.insert(user).values({ id: hr.id, name: hr.name, email: hr.email, emailVerified: true });
-  await ownerDb.insert(account).values({
-    id: `${hr.id}-credential`,
-    accountId: hr.id,
-    providerId: "credential",
-    userId: hr.id,
-    password: await hashPassword(hr.password),
-  });
+  await upsertHrAccount(ownerDb, hr);
   return hr;
 }

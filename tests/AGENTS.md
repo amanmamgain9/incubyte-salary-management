@@ -19,13 +19,13 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── global-setup.ts            # drop/create `<db>_test`, migrate once as owner, provide its URLs
 │   ├── setup.ts                   # per worker: stub DATABASE_URL/DATABASE_OWNER_URL with the `_test` URLs
 │   ├── harness.ts                 # resetTables() (refuses non-`_test` databases); signIn(user) → Cookie header; contextFor/callerFor(user | null, { now?, origin? })
-│   ├── auth.test.ts               # getSessionUser: no cookie, signed in, signed out, expired; sign-up disabled
+│   ├── auth.test.ts               # getSessionUser: no cookie, signed in, signed out, expired; sign-up disabled; seeded demo HR signs in
 │   ├── harness.test.ts            # app role reaches `<db>_test`; resetTables empties public tables and restarts identities
 │   ├── fixtures.ts                # minimal builders: lookups, HR user, employee + history
 │   ├── constraints.test.ts / grants.test.ts  # FKs, checks, unique revision; app role cannot UPDATE/DELETE history
 │   ├── employees.test.ts          # list filters/search/status boundaries, create (+ revision 1), duplicate ID, details edit
 │   ├── salaries.test.ts           # change, stale revision, upcoming allowed, departed rejected, rollback, history paging
-│   ├── lookups.test.ts            # lookups.get: name order, empty lists, session required
+│   ├── lookups.test.ts            # lookups.get: name order, seeded lookups, empty lists, session required
 │   ├── procedures.test.ts         # createCaller: auth, same-origin, error codes, field_errors, invalid cursor
 │   └── reports/<report>.test.ts   # report numbers on small fixtures (known cases in docs/data-generation.md)
 └── e2e/
@@ -40,12 +40,12 @@ scripts/
 │   ├── init-roles.sql             # local/CI only: owner and app roles
 │   ├── migrate.ts                 # apply drizzle/ as owner
 │   ├── reset.ts                   # explicit wipe before reseeding
-│   ├── seed.ts                    # HR account first (better-auth/crypto hashPassword), then employees + history in bulk (--seed, --as-of)
+│   ├── seed.ts                    # HR account first (better-auth/crypto hashPassword, upserted), lookups, then employees + history in bulk (--seed, --as-of); exports its steps for db tests (main runs only under `import.meta.main`)
 │   └── verify.ts                  # run report queries and compare with the manifest (CI, after seeding)
 ├── data-generation/
 │   ├── generate.ts                # pure deterministic generator (seed, as_of) → rows
 │   ├── random.ts                  # seeded PRNG
-│   ├── profiles.ts                # population, tenure, pay bands, review profiles from the doc
+│   ├── profiles.ts                # seeded lookups (SEED_LOOKUPS), population, tenure, pay bands, review profiles from the doc
 │   └── manifest.ts                # independent exact-arithmetic expected totals/percentiles
 └── bench-reports.ts               # time each report on the seeded DB
 ```

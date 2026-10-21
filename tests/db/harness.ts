@@ -3,7 +3,7 @@ import { type Context, createContext } from "@/server/api/context";
 import { appRouter } from "@/server/api/root";
 import { createCallerFactory } from "@/server/api/trpc";
 import { auth } from "@/server/auth/auth";
-import { ownerDb } from "@/server/db/owner";
+import { ownerDb, truncatePublicTables } from "@/server/db/owner";
 import { getEnv } from "@/server/env";
 import type { HrUserFixture } from "./fixtures";
 
@@ -14,15 +14,7 @@ export async function resetTables(): Promise<void> {
   if (!current.rows[0]?.database.endsWith("_test")) {
     throw new Error("resetTables only runs against a `_test` database");
   }
-  const { rows } = await ownerDb.execute<{ name: string }>(
-    sql`select tablename as name from pg_tables where schemaname = 'public'`,
-  );
-  if (rows.length === 0) return;
-  const tables = sql.join(
-    rows.map((row) => sql`public.${sql.identifier(row.name)}`),
-    sql`, `,
-  );
-  await ownerDb.execute(sql`TRUNCATE ${tables} RESTART IDENTITY CASCADE`);
+  await truncatePublicTables();
 }
 
 /** Signs the user in through Better Auth and returns the `Cookie` header value carrying the session. */
