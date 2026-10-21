@@ -53,7 +53,7 @@ src/server/
 │   ├── queries.ts                 # employee assignment snapshot, lock employee row, insert history, update current pay + salary_revision, history page/count
 │   └── operations.ts              # appendSalaryRevision, changeSalary, listSalaryHistory
 └── reports/
-    ├── filters.ts                 # SQL predicates for country/department/currency report filters
+    ├── filters.ts                 # SQL shared by reports: matchesFilters (country/department/currency, current or at-change columns), pastKey/keyOrder keyset paging
     ├── salary-commitment/
     │   ├── queries.ts             # active-today rows by country/currency + headcount summary
     │   └── operations.ts          # salaryCommitment(op, input)
