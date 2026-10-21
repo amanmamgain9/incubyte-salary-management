@@ -16,8 +16,19 @@ export type StoredEmploymentDates = {
  * the latest post-initial revision date. Joining dates are not checked against history (revisions may precede joining).
  */
 export function employmentDateErrors(
-  _stored: StoredEmploymentDates,
-  _patch: Pick<DetailsPatch, "joining_date" | "last_working_day">,
+  stored: StoredEmploymentDates,
+  patch: Pick<DetailsPatch, "joining_date" | "last_working_day">,
 ): FieldErrors | null {
-  throw new Error("not implemented");
+  const joining = patch.joining_date ?? stored.joining_date;
+  const lastDay = patch.last_working_day === undefined ? stored.last_working_day : patch.last_working_day;
+  if (lastDay === null) return null;
+  if (patch.last_working_day === undefined) {
+    // Only the joining date moved; the stored last working day already satisfied the revision rule.
+    return lastDay < joining ? { joining_date: "Must be on or before the last working day" } : null;
+  }
+  if (lastDay < joining) return { last_working_day: "Must be on or after the joining date" };
+  if (stored.latest_revision_date !== null && lastDay < stored.latest_revision_date) {
+    return { last_working_day: `Must be on or after the latest salary revision (${stored.latest_revision_date})` };
+  }
+  return null;
 }

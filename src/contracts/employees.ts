@@ -14,5 +14,9 @@ export const DetailsPatch = z.object({
 export type DetailsPatch = z.infer<typeof DetailsPatch>;
 
 /** `employees.update` input: the changed details sit flat beside `id` (no nested patch); at least one is required. */
-export const UpdateEmployeeInput = z.object({ id: EmployeeId, ...DetailsPatch.shape });
+export const UpdateEmployeeInput = z
+  .object({ id: EmployeeId, ...DetailsPatch.shape })
+  .refine(({ id: _id, ...details }) => Object.values(details).some((value) => value !== undefined), {
+    message: "Change at least one field",
+  });
 export type UpdateEmployeeInput = z.infer<typeof UpdateEmployeeInput>;
