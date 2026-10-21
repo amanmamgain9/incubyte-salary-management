@@ -18,6 +18,7 @@ npm run dev               # http://localhost:3000
 ## Checks
 
 ```bash
+npm run lint              # ESLint, including the architecture boundary rules
 npm run typecheck         # route types + tsc
 npm run build             # production build
 ```
