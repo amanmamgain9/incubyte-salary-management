@@ -1,11 +1,11 @@
+// The report URL mechanism shared by every report: filter params, period validation and the filter form → URL patch.
+// Each report with a period owns its defaults and URL schema in its own folder's search-params.ts.
 import { z } from "zod";
 import { Paging } from "@/contracts/paging";
-import { IsoDate } from "@/contracts/primitives";
 import { periodEndError, ReportFilters } from "@/contracts/reports/filters";
 import { HistoricalSalaryBenchmarkInput } from "@/contracts/reports/historical-salary-benchmark";
 import { SalaryGrowthInput } from "@/contracts/reports/salary-growth";
-import { monthStart } from "@/lib/dates";
-import { defaultBenchmarkPeriod, defaultGrowthPeriod, type Period } from "@/lib/product-defaults";
+import { addMonths, monthStart } from "@/lib/dates";
 
 /**
  * The filter controls a report shows: `dates` is a revision date range (salary growth), `months` a month range ending
@@ -16,6 +16,7 @@ export type ReportFilterField = "dates" | "months" | "country" | "department" | 
 /** Search params a report filter writes; patching any of them drops the page cursor. */
 export type FilterParam = "from" | "to" | "work_country_code" | "department_id" | "salary_currency_code";
 export type FilterValues = Partial<Record<FilterParam, string>>;
+export type Period = { from: string; to: string };
 export type PeriodErrors = Partial<Record<keyof Period, string>>;
 
 /** Every filter param unset: the report's defaults. */
@@ -27,7 +28,8 @@ export const clearedFilters: Record<FilterParam, undefined> = {
   salary_currency_code: undefined,
 };
 
-const params = {
+/** The country, department and currency filters and the page cursor, each falling back to none when malformed. */
+export const filterParams = {
   work_country_code: ReportFilters.shape.work_country_code.catch(undefined),
   department_id: ReportFilters.shape.department_id.catch(undefined),
   salary_currency_code: ReportFilters.shape.salary_currency_code.catch(undefined),
@@ -35,10 +37,15 @@ const params = {
 };
 
 /** Salary commitment and department breakdown URL → input: country, department, currency and page cursor. */
-export const reportFilterSearch = z.object(params);
+export const reportFilterSearch = z.object(filterParams);
 
 const periodContracts = { dates: SalaryGrowthInput, months: HistoricalSalaryBenchmarkInput } as const;
 type PeriodField = keyof typeof periodContracts;
+
+/** `months` calendar months ending with today's: from the first day of the earliest month through today. */
+export function trailingMonths(today: string, months: number): Period {
+  return { from: monthStart(addMonths(monthStart(today), 1 - months)), to: today };
+}
 
 /** A period's errors keyed by field: the report contract's range rules, plus `to` no later than today. */
 export function periodErrors(field: PeriodField, period: Period, today: string): PeriodErrors {
@@ -54,34 +61,8 @@ export function periodErrors(field: PeriodField, period: Period, today: string):
 }
 
 /** The period when it is valid, else the default one (a hand-edited URL never reaches the API invalid). */
-function validPeriod<S extends Period>(field: PeriodField, search: S, fallback: Period, today: string): S {
+export function validPeriod<S extends Period>(field: PeriodField, search: S, fallback: Period, today: string): S {
   return Object.keys(periodErrors(field, search, today)).length === 0 ? search : { ...search, ...fallback };
-}
-
-/** Salary growth URL → input: revision dates (default: `defaultGrowthPeriod`), country, department, cursor. */
-export function salaryGrowthSearch(today: string) {
-  const fallback = defaultGrowthPeriod(today);
-  return z
-    .object({
-      from: IsoDate.catch(fallback.from),
-      to: IsoDate.catch(fallback.to),
-      work_country_code: params.work_country_code,
-      department_id: params.department_id,
-      cursor: params.cursor,
-    })
-    .transform((search) => validPeriod("dates", search, fallback, today));
-}
-
-/** Historical benchmark URL → input: months (default: `defaultBenchmarkPeriod`; `from` moved to its month's start), filters, cursor. */
-export function historicalSalaryBenchmarkSearch(today: string) {
-  const fallback = defaultBenchmarkPeriod(today);
-  return z
-    .object({
-      from: IsoDate.transform(monthStart).catch(fallback.from),
-      to: IsoDate.catch(fallback.to),
-      ...params,
-    })
-    .transform((search) => validPeriod("months", search, fallback, today));
 }
 
 /**

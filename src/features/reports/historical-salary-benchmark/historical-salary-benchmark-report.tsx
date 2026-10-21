@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { HistoricalSalaryBenchmarkSummary } from "@/features/reports/historical-salary-benchmark/historical-salary-benchmark-summary";
 import { HistoricalSalaryBenchmarkTable } from "@/features/reports/historical-salary-benchmark/historical-salary-benchmark-table";
 import { ReportPage } from "@/features/reports/report-page";
-import { historicalSalaryBenchmarkSearch } from "@/features/reports/search-params";
+import { historicalSalaryBenchmarkSearch } from "@/features/reports/historical-salary-benchmark/search-params";
 import { useTRPC } from "@/trpc/client";
 
 /** Historical benchmark: month-end P10/median/P90 by country, department and currency against the country median. */

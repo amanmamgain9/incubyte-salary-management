@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { ReportPage } from "@/features/reports/report-page";
 import { SalaryGrowthSummary } from "@/features/reports/salary-growth/salary-growth-summary";
 import { SalaryGrowthTable } from "@/features/reports/salary-growth/salary-growth-table";
-import { salaryGrowthSearch } from "@/features/reports/search-params";
+import { salaryGrowthSearch } from "@/features/reports/salary-growth/search-params";
 import { useTRPC } from "@/trpc/client";
 
 /** Salary growth: revisions' increases, decreases and net change by month, country and currency. */

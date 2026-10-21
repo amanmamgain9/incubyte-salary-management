@@ -72,13 +72,14 @@ src/features/
     ├── report-filters.tsx         # country/department/currency/date/month controls, configured per report; Apply checks the period, Reset → defaults
     ├── country-totals.tsx         # by-country/currency summary group strip (department, growth, benchmark); commitment's rows are its groups
     ├── report-scope.ts            # pure: overview scope line from the filters ("All countries · …")
-    ├── search-params.ts           # build a report's input from URL params + defaults(today); periodErrors (contract rules + `periodEndError`); filter form → patch
+    ├── search-params.ts           # mechanism: filter params, reportFilterSearch (commitment, department), trailingMonths, periodErrors (contract rules + `periodEndError`), validPeriod, filter form → patch
     └── <report>/                  # salary-commitment | department-breakdown | salary-growth | historical-salary-benchmark
         ├── <report>-report.tsx    # composes <ReportPage> with this report's parts
         ├── <report>-summary.tsx   # overview measures for this report
         ├── <report>-table.tsx     # column definitions for <Table>
         ├── <report>-chart.tsx     # not for salary-commitment; renders a bounded contract field
-        └── <report>-data.ts       # pure reshaping for summary/chart (only if there is logic) + unit test
+        ├── <report>-data.ts       # pure reshaping for summary/chart (only if there is logic) + unit test
+        └── search-params.ts       # salary-growth and historical-salary-benchmark only: default period (from `today`) + URL schema
 
 src/components/
 ├── ui/                            # primitives, built before any feature screen
@@ -121,7 +122,6 @@ src/lib/
 ├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState; patchSearchParams (cursor rule)
 ├── form-diff.ts                   # formDiff: a form's changes vs its baseline, and `outdated` when the latest record differs
 ├── mutation-errors.ts             # toFieldErrors(error) → { fields, message }; isConflict(error)
-├── product-defaults.ts            # default report ranges (benchmark: 24 months ending this month) and form selections, from `today`
 └── cn.ts                          # className merge
 
 src/trpc/
@@ -155,7 +155,7 @@ src/trpc/
 - Intentional: filters, pages and dialogs replace the current history entry (`replaceState`), so links and reloads keep the state but Back leaves the page instead of stepping through filter, page or dialog changes.
 - All search-param state goes through `useUrlState(schema)`. No direct `URLSearchParams`, `router.replace` with hand-built strings, `history.replaceState` or `as` casts.
 - URL schemas derive from contract inputs (`.pick()`, coercion, `.catch(default)`), so bad params fall back to defaults.
-- Defaults (report ranges, form selections) come from `lib/product-defaults.ts` as functions of `today`. Never hardcode dates or codes in components.
+- Defaults are functions of `today` owned by the feature that uses them (a report's period: its own `search-params.ts`). Never hardcode dates or codes in components.
 
 **Forms and mutations** (one pattern for every form)
 - `useForm({ initial, onSubmit })` + `<FormField>` + `inputProps(name)`. `onSubmit` returns `mutation.mutateAsync(...)`; `useForm` maps errors through `toFieldErrors`, keeps values and focuses the first error. Forms never write their own try/catch, `onError` or pending flags; pending is `mutation.isPending`.

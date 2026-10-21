@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { SalaryGrowthReport } from "@/features/reports/salary-growth/salary-growth-report";
-import { salaryGrowthSearch } from "@/features/reports/search-params";
+import { salaryGrowthSearch } from "@/features/reports/salary-growth/search-params";
 import { todayUtc } from "@/lib/dates";
 import { parseSearchParams } from "@/lib/search-params";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
