@@ -2,7 +2,7 @@
 
 **User:** ACME’s HR manager, managing salary records for 10,000 employees across countries.
 
-**Goal:** Maintain accurate salary records and answer questions about current annual pay.
+**Goal:** Maintain accurate salary records and answer questions about annual pay and its history.
 
 ## Access
 
@@ -87,6 +87,26 @@ Compare each revision with the preceding salary entry, even when that entry fall
 #### Filters
 
 - Revision date range, country and department; apply together to the list and summaries.
+
+### 4. Historical salary benchmarking
+
+**Question:** How has typical pay changed, and which departments pay above or below their country's typical salary?
+
+Reconstruct each employee's latest salary at month end; use the selected end date for the final partial month. Include employees active at that snapshot. Use country/department saved with the salary entry; intervening transfer dates are not recorded.
+
+#### List
+
+- One row per month, country, department and currency: headcount, total annual base pay, P10, median and P90.
+- Country median, department median's percentage difference from it, and year-over-year median change; null when the prior-year group is absent.
+
+#### Summaries
+
+- For the final selected snapshot: matching headcount and total annual base pay by country/currency.
+
+#### Filters
+
+- Month range up to 15 years, country, department and salary currency; apply together.
+- Country medians include all departments in the same country/currency. Department filtering preserves this reference; prior-year comparisons include the preceding year's data outside the selected range.
 
 ## Exclusions
 

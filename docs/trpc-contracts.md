@@ -47,6 +47,8 @@ HistoryView = SalaryHistoryEntry + { changed_by_name: String }
 
 All are queries. Each returns `{ rows: Page<Row>, summary }`; summaries cover all matching records, independent of pagination. Monetary summaries stay grouped by country and currency.
 
+Commitment and department reports use employees active on today's UTC calendar date. All filters apply together; empty results return empty rows/groups, zero counts and no next cursor.
+
 ### `reports.salaryCommitment`
 
 - **Input:** Optional `work_country_code`, `department_id`, `salary_currency_code`; plus `Paging`.
@@ -70,7 +72,15 @@ All are queries. Each returns `{ rows: Page<Row>, summary }`; summaries cover al
 - Find each employee's preceding revision before filtering by period/country/department. Skip initial salaries; use country/department at revision time, including later leavers.
 - Compare amounts only within the same currency. Count currency switches separately; exclude them from growth amounts.
 
-Commitment and department reports use employees active on today's UTC calendar date. All filters apply together; empty results return empty rows/groups, zero counts and no next cursor.
+### `reports.historicalSalaryBenchmark`
+
+- **Input:** Required `from` (first day of a month), `to` (inclusive snapshot end date, no later than today UTC); at most 180 visible months. Optional `work_country_code`, `department_id`, `salary_currency_code`; plus `Paging`.
+- **Row:** `{ month, work_country_code, department_id, salary_currency_code, employee_count, total_annual_base_pay, p10_annual_base_pay, median_annual_base_pay, p90_annual_base_pay, country_median_annual_base_pay, median_gap_percent, median_yoy_percent }`.
+- **Summary:** `{ snapshot_date: to, employee_count, by_country: SnapshotTotal[] }`; `SnapshotTotal` is `{ work_country_code, salary_currency_code, employee_count, total_annual_base_pay }` for the final selected snapshot only.
+- **Order:** Month, country, department, currency ascending. Percentages are signed decimal strings with two places; `median_yoy_percent` is null without a matching prior-year month/group.
+- Select employees active at each month end (or `to` for the final partial month). Use the latest revision before the next UTC midnight and its stored country/department/currency.
+- P10/median/P90 use exact numeric interpolation. `median_gap_percent = (department median / country median - 1) × 100`; year-over-year change uses the same department/country/currency 12 months earlier. Round final amounts/percentages to two places.
+- Calculate country medians across all departments; apply the department filter to displayed rows and summary membership afterward. Read 12 extra months before `from` for year-over-year comparisons. Summaries cover all matching departments, independent of pagination.
 
 ## Errors
 

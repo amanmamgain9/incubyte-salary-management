@@ -66,6 +66,7 @@ At `as_of`, distribute the 9,000 active employees by completed service:
 | Salary commitment | Uneven headcount/pay bands; Germany and France stay separate despite EUR; India's INR/USD totals stay separate. Only 9,000 active employees contribute. |
 | Department breakdown | Large teams lead total pay; smaller teams can lead average pay. Country-specific department mixes make filtering useful. |
 | Salary growth | Country-specific review months, promotion spikes, quiet months and correction periods produce distinct monthly increases/decreases. |
+| Historical salary benchmarking | Fifteen years of staggered joins, departures and salary revisions produce changing monthly headcounts, pay percentiles and department/country comparisons. Keep currencies separate. |
 
 Salary review profiles: India has a broad review spike; the US has staggered quarterly changes; the UK has modest annual reviews; Germany has two review periods; France has smaller changes and a correction period; Canada has midyear reviews; Singapore has targeted promotion spikes. Hiring growth does not itself contribute to salary-growth totals. Ensure at least one negative-net and one quiet month in a country.
 
@@ -75,3 +76,4 @@ Salary review profiles: India has a broad review spike; the US has staggered qua
 - Example arithmetic: EUR 100,000 → 110,000 → 108,000 gives increases 10,000, decreases 2,000 and net 8,000. Initial salaries and currency switches contribute no growth amount.
 - Preserve valid empty filters, such as France + INR. Compare paginated results with summaries over the full matching population.
 - Generate a manifest of expected headcounts, country/department/currency totals and monthly deltas using independent exact arithmetic. Validate report results against it.
+- For historical benchmarking, independently reconstruct monthly salaries and exact percentiles from the dataset. Check month boundaries, partial months, later leavers, snapshot assignments and prior-year data outside the visible range.
