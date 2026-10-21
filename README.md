@@ -23,6 +23,8 @@ npm run dev               # http://localhost:3000
 
 The demo HR account signs in with `DEMO_HR_EMAIL` / `DEMO_HR_PASSWORD` from `.env` (`POST /api/auth/sign-in/email`). `npm run db:reset` empties every app and auth table (schema and migrations stay); the seed refuses to add employees on top of existing ones, so reseed with `npm run db:reset && npm run db:seed`. Pass `-- --seed <text> --as-of YYYY-MM-DD` to `db:seed` (and `db:verify`) to reproduce a dataset; reports use today's UTC date, so reseed (or record the `as_of`) when deploying.
 
+`npm run bench` times each report request on the seeded database (`-- --explain` adds the benchmark snapshot plan); results are in [architecture](docs/architecture.md#report-performance).
+
 The Compose database listens on `127.0.0.1:55432` (not 5432) to avoid clashing with other local PostgreSQL instances. If you change it, update both URLs in `.env`.
 
 ## Checks

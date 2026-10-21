@@ -75,11 +75,28 @@ function percentile(sorted: SQL, size: SQL, fraction: "0.1" | "0.5" | "0.9"): SQ
  * country medians span every department. Runs inside the caller's transaction, which owns the temporary table.
  */
 export async function createBenchmarkGroups(db: Executor, range: BenchmarkRange): Promise<void> {
-  // Planner settings for this transaction only: the snapshot's row estimates trip JIT compilation, which costs more
-  // than the query, and hash-aggregating the amount arrays needs more than the default work_mem.
+  await applySnapshotSettings(db);
+  await db.execute(benchmarkGroupsStatement(range));
+}
+
+/** `EXPLAIN (ANALYZE, BUFFERS)` of `createBenchmarkGroups` (which it runs), for scripts/bench-reports.ts. */
+export async function explainBenchmarkGroups(db: Executor, range: BenchmarkRange): Promise<string[]> {
+  await applySnapshotSettings(db);
+  const { rows } = await db.execute<{ "QUERY PLAN": string }>(
+    sql`explain (analyze, buffers) ${benchmarkGroupsStatement(range)}`,
+  );
+  return rows.map((row) => row["QUERY PLAN"]);
+}
+
+// Planner settings for the caller's transaction only: the snapshot's row estimates trip JIT compilation, which costs
+// more than the query, and hash-aggregating the amount arrays needs more than the default work_mem.
+async function applySnapshotSettings(db: Executor): Promise<void> {
   await db.execute(sql`set local jit = off`);
   await db.execute(sql`set local work_mem = '256MB'`);
-  await db.execute(sql`
+}
+
+function benchmarkGroupsStatement(range: BenchmarkRange): SQL {
+  return sql`
     create temporary table ${benchmarkGroups} on commit drop as
     with bounds as (
       select ${monthIndex(sql`${range.from}::date`)} - 12 as first_month,
@@ -161,7 +178,7 @@ export async function createBenchmarkGroups(db: Executor, range: BenchmarkRange)
       and prior.work_country_code = g.work_country_code
       and prior.department_id = g.department_id
       and prior.salary_currency_code = g.salary_currency_code
-    where g.month >= (select first_month + 12 from bounds)`);
+    where g.month >= (select first_month + 12 from bounds)`;
 }
 
 /** One page of month/country/department/currency rows after (or before) `from`, in key order. */

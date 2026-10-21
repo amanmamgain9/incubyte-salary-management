@@ -42,3 +42,20 @@ Procedure inputs, outputs and errors: [tRPC contracts](trpc-contracts.md).
 - Commit migrations, each granting the app role on the tables it creates; run before release. Reproducibly seed 10,000 employees and salary history.
 - Environment (`src/server/env.ts`, listed in `.env.example`; parsed lazily, owner URL separately so tooling needs only it): `DATABASE_URL` (app role), `DATABASE_OWNER_URL` (migrations/seed only), `APP_URL` (auth base URL; its origin is the only accepted mutation `Origin`), `BETTER_AUTH_SECRET` and `CURSOR_SECRET` (≥ 32 characters, distinct), `DEMO_HR_EMAIL`, `DEMO_HR_PASSWORD`.
 - CI: typecheck, lint, build, unit/procedure tests against disposable PostgreSQL, seed + `db:verify`, and key browser workflows.
+
+## Report performance
+
+`npm run bench` (`scripts/bench-reports.ts`) times each report request as the app role on the 10,000-employee seed (41,826 history entries): first page and count together, then the summary, with the benchmark's snapshot build in the same transaction. 3 warmups, 20 runs, local PostgreSQL 17 (Docker):
+
+| Request | p50 ms | p95 ms |
+| --- | ---: | ---: |
+| Salary commitment, no filters / IN + engineering | 8.7 / 3.0 | 8.9 / 3.6 |
+| Department breakdown, no filters / EUR | 17.0 / 6.3 | 17.9 / 6.6 |
+| Salary growth, 12 / 24 / 180 months | 33 / 47 / 91 | 37 / 51 / 96 |
+| Salary growth, 24 months, IN + engineering | 25.0 | 25.4 |
+| Historical benchmark, 24 months (default range) / + finance | 331 / 310 | 332 / 321 |
+| Historical benchmark, 24 months, IN + USD | 70 | 71 |
+| Historical benchmark, 180 months | 582 | 589 |
+
+- The benchmark builds its month-end snapshot once per request into a transaction-scoped temporary table (36 snapshot months × ~7,400 active employees ≈ 266,000 rows for the default range): per-entry integer month ranges, one hash aggregation over both grouping sets, and exact percentiles from per-group sorted cents. `EXPLAIN (ANALYZE, BUFFERS)` (`npm run bench -- --explain`): ~130 ms expanding entries into snapshot rows, ~120 ms aggregating and sorting, all from shared buffers. JIT is off and `work_mem` is 256MB for that transaction only: JIT compilation alone cost ~700 ms, and the default `work_mem` spilled the aggregation to disk.
+- The default benchmark range sits just above the ~300 ms goal and 15 years take ~0.6 s; every other report is under 100 ms. No plan showed a missing index (the benchmark needs every history entry for its validity windows), so no index was added. A month-end snapshot table maintained by salary and details writes is the next step if the benchmark must get faster.
