@@ -48,7 +48,8 @@ scripts/
 │   ├── seed.ts                    # HR account first (better-auth/crypto hashPassword, upserted), lookups, then employees + history in bulk (--seed, --as-of); exports its steps for db tests (main runs only under `import.meta.main`)
 │   └── verify.ts                  # run report queries and compare with the manifest (CI, after seeding)
 ├── data-generation/
-│   ├── generate.ts                # pure deterministic generator (seed, as_of) → rows
+│   ├── generate.ts                # pure deterministic generator (seed, as_of) → rows: population, IDs, known cases
+│   ├── history.ts                 # one employee's salary history from the review profiles
 │   ├── random.ts                  # seeded PRNG
 │   ├── profiles.ts                # seeded lookups (SEED_LOOKUPS), population, tenure, pay bands, review profiles from the doc
 │   ├── names.ts                   # small per-country name pools (repeated names)
