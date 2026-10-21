@@ -61,7 +61,7 @@ src/server/
 │   └── session.ts                 # getSessionUser(headers) → { id, name, email } | null
 ├── api/
 │   ├── trpc.ts                    # initTRPC, router, `signedInProcedure`, `signedInMutationProcedure`
-│   ├── error-formatter.ts         # generic: ZodError/ValidationError → data.field_errors; unexpected → generic message
+│   ├── error-formatter.ts         # generic: field errors from ZodError/ValidationError/ConflictError → data.field_errors; unexpected → generic message
 │   ├── context.ts                 # createContext({ headers }) → { db, headers, now }
 │   ├── root.ts                    # appRouter + `AppRouter` type
 │   ├── middleware/
@@ -84,24 +84,24 @@ src/server/
 │   └── operations.ts              # getLookups, assertKnownCodes (field-keyed ValidationError)
 ├── employees/
 │   ├── status.ts                  # isActiveOn(date), employmentStatusOn(date) SQL expressions
-│   ├── queries.ts                 # directory page/count, EmployeeView select (incl. salary_revision), insert, details update
+│   ├── queries.ts                 # directory page/count/summary, EmployeeView select (incl. salary_revision), insert, details update
 │   └── operations.ts              # listEmployees, getEmployee, createEmployee, updateEmployeeDetails
 ├── salaries/
-│   ├── queries.ts                 # lock employee row, next revision, insert history, update current pay, history page/count
+│   ├── queries.ts                 # lock employee row, insert history, update current pay + salary_revision, history page/count
 │   └── operations.ts              # appendSalaryRevision, changeSalary, listSalaryHistory
 └── reports/
     ├── filters.ts                 # SQL predicates for country/department/currency report filters
     ├── salary-commitment/
-    │   ├── queries.ts             # active-today rows by country/currency + summary
+    │   ├── queries.ts             # active-today rows by country/currency + headcount summary
     │   └── operations.ts          # salaryCommitment(op, input)
     ├── department-breakdown/
-    │   ├── queries.ts             # active-today rows by country/department/currency + by-country summary
+    │   ├── queries.ts             # active-today rows by country/department/currency + by-country/by-department summary
     │   └── operations.ts          # departmentBreakdown(op, input)
     ├── salary-growth/
-    │   ├── queries.ts             # predecessor-aware monthly increases/decreases, switch count, summary
+    │   ├── queries.ts             # predecessor-aware monthly increases/decreases/switches, summary, 12-month trend
     │   └── operations.ts          # salaryGrowth(op, input)
     └── historical-salary-benchmark/
-        ├── queries.ts             # month-end snapshots, percentiles, country median, YoY, final-snapshot summary
+        ├── queries.ts             # month-end snapshots, percentiles, country median, YoY, final-snapshot summary, monthly trend
         └── operations.ts          # historicalSalaryBenchmark(op, input)
 ```
 
@@ -110,17 +110,17 @@ src/server/
 ```text
 src/contracts/
 ├── primitives.ts                  # IsoDate, Month (YYYY-MM), Timestamp, Money (input: positive, ≤2 dp), Decimal (output: signed, 2 dp), codes, EmployeeId
-├── paging.ts                      # Paging input, page(item) output factory, DEFAULT_LIMIT 50, MAX_LIMIT 100
+├── paging.ts                      # Paging input, page(item) output factory (next/prev cursor, total_count, range_start), DEFAULT_LIMIT 50, MAX_LIMIT 100
 ├── errors.ts                      # FieldErrors shape of error.data.field_errors
 ├── lookups.ts                     # Country, Department, Currency, lookups.get output
-├── employees.ts                   # EmploymentStatus (only definition), EmployeeInput, DetailsPatch, EmployeeFilters, EmployeeView, get/update inputs
+├── employees.ts                   # EmploymentStatus (only definition), EmployeeInput, DetailsPatch, EmployeeFilters, EmployeeView, DirectorySummary, get/list/update inputs and outputs
 ├── salaries.ts                    # HistoryView, history input, salary update input
 └── reports/
     ├── filters.ts                 # shared country/department/currency filter fields
-    ├── salary-commitment.ts       # input, Row, Summary, output
-    ├── department-breakdown.ts    # input, Row, CountrySummary, output
-    ├── salary-growth.ts           # input (from ≤ to), Row, GrowthTotal, output
-    └── historical-salary-benchmark.ts  # input (first-of-month from, ≤ 180 months), Row, SnapshotTotal, output
+    ├── salary-commitment.ts       # input, Row, CountryCount, Summary, output
+    ├── department-breakdown.ts    # input, Row, CountrySummary, DepartmentPoint, output
+    ├── salary-growth.ts           # input (from ≤ to), Row, GrowthTotal, GrowthPoint, output
+    └── historical-salary-benchmark.ts  # input (first-of-month from, ≤ 180 months), Row, SnapshotTotal, BenchmarkPoint, output
 ```
 
 ### `src/app` (routes)
@@ -165,7 +165,7 @@ src/features/
 │   ├── employee-fields.tsx        # field group shared by create and edit forms
 │   ├── employment-status-badge.tsx  # EmploymentStatus → <Badge> label/tone (only mapping)
 │   ├── create-employee-form.tsx   # employees.create form (ID, details, initial pay + currency)
-│   ├── edit-employee-form.tsx     # employees.update form; ID locked; set/clear last working day
+│   ├── edit-employee-form.tsx     # employees.update form (flat { id, ...changed fields }); ID locked; set/clear last working day
 │   ├── directory/
 │   │   ├── employee-directory.tsx # title/action → filters → overview → table
 │   │   ├── directory-filters.tsx  # search, country, department, status
@@ -224,7 +224,7 @@ src/lib/
 ├── money.ts                       # decimal string ↔ integer minor units, exact compare/diff
 ├── dates.ts                       # todayUtc, month start/end, addMonths, monthsBetween (UTC)
 ├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState
-├── mutation-errors.ts             # toFieldErrors(error, { root? }) → { fields, message }
+├── mutation-errors.ts             # toFieldErrors(error) → { fields, message }
 ├── product-defaults.ts            # default report ranges and form selections as functions of `today`
 └── cn.ts                          # className merge
 
@@ -326,11 +326,11 @@ scripts/
 - Chain: `mapDomainErrors` → `requireSameOrigin` (mutations only) → `requireSession` → `operationContext`. Each does one thing; names say what is checked. There are no roles.
 - `signedInProcedure` (queries) and `signedInMutationProcedure` (adds same-origin) in `api/trpc.ts`. Every procedure uses one; auth is checked there and nowhere else.
 - Middleware and `error-formatter.ts` never branch on procedure paths, router names or feature-specific errors. A feature need is solved in its operation.
-- Field errors are keyed by full dotted input path. Inputs are flat so paths equal form field names; only `employees.update` nests `changes` (contract), and its form uses `toFieldErrors(error, { root: "changes" })`.
+- Field errors are keyed by full dotted input path. Every input is flat (including `employees.update`), so paths equal form field names.
 
 **Validation split**
 - Zod (contracts): shape, format, static limits — 2 dp positive money, ISO dates, `from ≤ to`, first-of-month, ≤ 180 months, non-empty patch.
-- Operations: rules needing the DB or clock — codes exist (`assertKnownCodes` on writes), expected revision, `to ≤ today` — as `ValidationError` keyed by field, `ConflictError` or `NotFoundError`.
+- Operations: rules needing the DB or clock — codes exist (`assertKnownCodes` on writes and list/report filters), employment dates against stored dates and salary history, expected revision, `to ≤ today` — as `ValidationError` keyed by field, `ConflictError` or `NotFoundError`.
 - Duplicate employee ID: no pre-check SELECT; translate the primary-key violation to `ConflictError` with `field_errors.id`. Never leak SQL errors or constraint names.
 
 **Pagination**
@@ -342,14 +342,14 @@ export async function paginateKeyset<Row, Key extends readonly unknown[]>(args: 
   scope: string;                                     // "reports.salaryGrowth"
   input: Paging & Record<string, unknown>;           // the parsed procedure input, as-is
   keyOf: (row: Row) => Key;                          // same columns as ORDER BY
-  fetch: (after: Key | null, take: number) => Promise<Row[]>; // ORDER BY key, LIMIT take
+  fetch: (from: { key: Key; before: boolean } | null, take: number) => Promise<Row[]>; // ORDER BY key (reversed when before), LIMIT take
   count: () => Promise<number>;
-}): Promise<Page<Row>>;                              // { items, next_cursor, total_count }
+}): Promise<Page<Row>>;                              // { items, next_cursor, prev_cursor, total_count, range_start }
 ```
 
 **Reports**
-- Each report folder has exactly `queries.ts` + `operations.ts`. Operation body: `return { rows: await paginateKeyset({...}), summary: await <summary query> }`; nothing else.
-- Output contracts have no unbounded arrays except `Page.items`; every other array has `.max(n)`. A chart needs a bounded field added to `docs/trpc-contracts.md` and the contract first; never return all rows beside the page.
+- Each report folder has exactly `queries.ts` + `operations.ts`. Operation body: input checks (`assertKnownCodes`, `to ≤ today`), then `return { rows: await paginateKeyset({...}), summary: await <summary query> }`; nothing else.
+- Output contracts have no unbounded arrays except `Page.items`; every other array has `.max(n)`. Chart series are bounded `summary` fields defined in `docs/trpc-contracts.md` and the contract first; never return all rows beside the page.
 - SQL does all salary math (`NUMERIC`, exact percentiles, rounding); TypeScript only formats.
 
 **Data access**
@@ -422,7 +422,7 @@ export const ownerEnv = () => z.object({ DATABASE_OWNER_URL: z.url() }).parse(pr
 
 - TDD for business logic: failing test, pass, refactor. Commit the test with the implementation.
 - `npm test` runs `tests/unit` only: fast, deterministic, no DB, network or real clock (pass `today`/`now` in).
-- Required unit coverage: cursor codec, `paginateKeyset` (pages, fingerprint mismatch, tampering), error formatter and domain-error mapping, contract edge cases, every `lib/*` module, every `*-data.ts`, `salary-delta.ts`, data generator determinism/quotas and manifest arithmetic.
+- Required unit coverage: cursor codec, `paginateKeyset` (next/previous pages, range_start, fingerprint mismatch, tampering), error formatter and domain-error mapping, contract edge cases, every `lib/*` module, every `*-data.ts`, `salary-delta.ts`, data generator determinism/quotas and manifest arithmetic.
 - `npm run test:db` runs `tests/db` on a fresh database; `npm run test:e2e` runs `tests/e2e` against the seeded app.
 - One behavior per test, named as a sentence. Assert through public functions or procedures. Fixtures are minimal and built in the test; only `scripts/db/verify.ts` depends on the 10,000-row seed.
 - Benchmarks, verifiers and seed tools live in `scripts/`, never in `tests/`.

@@ -2,7 +2,7 @@
 
 ## Demo scope
 
-One seeded HR account; show its credentials on the login page. All data is synthetic.
+One seeded HR account (`DEMO_HR_EMAIL`, `DEMO_HR_PASSWORD`); show its credentials on the login page. All data is synthetic.
 
 Signup, password reset and user administration are excluded.
 

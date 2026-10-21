@@ -40,12 +40,11 @@ Commitment and department reports include employees active today, from joining d
 
 #### List
 
-- One row per work country and salary currency: active employee count and total current annual base pay.
+- One row per work country and salary currency: active employee count and annual commitment, a full year at current salaries without prorating.
 
 #### Summaries
 
-- Total matching active employees across countries.
-- Annual commitment by country, split by currency; a full year at current salaries without prorating.
+- Matching active employees, in total and by country; number of salary currencies.
 
 #### Filters
 

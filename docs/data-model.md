@@ -14,6 +14,7 @@ struct Employee {
     last_working_day: Date?
     annual_base_pay: Decimal          // current salary
     salary_currency_code: String      // Currency.code
+    salary_revision: Integer          // latest SalaryHistoryEntry.revision
 }
 ```
 
@@ -88,7 +89,8 @@ For application tables; auth tables follow the generated schema above.
 - Primary keys: each `id`; country/currency `code`.
 - Fields are `NOT NULL` unless marked `?`.
 - Struct references are foreign keys with `ON DELETE RESTRICT`.
-- Unique `(employee_id, revision)`; positive revision numbers.
+- Unique `(employee_id, revision)`; positive revision numbers, including `salary_revision`.
+- `last_working_day >= joining_date` when set.
 - Salary amounts: `NUMERIC(18,2)`, positive and finite.
 
 ## Indexes
@@ -107,6 +109,7 @@ The unique `(employee_id, revision)` index also supports ordered salary history.
 - Employee IDs remain unique and cannot be reused; records are retained after departure.
 - Store the initial salary and each revision as separate snapshots; history cannot be edited or deleted.
 - Order history by revision; the preceding entry supplies the previous salary.
-- Lock the employee and check the expected revision before assigning the next revision.
+- Lock the employee and compare `salary_revision` with the expected revision; the new entry takes `salary_revision + 1`, and the employee's `salary_revision` is updated in the same transaction.
+- `joining_date` may not be later than the UTC date of the first revision after the initial salary; the initial salary may precede joining.
 - Create employees with initial history, and update current salary with new history, in one transaction; a failure saves neither.
 - The application database role can only read/insert salary history; migrations use a separate owner role.
