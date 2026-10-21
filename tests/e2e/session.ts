@@ -12,7 +12,7 @@ type StorageState = Awaited<ReturnType<BrowserContext["storageState"]>>;
 /** Signs in through the login form (for specs about signing in). */
 export async function signIn(page: Page, password = DEMO_HR_PASSWORD) {
   await page.goto("/login");
-  await page.getByLabel("Email").fill(DEMO_HR_EMAIL);
+  await page.getByLabel("Email", { exact: true }).fill(DEMO_HR_EMAIL);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
 }

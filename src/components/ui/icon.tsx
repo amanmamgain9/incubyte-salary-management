@@ -4,9 +4,11 @@ import {
   Calendar,
   ChartLine,
   ChartNoAxesColumnIncreasing,
+  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Copy,
   LayoutGrid,
   LoaderCircle,
   LogOut,
@@ -38,6 +40,8 @@ const icons = {
   previous: ChevronLeft,
   next: ChevronRight,
   expand: ChevronDown,
+  copy: Copy,
+  copied: Check,
 } as const;
 
 export type IconName = keyof typeof icons;

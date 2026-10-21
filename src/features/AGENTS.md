@@ -32,6 +32,7 @@ src/features/
 │   ├── auth-client.ts             # Better Auth React client (only auth uses it)
 │   ├── login-screen.tsx           # centered brand panel + demo credentials + <LoginForm>
 │   ├── login-form.tsx             # client: email/password, show password, inline error
+│   ├── copy-button.tsx            # client: copies a demo credential, confirms for 1.5 s
 │   └── sign-out-button.tsx        # client: signOut → queryClient.clear() → /login
 ├── workspace/
 │   ├── workspace-shell.tsx        # nav rail + content column

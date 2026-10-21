@@ -51,3 +51,13 @@ test("signing out returns to the login page and closes the workspace", async ({ 
   await page.goto("/employees");
   await expect(page).toHaveURL(/\/login$/);
 });
+
+test("the demo credentials copy to the clipboard", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/login");
+  await page.getByRole("button", { name: "Copy password" }).click();
+  await expect(page.getByRole("button", { name: "Password copied" })).toBeVisible();
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copied.length).toBeGreaterThan(0);
+  await expect(page.getByText(copied, { exact: true })).toBeVisible();
+});
