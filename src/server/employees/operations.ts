@@ -1,11 +1,12 @@
 import "server-only";
-import type {
-  EmployeeInput,
-  EmployeeView,
-  GetEmployeeInput,
-  ListEmployeesInput,
-  ListEmployeesOutput,
-  UpdateEmployeeInput,
+import {
+  type EmployeeInput,
+  type EmployeeView,
+  type GetEmployeeInput,
+  type ListEmployeesInput,
+  type ListEmployeesOutput,
+  toEmployeeView,
+  type UpdateEmployeeInput,
 } from "@/contracts/employees";
 import { ConflictError, isUniqueViolation, NotFoundError, ValidationError } from "@/server/core/errors";
 import type { OperationContext } from "@/server/core/operation-context";
@@ -30,7 +31,8 @@ export async function listEmployees(op: OperationContext, input: ListEmployeesIn
     scope: "employees.list",
     input,
     keyOf: (row: EmployeeView) => [row.id] as const,
-    fetch: (from, take) => selectDirectoryPage(op.db, input, op.today, from, take),
+    fetch: async (from, take) =>
+      (await selectDirectoryPage(op.db, input, op.today, from, take)).map((row) => toEmployeeView(row, op.today)),
     count: () => countDirectory(op.db, input, op.today),
   });
   return { rows, summary: await selectDirectorySummary(op.db, input, op.today) };
@@ -79,7 +81,7 @@ export async function updateEmployeeDetails(op: OperationContext, input: UpdateE
 }
 
 async function requireEmployee(db: Executor, id: string, today: string): Promise<EmployeeView> {
-  const employee = await selectEmployee(db, id, today);
+  const employee = await selectEmployee(db, id);
   if (!employee) throw new NotFoundError("Employee not found");
-  return employee;
+  return toEmployeeView(employee, today);
 }

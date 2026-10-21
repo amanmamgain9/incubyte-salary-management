@@ -47,7 +47,7 @@ src/server/
 │   └── operations.ts              # getLookups, assertKnownCodes (field-keyed ValidationError)
 ├── employees/
 │   ├── status.ts                  # isActiveOn(date | date SQL), employmentStatusOn(date) SQL expressions; employmentDateErrors (pure details-edit date rule)
-│   ├── queries.ts                 # directory page/count/summary, EmployeeView select (incl. salary_revision), insert, lock + employment dates, details update
+│   ├── queries.ts                 # directory page/count/summary, employee columns select (incl. salary_revision; operations map rows through `toEmployeeView`), insert, lock + employment dates, details update
 │   └── operations.ts              # listEmployees, getEmployee, createEmployee, updateEmployeeDetails
 ├── salaries/
 │   ├── queries.ts                 # employee assignment snapshot, lock employee row, insert history, update current pay + salary_revision (returning the row), history page/count
@@ -77,7 +77,7 @@ src/contracts/
 ├── paging.ts                      # Paging input, page(item) → Page<T> (next/prev cursor, total_count, range_start), KeysetFrom<Key> (a fetch's `from`), DEFAULT_LIMIT 50, MAX_LIMIT 100
 ├── errors.ts                      # FieldErrors shape of error.data.field_errors; INVALID_CURSOR_MESSAGE (InvalidCursorError's message)
 ├── lookups.ts                     # Country, Department, Currency, lookups.get output
-├── employees.ts                   # EmploymentStatus (only definition) + employmentStatusFor(dates, date) for a loaded row, EmployeeInput, DetailsPatch, EmployeeFilters, EmployeeView, DirectorySummary, get/list/update inputs and outputs
+├── employees.ts                   # EmploymentStatus (only definition) + employmentStatusFor(dates, date) for a loaded row, EmployeeView + toEmployeeView(row, today) (its only producer), EmployeeInput, DetailsPatch, EmployeeFilters, DirectorySummary, get/list/update inputs and outputs
 ├── salaries.ts                    # HistoryView, history input, salary update input
 └── reports/
     ├── filters.ts                 # shared country/department/currency filter fields; periodEndError (`to` ≤ today, growth and benchmark)

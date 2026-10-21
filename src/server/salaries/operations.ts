@@ -1,5 +1,5 @@
 import "server-only";
-import { employmentStatusFor, type EmployeeView } from "@/contracts/employees";
+import { employmentStatusFor, type EmployeeView, toEmployeeView } from "@/contracts/employees";
 import type { HistoryView, SalaryHistoryInput, SalaryHistoryOutput, UpdateSalaryInput } from "@/contracts/salaries";
 import { toMinorUnits } from "@/lib/money";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/core/errors";
@@ -73,7 +73,7 @@ export async function changeSalary(op: OperationContext, input: UpdateSalaryInpu
       currency_code: salary_currency_code,
       reason,
     });
-    return { ...employee, employment_status: employmentStatusFor(employee, op.today) };
+    return toEmployeeView(employee, op.today);
   });
 }
 

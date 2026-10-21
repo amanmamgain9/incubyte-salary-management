@@ -9,7 +9,7 @@ export type EmploymentStatus = z.infer<typeof EmploymentStatus>;
 /**
  * One loaded employee's status on `date` (`YYYY-MM-DD`): upcoming before joining, departed after the last working day,
  * otherwise active. The same rule as the SQL `employmentStatusOn` (`server/employees/status.ts`), which filters and
- * aggregates many rows; this one serves code that already holds the dates (the salary change and its response).
+ * aggregates many rows; this one serves code that already holds the dates (the salary change and `toEmployeeView`).
  */
 export function employmentStatusFor(
   dates: { joining_date: string; last_working_day: string | null },
@@ -66,6 +66,28 @@ export const EmployeeView = z.object({
   employment_status: EmploymentStatus,
 });
 export type EmployeeView = z.infer<typeof EmployeeView>;
+
+/** The stored employee columns an `EmployeeView` is built from (everything but the derived status). */
+export type EmployeeRecord = Omit<EmployeeView, "employment_status">;
+
+/**
+ * The one producer of `EmployeeView`: the stored columns plus `employment_status` on `today`. Every procedure that
+ * returns an employee (get, list, create, update, salary change) maps its row through this.
+ */
+export function toEmployeeView(row: EmployeeRecord, today: string): EmployeeView {
+  return {
+    id: row.id,
+    name: row.name,
+    department_id: row.department_id,
+    work_country_code: row.work_country_code,
+    joining_date: row.joining_date,
+    last_working_day: row.last_working_day,
+    annual_base_pay: row.annual_base_pay,
+    salary_currency_code: row.salary_currency_code,
+    salary_revision: row.salary_revision,
+    employment_status: employmentStatusFor(row, today),
+  };
+}
 
 export const GetEmployeeInput = z.object({ id: EmployeeId });
 export type GetEmployeeInput = z.infer<typeof GetEmployeeInput>;

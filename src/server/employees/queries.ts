@@ -1,28 +1,25 @@
 import { and, asc, count, countDistinct, desc, eq, gt, ilike, lt, or, type SQL, sql } from "drizzle-orm";
-import type { DetailsPatch, DirectorySummary, EmployeeFilters, EmployeeView } from "@/contracts/employees";
+import type { DetailsPatch, DirectorySummary, EmployeeFilters, EmployeeRecord } from "@/contracts/employees";
 import type { KeysetFrom } from "@/contracts/paging";
 import type { Executor, Tx } from "@/server/db/connect";
 import { employees, salaryHistory } from "@/server/db/schema";
 import { employmentStatusOn, isActiveOn, type StoredEmploymentDates } from "@/server/employees/status";
 
-/** The EmployeeView columns, with `employment_status` as of `today`. */
-function employeeViewColumns(today: string) {
-  return {
-    id: employees.id,
-    name: employees.name,
-    department_id: employees.department_id,
-    work_country_code: employees.work_country_code,
-    joining_date: employees.joining_date,
-    last_working_day: employees.last_working_day,
-    annual_base_pay: employees.annual_base_pay,
-    salary_currency_code: employees.salary_currency_code,
-    salary_revision: employees.salary_revision,
-    employment_status: employmentStatusOn(today),
-  };
-}
+/** The stored columns of an EmployeeView; operations add the status through `toEmployeeView`. */
+const employeeColumns = {
+  id: employees.id,
+  name: employees.name,
+  department_id: employees.department_id,
+  work_country_code: employees.work_country_code,
+  joining_date: employees.joining_date,
+  last_working_day: employees.last_working_day,
+  annual_base_pay: employees.annual_base_pay,
+  salary_currency_code: employees.salary_currency_code,
+  salary_revision: employees.salary_revision,
+};
 
-export async function selectEmployee(db: Executor, id: string, today: string): Promise<EmployeeView | undefined> {
-  const [row] = await db.select(employeeViewColumns(today)).from(employees).where(eq(employees.id, id));
+export async function selectEmployee(db: Executor, id: string): Promise<EmployeeRecord | undefined> {
+  const [row] = await db.select(employeeColumns).from(employees).where(eq(employees.id, id));
   return row;
 }
 
@@ -50,10 +47,10 @@ export function selectDirectoryPage(
   today: string,
   from: KeysetFrom<readonly [string]>,
   take: number,
-): Promise<EmployeeView[]> {
+): Promise<EmployeeRecord[]> {
   const after = from === null ? undefined : from.before ? lt(employees.id, from.key[0]) : gt(employees.id, from.key[0]);
   return db
-    .select(employeeViewColumns(today))
+    .select(employeeColumns)
     .from(employees)
     .where(and(directoryWhere(filters, today), after))
     .orderBy(from?.before ? desc(employees.id) : asc(employees.id))
