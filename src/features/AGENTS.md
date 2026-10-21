@@ -69,7 +69,7 @@ src/features/
 │   └── salary-history-table.tsx   # read-only paginated history (rendered by employees/profile)
 └── reports/
     ├── report-page.tsx            # shell: header → filters → overview/trends → table; owns query + cursor wiring and the one useLookups call
-    ├── report-filters.tsx         # country/department/currency/date/month controls, configured per report; Apply checks the period, Reset → defaults
+    ├── report-filters.tsx         # country/department/currency selects + period DatePicker/MonthPicker, configured per report; Apply checks the period, Reset → defaults
     ├── country-totals.tsx         # by-country/currency summary group strip (department, growth, benchmark); commitment's rows are its groups
     ├── report-scope.ts            # pure: overview scope line from the filters ("All countries · …")
     ├── search-params.ts           # mechanism: filter params defined once (`filterParams` code filters + `from`/`to` → FilterParam, clearedFilters, appliedFilters; period reports `.pick`/`.extend` them), reportFilterSearch (commitment, department), trailingMonths, periodErrors/validPeriod (the caller's period contract + `periodEndError`), filter form → patch; never imports a specific report
@@ -152,7 +152,7 @@ src/trpc/
 **UI and styling**
 - Build screens from `src/components/ui`. Never paste Tailwind class strings for buttons, alerts, headers, cards, tables or fields; add a variant instead.
 - Colors, radii and shadows come only from `@theme` tokens in `src/app/globals.css`, ported once from `docs/screens/styles.input.css`. No hex/rgb/hsl values or arbitrary color classes (`bg-[#…]`) in components.
-- Dates and months use native `<Input type="date">` / `<Input type="month">` with ISO values. A month input also carries `placeholder="YYYY-MM"` for browsers that render it as text.
+- Every date goes through `<DatePicker>` and every month through `<MonthPicker>` (`components/ui`): controlled with ISO strings (a month is its first day, `YYYY-MM-01`), `min`/`max` for bounds, `clearable` for optional dates. No native date/month inputs and no other date library. In a `useForm` form spread `valueProps(name)`; in a form read with FormData (report filters) hold the value in state and pass `name`, which submits it through a hidden input.
 - Every amount renders through `<Amount>` with its currency. Currencies are never summed or charted together.
 - Every form is a modal: `<Dialog>` (`components/ui/dialog.tsx`) opened and closed only through `useDialog` (`?dialog=`), wrapped per feature with its own names (`useEmployeeDialog`). Dialog files wrap a dialog-agnostic form (`onSaved`/`onCancel` props) and pass `pending` from `useIsMutating({ mutationKey })`. Never copy dialog plumbing (`showModal`, backdrop, focus, `replaceState`) anywhere else.
 

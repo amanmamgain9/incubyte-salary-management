@@ -96,8 +96,8 @@ describe("readFilterForm", () => {
     ).toEqual({ patch: { work_country_code: "IN", department_id: "", salary_currency_code: "" }, errors: {} });
   });
 
-  it("turns a month control into its first day", () => {
-    const form = { from: "2025-02", to: "2026-01-31", work_country_code: "" };
+  it("patches the picked period with the code filters", () => {
+    const form = { from: "2025-02-01", to: "2026-01-31", work_country_code: "" };
     expect(readFilterForm(["months", "country"], form, today, HistoricalSalaryBenchmarkInput)).toEqual({
       patch: { work_country_code: "", from: "2025-02-01", to: "2026-01-31" },
       errors: {},
@@ -112,7 +112,7 @@ describe("readFilterForm", () => {
   });
 
   it("checks the period with the contract it is given", () => {
-    const form = { from: "2011-01", to: "2026-01-31" };
+    const form = { from: "2011-01-01", to: "2026-01-31" };
     expect(readFilterForm(["months"], form, today, HistoricalSalaryBenchmarkInput).errors).toEqual({
       to: "Choose at most 180 months",
     });

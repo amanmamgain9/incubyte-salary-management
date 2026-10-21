@@ -77,7 +77,7 @@ export function validPeriod<S extends Period>(
 
 /**
  * The filter form's submitted fields → a URL patch, or the period's errors (checked against `period`, the report's
- * contract, when it shows a period). A blank select means "all"; a month control's `YYYY-MM` becomes its first day.
+ * contract, when it shows a period). A blank select means "all"; the pickers submit ISO dates (a month as its first day).
  */
 export function readFilterForm(
   fields: readonly ReportFilterField[],
@@ -92,7 +92,6 @@ export function readFilterForm(
   const field = fields.includes("dates") ? "dates" : fields.includes("months") ? "months" : null;
   if (!field) return { patch, errors: {} };
   if (!period) throw new Error(`A report with a ${field} filter passes its period contract`);
-  const from = form.from ?? "";
-  const values = { from: field === "months" ? `${from}-01` : from, to: form.to ?? "" };
+  const values = { from: form.from ?? "", to: form.to ?? "" };
   return { patch: { ...patch, ...values }, errors: periodErrors(period, values, today) };
 }

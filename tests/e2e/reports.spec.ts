@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { pickDate, pickerTrigger } from "./pickers";
 import { expect, test } from "./session";
 
 // The setup project seeds a small generated workforce in GB, DE and SG with salary histories (global-setup.ts).
@@ -68,8 +69,8 @@ test("salary growth lists monthly changes and filters by country", async ({ page
 
 test("a reversed growth period shows the error and keeps the URL", async ({ page }) => {
   await page.goto("/reports/salary-growth");
-  await page.getByLabel("From date").fill("2026-01-01");
-  await page.getByLabel("Through").fill("2025-12-31");
+  await pickDate(page, "From date", "2026-01-01");
+  await pickDate(page, "Through", "2025-12-31");
   await page.getByRole("button", { name: "Apply" }).click();
   await expect(page.getByText("Must be on or after the start date")).toBeVisible();
   await expect(page).toHaveURL(/\/reports\/salary-growth$/);
@@ -79,7 +80,7 @@ test("historical benchmark lists month-end rows for 24 months and filters by cur
   await page.goto("/reports/historical-salary-benchmark");
   const table = page.getByRole("table", { name: "Monthly salary benchmarks" });
   await expect(table.getByRole("row").nth(1)).toBeVisible();
-  await expect(page.getByLabel("From month")).not.toHaveValue("");
+  await expect(pickerTrigger(page, "From month")).toHaveText(/^[A-Z][a-z]{2} \d{4}$/);
 
   await applyFilter(page, "Currency", "SGD · Singapore Dollar");
   await expect(page).toHaveURL(/\/reports\/historical-salary-benchmark\?.*salary_currency_code=SGD/);

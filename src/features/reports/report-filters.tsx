@@ -2,8 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { FormField } from "@/components/ui/form-field";
-import { Input } from "@/components/ui/input";
+import { MonthPicker } from "@/components/ui/month-picker";
 import { Select } from "@/components/ui/select";
 import {
   readFilterForm,
@@ -45,6 +46,10 @@ export function ReportFilters({
   onReset: () => void;
 }) {
   const [errors, setErrors] = useState<PeriodErrors>({});
+  // The pickers are controlled; their hidden inputs put the period into the FormData read on Apply.
+  const [picked, setPicked] = useState({ from: values.from ?? "", to: values.to ?? "" });
+  const setFrom = (from: string) => setPicked((current) => ({ ...current, from }));
+  const setTo = (to: string) => setPicked((current) => ({ ...current, to }));
   const controls = fields.reduce((count, field) => count + (field === "dates" || field === "months" ? 2 : 1), 0);
 
   const apply = (event: FormEvent<HTMLFormElement>) => {
@@ -67,26 +72,17 @@ export function ReportFilters({
     >
       {fields.includes("dates") ? (
         <FormField label="From date" error={errors.from}>
-          <Input type="date" name="from" defaultValue={values.from} max={today} required />
+          <DatePicker name="from" value={picked.from} onChange={setFrom} max={today} required />
         </FormField>
       ) : null}
       {fields.includes("months") ? (
         <FormField label="From month" error={errors.from}>
-          {/* Browsers without a month control render a text field: the placeholder and pattern show the format. */}
-          <Input
-            type="month"
-            name="from"
-            defaultValue={values.from?.slice(0, 7)}
-            max={today.slice(0, 7)}
-            placeholder="YYYY-MM"
-            pattern="[0-9]{4}-[0-9]{2}"
-            required
-          />
+          <MonthPicker name="from" value={picked.from} onChange={setFrom} max={today} />
         </FormField>
       ) : null}
       {fields.includes("dates") || fields.includes("months") ? (
         <FormField label="Through" error={errors.to}>
-          <Input type="date" name="to" defaultValue={values.to} max={today} required />
+          <DatePicker name="to" value={picked.to} onChange={setTo} max={today} required />
         </FormField>
       ) : null}
       {fields.includes("country") ? (

@@ -23,7 +23,7 @@ Sign in → Employees → Employee profile. Forms open as modal dialogs, never a
 
 ## Shared behavior
 
-- Employee dates and report dates use native date inputs, report months a native month input (`YYYY-MM` placeholder where a browser shows it as text); values are ISO strings and the last working day can be cleared.
+- One shared calendar for every date: employee joining and leaving dates and report dates use the date picker, the benchmark's from month the month picker. The field shows the picked date ("21 Oct 2026") and opens a popover below it: a month grid with month and year dropdowns (date) or a year of months with previous/next year (month), today marked, days or months after today disabled where the period must end by today. Keyboard: arrows move, PageUp/PageDown change month (date) or year (month), Enter picks, Esc closes and returns focus to the field. The optional last working day has a clear button. Values are ISO strings (a month is its first day); on a phone the popover stays within the screen.
 - Country and salary currency stay separate. Pay comparisons/charts never combine currencies.
 - Report summaries cover the complete matching population, independent of table pagination. Historical country medians retain all departments.
 - Tables scroll horizontally on smaller screens; wide historical tables keep the month visible. Keyboard focus, labels, status text and form errors remain visible.
