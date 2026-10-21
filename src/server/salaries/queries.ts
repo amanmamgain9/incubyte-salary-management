@@ -28,9 +28,22 @@ export async function insertHistoryEntry(db: Executor, entry: Omit<typeof salary
 export async function lockCurrentPay(
   db: Executor,
   employee_id: string,
-): Promise<{ salary_revision: number; last_working_day: string | null } | undefined> {
+): Promise<
+  | {
+      salary_revision: number;
+      last_working_day: string | null;
+      annual_base_pay: string;
+      salary_currency_code: string;
+    }
+  | undefined
+> {
   const [row] = await db
-    .select({ salary_revision: employees.salary_revision, last_working_day: employees.last_working_day })
+    .select({
+      salary_revision: employees.salary_revision,
+      last_working_day: employees.last_working_day,
+      annual_base_pay: employees.annual_base_pay,
+      salary_currency_code: employees.salary_currency_code,
+    })
     .from(employees)
     .where(eq(employees.id, employee_id))
     .for("update");

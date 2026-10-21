@@ -1,5 +1,6 @@
 import "server-only";
 import type { HistoryView, SalaryHistoryInput, SalaryHistoryOutput, UpdateSalaryInput } from "@/contracts/salaries";
+import { toMinorUnits } from "@/lib/money";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/core/errors";
 import type { OperationContext } from "@/server/core/operation-context";
 import { paginateKeyset } from "@/server/core/pagination";
@@ -39,8 +40,9 @@ export async function appendSalaryRevision(tx: Executor, op: OperationContext, r
 }
 
 /**
- * The only way current pay changes: locks the employee, rejects a departed employee or a stale `expected_revision`,
- * then updates current pay to the next revision and appends its history entry, in one transaction.
+ * The only way current pay changes: locks the employee, rejects a departed employee, a stale `expected_revision` or a
+ * change to the same amount and currency, then updates current pay to the next revision and appends its history entry,
+ * in one transaction.
  */
 export async function changeSalary(op: OperationContext, input: UpdateSalaryInput): Promise<void> {
   await assertKnownCodes(op, input);
@@ -54,6 +56,10 @@ export async function changeSalary(op: OperationContext, input: UpdateSalaryInpu
     }
     if (stored.salary_revision !== expected_revision) {
       throw new ConflictError("Salary changed since it was loaded; reload and try again");
+    }
+    const samePay = toMinorUnits(stored.annual_base_pay) === toMinorUnits(annual_base_pay);
+    if (samePay && stored.salary_currency_code === salary_currency_code) {
+      throw new ValidationError({ annual_base_pay: "No change from the current salary" });
     }
     const revision = expected_revision + 1;
     await updateCurrentPay(tx, employee_id, { annual_base_pay, salary_currency_code, salary_revision: revision });

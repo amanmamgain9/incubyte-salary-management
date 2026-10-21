@@ -60,6 +60,7 @@ HistoryView = SalaryHistoryEntry + { changed_by_name: String }
 - Details edits validate against stored values: `last_working_day` ≥ `joining_date` and ≥ the UTC date of the latest revision after the initial salary. `joining_date` is not checked against history: revisions may precede joining. Violations are `BAD_REQUEST` keyed by the submitted field. Clients send only changed fields.
 - `salary_revision` is stored on the employee and equals the latest history revision. Salary updates require it as `expected_revision` and return the new revision after commit.
 - Salary updates need an employee active or upcoming today (UTC); a pre-start revision (e.g. a revised offer) is a normal revision. Departed (last working day before today) is `BAD_REQUEST` with `field_errors.employee_id`. Revisions therefore never fall after the last working day.
+- A salary update whose amount and currency both equal the current ones is `BAD_REQUEST` with `field_errors.annual_base_pay` ("No change from the current salary"), checked after the expected revision: an identical revision would add history without a pay change. The same amount in another currency is a change.
 - Server assigns history ID, revision, timestamp, actor and country/department snapshots. Details edits preserve existing history.
 
 ## Reports
@@ -112,7 +113,7 @@ Use [tRPC error codes](https://trpc.io/docs/server/error-handling):
 
 | Code | Meaning |
 | --- | --- |
-| `BAD_REQUEST` | Invalid input, unknown country/department/currency, salary change for a departed employee, or invalid cursor; validation includes `error.data.field_errors` |
+| `BAD_REQUEST` | Invalid input, unknown country/department/currency, salary change for a departed employee or with no change, or invalid cursor; validation includes `error.data.field_errors` |
 | `UNAUTHORIZED` | Missing, expired or revoked session |
 | `FORBIDDEN` | Mutation whose `Origin` header is missing or not the app origin |
 | `NOT_FOUND` | Employee does not exist |

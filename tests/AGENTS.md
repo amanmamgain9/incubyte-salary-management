@@ -28,7 +28,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── constraints.test.ts / grants.test.ts  # FKs, checks, unique revision; app role cannot UPDATE/DELETE history
 │   ├── employees.test.ts          # list filters/search/status boundaries/paging/summary, get
 │   ├── employee-writes.test.ts    # create (+ revision 1 history), duplicate ID, unknown codes, details edit and date rules
-│   ├── salaries.test.ts           # change, stale revision, concurrent changes, upcoming allowed, departed rejected, rollback
+│   ├── salaries.test.ts           # change, no-change rejection, stale revision, concurrent changes, upcoming allowed, departed rejected, rollback
 │   ├── salary-history.test.ts     # history order, actor name, snapshots, paging, cursor scope, departed still readable
 │   ├── lookups.test.ts            # lookups.get: name order, seeded lookups, empty lists, session required; assertKnownCodes
 │   ├── seed.test.ts               # seedEmployees: the full generated dataset passes every constraint; refuses a non-empty table
@@ -39,7 +39,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
     ├── session.ts                 # signIn (login form), callMutation, and `test` with one HR session per worker + `api.mutate`
     ├── auth.spec.ts               # login error, login, sign out
     ├── employees.spec.ts          # create dialog → profile, duplicate ID, edit/date errors/departure, deep link, Esc, focus return, 404
-    ├── salaries.spec.ts           # salary change with delta → new history revision; conflict reload
+    ├── salaries.spec.ts           # unchanged pay error, salary change with delta → new history revision; conflict reload
     └── reports.spec.ts            # each report renders rows and applies a filter (URL + table; growth first makes its own revision, so the seed date does not matter); a salary change refreshes the cached commitment report
 
 scripts/

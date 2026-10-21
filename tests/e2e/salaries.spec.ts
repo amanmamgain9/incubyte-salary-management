@@ -10,13 +10,20 @@ const employee = (id: string) => ({
   salary_currency_code: "INR",
 });
 
-test("changing salary shows the delta and adds a revision to the history", async ({ page, api }) => {
+test("changing salary rejects the current pay, shows the delta and adds a revision to the history", async ({ page, api }) => {
   await api.mutate("employees.create", employee("E2E-0201"));
   await page.goto("/employees/E2E-0201");
   await page.getByRole("button", { name: "Change salary" }).click();
   await expect(page).toHaveURL(/\?dialog=salary$/);
   const dialog = page.getByRole("dialog", { name: "Change salary" });
   await expect(dialog.getByText("Revision 1")).toBeVisible();
+  await dialog.getByLabel("New annual base pay").fill("1200000");
+  await expect(dialog.getByText("Same as current pay")).toBeVisible();
+  await dialog.getByLabel("Reason for change").fill("Annual salary review");
+  await dialog.getByRole("button", { name: "Save salary" }).click();
+  await expect(dialog.getByText("No change from the current salary")).toBeVisible();
+  await expect(dialog.getByLabel("New annual base pay")).toHaveAttribute("aria-invalid", "true");
+
   await dialog.getByLabel("New annual base pay").fill("1350000.50");
   await expect(dialog.getByText("+12.50% · INR 150,000.50 increase")).toBeVisible();
   await dialog.getByLabel("Reason for change").fill("Annual salary review");
