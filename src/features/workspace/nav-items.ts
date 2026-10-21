@@ -11,6 +11,7 @@ export const navSections: ReadonlyArray<{ label: string; items: readonly NavItem
     items: [
       { href: "/reports/salary-commitment", label: "Salary commitment", icon: "commitment" },
       { href: "/reports/department-breakdown", label: "Departments", icon: "departments" },
+      { href: "/reports/salary-growth", label: "Salary growth", icon: "growth" },
     ],
   },
 ];

@@ -1,0 +1,25 @@
+"use client";
+
+import { useMemo } from "react";
+import { ReportPage } from "@/features/reports/report-page";
+import { SalaryGrowthSummary } from "@/features/reports/salary-growth/salary-growth-summary";
+import { SalaryGrowthTable } from "@/features/reports/salary-growth/salary-growth-table";
+import { salaryGrowthSearch } from "@/features/reports/search-params";
+import { useTRPC } from "@/trpc/client";
+
+/** Salary growth: revisions' increases, decreases and net change by month, country and currency. */
+export function SalaryGrowthReport({ today }: { today: string }) {
+  const trpc = useTRPC();
+  const search = useMemo(() => salaryGrowthSearch(today), [today]);
+  return (
+    <ReportPage
+      title="Salary growth"
+      today={today}
+      search={search}
+      filters={["dates", "country", "department"]}
+      queryOptions={(input) => trpc.reports.salaryGrowth.queryOptions(input)}
+      summary={(output, input) => <SalaryGrowthSummary summary={output.summary} input={input} />}
+      table={(rows, input) => <SalaryGrowthTable rows={rows} input={input} />}
+    />
+  );
+}

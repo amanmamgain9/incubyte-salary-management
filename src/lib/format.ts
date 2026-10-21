@@ -79,6 +79,14 @@ export function formatDate(date: string | null): string {
   return dates.format(new Date(`${date.slice(0, 10)}T00:00:00Z`));
 }
 
+const months = new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" });
+
+/** A `YYYY-MM` month, e.g. "2026-10" → "Oct 2026"; `short` for chart axes → "Oct ’26". */
+export function formatMonth(month: string, style: "long" | "short" = "long"): string {
+  const name = months.format(new Date(`${month}-01T00:00:00Z`));
+  return style === "short" ? `${name} ’${month.slice(2, 4)}` : `${name} ${month.slice(0, 4)}`;
+}
+
 /** An ISO UTC timestamp as date and minute, e.g. "2024-01-15T10:05:00.000Z" → "15 Jan 2024 · 10:05 UTC". */
 export function formatTimestamp(timestamp: string): string {
   const time = new Date(timestamp).toISOString().slice(11, 16);

@@ -5,6 +5,7 @@ import {
   formatDate,
   formatInitials,
   formatMoney,
+  formatMonth,
   formatPercent,
   formatRange,
   formatTimestamp,
@@ -117,5 +118,17 @@ describe("formatCompact", () => {
 
   it("returns a non-decimal value unchanged", () => {
     expect(formatCompact("n/a")).toBe("n/a");
+  });
+});
+
+describe("formatMonth", () => {
+  it("names the month and year", () => {
+    expect(formatMonth("2026-10")).toBe("Oct 2026");
+    expect(formatMonth("2025-01")).toBe("Jan 2025");
+    expect(formatMonth("2025-09")).toBe("Sep 2025");
+  });
+
+  it("abbreviates the year for chart axes", () => {
+    expect(formatMonth("2026-03", "short")).toBe("Mar ’26");
   });
 });
