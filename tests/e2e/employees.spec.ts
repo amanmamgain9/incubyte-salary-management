@@ -1,3 +1,4 @@
+import { pickDate, pickerTrigger } from "./pickers";
 import { expect, test } from "./session";
 
 const grace = {
@@ -19,7 +20,7 @@ test("adding an employee from the dialog lists them and opens their profile", as
   await dialog.getByLabel("Full name").fill("Katherine Johnson");
   await dialog.getByLabel("Department").selectOption({ label: "Engineering" });
   await dialog.getByLabel("Work country").selectOption({ label: "Canada" });
-  await dialog.getByLabel("Joining date").fill("2024-05-02");
+  await pickDate(dialog, "Joining date", "2024-05-02");
   await dialog.getByLabel("Annual base pay").fill("101500.25");
   await dialog.getByLabel("Salary currency").selectOption("CAD");
   await dialog.getByRole("button", { name: "Create employee" }).click();
@@ -67,12 +68,12 @@ test("editing details sends changes, shows date errors per field and records a d
   await expect(dialog.getByLabel("Employee ID")).toHaveValue("E2E-0103");
   await expect(save).toBeDisabled();
 
-  await dialog.getByLabel("Last working day · optional").fill("2024-01-31");
+  await pickDate(dialog, "Last working day · optional", "2024-01-31");
   await save.click();
   await expect(dialog.getByText("Must be on or after the joining date")).toBeVisible();
-  await expect(dialog.getByLabel("Last working day · optional")).toBeFocused();
+  await expect(pickerTrigger(dialog, "Last working day · optional")).toBeFocused();
 
-  await dialog.getByLabel("Last working day · optional").fill("2025-06-30");
+  await pickDate(dialog, "Last working day · optional", "2025-06-30");
   await dialog.getByLabel("Department").selectOption({ label: "Finance" });
   await save.click();
 

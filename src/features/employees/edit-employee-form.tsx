@@ -2,6 +2,7 @@
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { FormActions, FormField, FormGrid, FormSection } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import type { EmployeeView } from "@/contracts/employees";
@@ -61,7 +62,7 @@ export function EditEmployeeForm({
           </FormField>
           <EmployeeFields form={form} options={options} countryHint="Salary currency stays unchanged." />
           <FormField label="Last working day · optional" hint="Blank while employed." error={form.errors.last_working_day}>
-            <Input {...form.inputProps("last_working_day")} type="date" />
+            <DatePicker {...form.valueProps("last_working_day")} clearable />
           </FormField>
         </FormGrid>
       </FormSection>

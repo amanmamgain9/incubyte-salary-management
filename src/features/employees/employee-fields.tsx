@@ -1,7 +1,8 @@
+import { DatePicker } from "@/components/ui/date-picker";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import type { InputProps } from "@/hooks/use-form";
+import type { InputProps, ValueProps } from "@/hooks/use-form";
 import type { LookupOptions } from "@/hooks/use-lookups";
 
 type DetailsField = "name" | "department_id" | "work_country_code" | "joining_date";
@@ -9,6 +10,7 @@ type DetailsField = "name" | "department_id" | "work_country_code" | "joining_da
 /** The `useForm` parts the shared fields need; any form whose values include these fields fits. */
 type DetailsForm = {
   inputProps: (name: DetailsField) => InputProps;
+  valueProps: (name: DetailsField) => ValueProps;
   errors: Partial<Record<DetailsField, string>>;
 };
 
@@ -34,7 +36,7 @@ export function EmployeeFields({
         <Select {...form.inputProps("work_country_code")} required emptyLabel="Select a country" options={options.countryOptions} />
       </FormField>
       <FormField label="Joining date" error={form.errors.joining_date}>
-        <Input {...form.inputProps("joining_date")} type="date" required />
+        <DatePicker {...form.valueProps("joining_date")} required />
       </FormField>
     </>
   );
