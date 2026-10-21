@@ -1,5 +1,6 @@
 import "server-only";
 import type { SalaryGrowthInput, SalaryGrowthOutput, SalaryGrowthRow } from "@/contracts/reports/salary-growth";
+import { periodEndError } from "@/contracts/reports/filters";
 import { ValidationError } from "@/server/core/errors";
 import type { OperationContext } from "@/server/core/operation-context";
 import { paginateKeyset } from "@/server/core/pagination";
@@ -9,7 +10,8 @@ import { countGrowthRows, selectGrowthRows, selectGrowthSummary } from "@/server
 /** Increases, decreases and currency switches from salary revisions in a period, by month, country and currency. */
 export async function salaryGrowth(op: OperationContext, input: SalaryGrowthInput): Promise<SalaryGrowthOutput> {
   await assertKnownCodes(op, input);
-  if (input.to > op.today) throw new ValidationError({ to: "Must be today or earlier" });
+  const toError = periodEndError(input.to, op.today);
+  if (toError) throw new ValidationError({ to: toError });
   const rows = await paginateKeyset({
     scope: "reports.salaryGrowth",
     input,

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Paging } from "@/contracts/paging";
 import { IsoDate } from "@/contracts/primitives";
-import { ReportFilters } from "@/contracts/reports/filters";
+import { periodEndError, ReportFilters } from "@/contracts/reports/filters";
 import { HistoricalSalaryBenchmarkInput } from "@/contracts/reports/historical-salary-benchmark";
 import { SalaryGrowthInput } from "@/contracts/reports/salary-growth";
 import { monthStart } from "@/lib/dates";
@@ -48,7 +48,8 @@ export function periodErrors(field: PeriodField, period: Period, today: string):
     const key = issue.path[0];
     if ((key === "from" || key === "to") && !errors[key]) errors[key] = issue.message;
   }
-  if (!errors.to && period.to > today) errors.to = "Must be today or earlier";
+  const toError = errors.to ? undefined : periodEndError(period.to, today);
+  if (toError) errors.to = toError;
   return errors;
 }
 

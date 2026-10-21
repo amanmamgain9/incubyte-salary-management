@@ -14,7 +14,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── server/api/{error-formatter,map-domain-errors}.test.ts
 │   ├── server/db/connect.test.ts  # siblingDatabaseUrl / databaseName
 │   ├── trpc/query-client.test.ts  # retry predicate, invalid-cursor predicate, global UNAUTHORIZED handling
-│   ├── contracts/*.test.ts        # money/decimal, dates, first-of-month, 180 months, non-empty DetailsPatch
+│   ├── contracts/**/*.test.ts       # money/decimal, dates, first-of-month, 180 months, non-empty DetailsPatch, period end ≤ today
 │   ├── lib/*.test.ts              # format, money, dates, search-params, mutation-errors, product-defaults
 │   ├── features/**/*.test.ts      # every *-data.ts, salary-delta, search-params builders
 │   └── scripts/data-generation/*.test.ts  # determinism, quotas, tenure, history rules, manifest arithmetic

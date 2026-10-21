@@ -71,7 +71,7 @@ src/features/
     ├── report-filters.tsx         # country/department/currency/date/month controls, configured per report; Apply checks the period, Reset → defaults
     ├── country-totals.tsx         # by-country/currency summary group strip (department, growth, benchmark); commitment's rows are its groups
     ├── report-scope.ts            # pure: overview scope line from the filters ("All countries · …")
-    ├── search-params.ts           # build a report's input from URL params + defaults(today); periodErrors (contract rules + `to` ≤ today); filter form → patch
+    ├── search-params.ts           # build a report's input from URL params + defaults(today); periodErrors (contract rules + `periodEndError`); filter form → patch
     └── <report>/                  # salary-commitment | department-breakdown | salary-growth | historical-salary-benchmark
         ├── <report>-report.tsx    # composes <ReportPage> with this report's parts
         ├── <report>-summary.tsx   # overview measures for this report

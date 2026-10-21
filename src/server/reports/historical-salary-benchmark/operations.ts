@@ -4,6 +4,7 @@ import type {
   HistoricalSalaryBenchmarkOutput,
   HistoricalSalaryBenchmarkRow,
 } from "@/contracts/reports/historical-salary-benchmark";
+import { periodEndError } from "@/contracts/reports/filters";
 import { ValidationError } from "@/server/core/errors";
 import type { OperationContext } from "@/server/core/operation-context";
 import { paginateKeyset } from "@/server/core/pagination";
@@ -24,7 +25,8 @@ export async function historicalSalaryBenchmark(
   input: HistoricalSalaryBenchmarkInput,
 ): Promise<HistoricalSalaryBenchmarkOutput> {
   await assertKnownCodes(op, input);
-  if (input.to > op.today) throw new ValidationError({ to: "Must be today or earlier" });
+  const toError = periodEndError(input.to, op.today);
+  if (toError) throw new ValidationError({ to: toError });
   return op.db.transaction(async (tx) => {
     await createBenchmarkGroups(tx, input);
     const rows = await paginateKeyset({

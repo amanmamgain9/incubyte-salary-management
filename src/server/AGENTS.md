@@ -79,7 +79,7 @@ src/contracts/
 ├── employees.ts                   # EmploymentStatus (only definition), EmployeeInput, DetailsPatch, EmployeeFilters, EmployeeView, DirectorySummary, get/list/update inputs and outputs
 ├── salaries.ts                    # HistoryView, history input, salary update input
 └── reports/
-    ├── filters.ts                 # shared country/department/currency filter fields
+    ├── filters.ts                 # shared country/department/currency filter fields; periodEndError (`to` ≤ today, growth and benchmark)
     ├── salary-commitment.ts       # input, Row, CountryCount, Summary, output
     ├── department-breakdown.ts    # input, Row, CountrySummary, DepartmentPoint, output
     ├── salary-growth.ts           # input (from ≤ to), Row, GrowthTotal, GrowthPoint, output
@@ -106,7 +106,7 @@ src/contracts/
 
 **Validation split**
 - Zod (contracts): shape, format, static limits — 2 dp positive money, ISO dates, `from ≤ to`, first-of-month, ≤ 180 months, non-empty patch.
-- Operations: rules needing the DB or clock — codes exist (`assertKnownCodes` on writes and list/report filters), employment dates against stored dates and salary history, expected revision, salary changes only for employees not departed today (active or upcoming), `to ≤ today` (growth, benchmark) — as `ValidationError` keyed by field, `ConflictError` or `NotFoundError`.
+- Operations: rules needing the DB or clock — codes exist (`assertKnownCodes` on writes and list/report filters), employment dates against stored dates and salary history, expected revision, salary changes only for employees not departed today (active or upcoming), `to ≤ today` (growth, benchmark; `periodEndError` in `contracts/reports/filters.ts`, which the filter form also checks) — as `ValidationError` keyed by field, `ConflictError` or `NotFoundError`.
 - Duplicate employee ID: no pre-check SELECT; translate the primary-key violation to `ConflictError` with `field_errors.id`. Never leak SQL errors or constraint names.
 
 **Pagination**
@@ -141,7 +141,8 @@ export async function paginateKeyset<Row, Key extends readonly unknown[]>(args: 
 // src/server/reports/salary-growth/operations.ts — every report operation has this shape
 export async function salaryGrowth(op: OperationContext, input: SalaryGrowthInput): Promise<SalaryGrowthOutput> {
   await assertKnownCodes(op, input);
-  if (input.to > op.today) throw new ValidationError({ to: "Must be today or earlier" });
+  const toError = periodEndError(input.to, op.today); // contracts/reports/filters.ts, shared with the filter form
+  if (toError) throw new ValidationError({ to: toError });
   const rows = await paginateKeyset({
     scope: "reports.salaryGrowth", input,
     keyOf: (row) => [row.month, row.work_country_code, row.salary_currency_code] as const,

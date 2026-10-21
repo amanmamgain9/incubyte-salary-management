@@ -11,3 +11,11 @@ export const ReportFilters = z.object({
   salary_currency_code: CurrencyCode.optional(),
 });
 export type ReportFilters = z.infer<typeof ReportFilters>;
+
+/**
+ * A period that must end today (UTC) or earlier (salary growth, historical benchmark): the error for `to`, or undefined.
+ * The operations enforce it and the report filter form checks it before applying.
+ */
+export function periodEndError(to: string, today: string): string | undefined {
+  return to > today ? "Must be today or earlier" : undefined;
+}
