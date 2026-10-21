@@ -6,7 +6,7 @@ Design rules: [visual language](design-language.md).
 
 ## Navigation
 
-Sign in → Employees → Employee profile. Forms open as modal dialogs, never as pages: Add employee over Employees (`?dialog=create`); Edit details (`?dialog=edit`) and Change salary (`?dialog=salary`) over the profile. The `dialog` search param deep-links each one; closing returns to the page behind. The prototypes draw the forms as pages; their fields and states still apply. The shared sidebar links to all four reports; sign out returns to login.
+Sign in → Employees → Employee profile. Forms open as modal dialogs, never as pages: Add employee over Employees (`?dialog=create`); Edit details (`?dialog=edit`) and Change salary (`?dialog=salary`) over the profile. The `dialog` search param deep-links each one; closing returns to the page behind. Filters, pages and dialogs replace the current URL rather than adding history entries, so Back leaves the page (intentional). The prototypes draw the forms as pages; their fields and states still apply. The shared sidebar links to all four reports; sign out returns to login.
 
 | Screen                  | HTML                                                  | Contents and actions                                                                                                                                                                               |
 | ----------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

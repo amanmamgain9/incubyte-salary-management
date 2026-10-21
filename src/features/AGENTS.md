@@ -150,6 +150,7 @@ src/trpc/
 - Every form is a modal: `<Dialog>` (`components/ui/dialog.tsx`) opened and closed only through `useDialog()` (`?dialog=`). Dialog files wrap a dialog-agnostic form (`onSaved`/`onCancel` props) and pass `pending` from `useIsMutating({ mutationKey })`. Never copy dialog plumbing (`showModal`, backdrop, focus, `replaceState`) anywhere else.
 
 **URL state**
+- Intentional: filters, pages and dialogs replace the current history entry (`replaceState`), so links and reloads keep the state but Back leaves the page instead of stepping through filter, page or dialog changes.
 - All search-param state goes through `useUrlState(schema)`. No direct `URLSearchParams`, `router.replace` with hand-built strings, `history.replaceState` or `as` casts.
 - URL schemas derive from contract inputs (`.pick()`, coercion, `.catch(default)`), so bad params fall back to defaults.
 - Defaults (report ranges, form selections) come from `lib/product-defaults.ts` as functions of `today`. Never hardcode dates or codes in components.
