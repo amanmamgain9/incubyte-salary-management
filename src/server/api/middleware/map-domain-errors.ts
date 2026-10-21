@@ -1,6 +1,12 @@
 import "server-only";
 import { initTRPC, TRPCError } from "@trpc/server";
-import { ConflictError, InvalidCursorError, NotFoundError, ValidationError } from "@/server/core/errors";
+import {
+  ConflictError,
+  InvalidCursorError,
+  NotFoundError,
+  sqlStateOf,
+  ValidationError,
+} from "@/server/core/errors";
 
 // A standalone builder so api/trpc.ts can `.concat()` this middleware without an import cycle.
 const t = initTRPC.create();
@@ -26,13 +32,6 @@ function toTRPCError(error: TRPCError): TRPCError {
 
 // Error messages can embed SQL parameters (inputs), so only the name and SQLSTATE are logged.
 function logUnexpected(path: string, cause: Error | undefined): void {
-  const sqlState = findSqlState(cause);
+  const sqlState = sqlStateOf(cause);
   console.error(`Unexpected error in ${path}: ${cause?.name ?? "Error"}${sqlState ? ` (SQLSTATE ${sqlState})` : ""}`);
-}
-
-function findSqlState(error: unknown): string | undefined {
-  for (let current = error; current instanceof Error; current = current.cause) {
-    if ("code" in current && typeof current.code === "string") return current.code;
-  }
-  return undefined;
 }

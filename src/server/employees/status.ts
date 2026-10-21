@@ -1,6 +1,20 @@
 // Employment status and dates, derived from joining_date and last_working_day. Script-safe: no `server-only`.
+import { type SQL, sql } from "drizzle-orm";
 import type { FieldErrors } from "@/contracts/errors";
-import type { DetailsPatch } from "@/contracts/employees";
+import type { DetailsPatch, EmploymentStatus } from "@/contracts/employees";
+import { employees } from "@/server/db/schema";
+
+/** SQL: the employee is active on `date` (`YYYY-MM-DD`), from the joining date through the last working day. */
+export function isActiveOn(date: string): SQL {
+  return sql`(${employees.joining_date} <= ${date}::date
+    and (${employees.last_working_day} is null or ${employees.last_working_day} >= ${date}::date))`;
+}
+
+/** SQL: the employee's status on `date`: active (isActiveOn), upcoming before joining, departed after leaving. */
+export function employmentStatusOn(date: string): SQL<EmploymentStatus> {
+  return sql<EmploymentStatus>`(case when ${isActiveOn(date)} then 'active'
+    when ${employees.joining_date} > ${date}::date then 'upcoming' else 'departed' end)`;
+}
 
 /** The stored dates a details edit is checked against. */
 export type StoredEmploymentDates = {

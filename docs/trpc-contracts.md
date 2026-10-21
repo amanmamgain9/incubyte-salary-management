@@ -4,7 +4,7 @@ Procedures at `/api/trpc` use [Zod validation](https://trpc.io/docs/server/valid
 
 ## Shared shapes
 
-Models reference [data-model.md](data-model.md). Money is a decimal string; counts/revisions are integers. Dates are `YYYY-MM-DD`; timestamps are ISO UTC strings. `?` means optional input; `null` clears the last working day.
+Models reference [data-model.md](data-model.md). Money is a decimal string (input: positive, at most two decimals and 16 integer digits); counts/revisions are integers. Dates are `YYYY-MM-DD`; timestamps are ISO UTC strings. `?` means optional input; `null` clears the last working day.
 
 ```text
 Paging = { cursor?: String, limit?: Integer }

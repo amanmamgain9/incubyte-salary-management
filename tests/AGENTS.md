@@ -24,9 +24,10 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── harness.test.ts            # app role reaches `<db>_test`; resetTables empties public tables and restarts identities
 │   ├── fixtures.ts                # minimal builders: lookups, HR user, employee + history
 │   ├── constraints.test.ts / grants.test.ts  # FKs, checks, unique revision; app role cannot UPDATE/DELETE history
-│   ├── employees.test.ts          # list filters/search/status boundaries, create (+ revision 1), duplicate ID, details edit
+│   ├── employees.test.ts          # list filters/search/status boundaries/paging/summary, get
+│   ├── employee-writes.test.ts    # create (+ revision 1 history), duplicate ID, unknown codes, details edit and date rules
 │   ├── salaries.test.ts           # change, stale revision, upcoming allowed, departed rejected, rollback, history paging
-│   ├── lookups.test.ts            # lookups.get: name order, seeded lookups, empty lists, session required
+│   ├── lookups.test.ts            # lookups.get: name order, seeded lookups, empty lists, session required; assertKnownCodes
 │   ├── procedures.test.ts         # createCaller: auth, same-origin, error codes, field_errors, invalid cursor
 │   └── reports/<report>.test.ts   # report numbers on small fixtures (known cases in docs/data-generation.md)
 └── e2e/

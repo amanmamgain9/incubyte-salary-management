@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { db } from "@/server/db/client";
 import { ownerDb } from "@/server/db/owner";
+import { assertKnownCodes } from "@/server/lookups/operations";
 import { seedLookups } from "@scripts/db/seed";
 import { insertHrUser, insertLookups } from "./fixtures";
 import { callerFor, resetTables } from "./harness";
@@ -75,5 +77,30 @@ describe("lookups.get", () => {
     const caller = await callerFor(null);
 
     await expect(caller.lookups.get()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+});
+
+describe("assertKnownCodes", () => {
+  const now = new Date("2026-10-21T12:00:00Z");
+  const op = { db, actor: { id: "hr-1", name: "Hannah Reyes", email: "hannah@acme.test" }, now, today: "2026-10-21" };
+
+  it("accepts known codes and skips absent fields", async () => {
+    await insertLookups();
+
+    await expect(assertKnownCodes(op, { work_country_code: "IN", salary_currency_code: "EUR" })).resolves.toBeUndefined();
+  });
+
+  it("rejects every unknown code, keyed by its field", async () => {
+    await insertLookups();
+
+    await expect(
+      assertKnownCodes(op, { work_country_code: "JP", department_id: "legal", salary_currency_code: "JPY" }),
+    ).rejects.toMatchObject({
+      field_errors: {
+        work_country_code: "Unknown country",
+        department_id: "Unknown department",
+        salary_currency_code: "Unknown currency",
+      },
+    });
   });
 });

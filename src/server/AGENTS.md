@@ -43,14 +43,14 @@ src/server/
 │   ├── pagination.ts              # server-only: paginateKeyset(), the only pagination implementation
 │   └── operation-context.ts       # OperationContext type { db, actor: Actor, now, today (UTC YYYY-MM-DD) }; Actor { id, name, email }
 ├── lookups/
-│   ├── queries.ts                 # select countries/departments/currencies
+│   ├── queries.ts                 # select countries/departments/currencies; country/department/currency existence
 │   └── operations.ts              # getLookups, assertKnownCodes (field-keyed ValidationError)
 ├── employees/
 │   ├── status.ts                  # isActiveOn(date), employmentStatusOn(date) SQL expressions; employmentDateErrors (pure details-edit date rule)
-│   ├── queries.ts                 # directory page/count/summary, EmployeeView select (incl. salary_revision), insert, details update
+│   ├── queries.ts                 # directory page/count/summary, EmployeeView select (incl. salary_revision), insert, lock + employment dates, details update
 │   └── operations.ts              # listEmployees, getEmployee, createEmployee, updateEmployeeDetails
 ├── salaries/
-│   ├── queries.ts                 # lock employee row, insert history, update current pay + salary_revision, history page/count
+│   ├── queries.ts                 # employee assignment snapshot, lock employee row, insert history, update current pay + salary_revision, history page/count
 │   └── operations.ts              # appendSalaryRevision, changeSalary, listSalaryHistory
 └── reports/
     ├── filters.ts                 # SQL predicates for country/department/currency report filters
@@ -160,7 +160,7 @@ export async function salaryGrowth(op: OperationContext, input: SalaryGrowthInpu
 - `lookups` owns countries/departments/currencies.
 - `employees` owns the employee row and its details columns. `createEmployee` inserts the row with initial pay and `salary_revision = 1`, then calls `appendSalaryRevision` (revision 1, `Initial salary`) in the same transaction.
 - `salaries` owns `salary_history` and, after insert, the current-pay columns (`annual_base_pay`, `salary_currency_code`, `salary_revision`). Only `changeSalary` updates them: it locks the row, checks `expected_revision` and that the employee is not departed today (`employmentStatusOn`; upcoming is allowed), updates current pay and appends history in one transaction.
-- `appendSalaryRevision(tx, …)` is the only app code that inserts history; it snapshots the employee's current country/department. The seed bulk-inserts history as owner and is the only other writer.
+- `appendSalaryRevision(tx, op, …)` is the only app code that inserts history; it snapshots the employee's current country/department and stamps `op.actor.id` and `op.now`. The seed bulk-inserts history as owner and is the only other writer.
 - Modules may read any table in their own queries; writes follow this ownership.
 
 **Environment and secrets**

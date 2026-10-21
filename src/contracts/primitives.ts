@@ -14,6 +14,17 @@ export const EmployeeId = z
 /** A calendar date, `YYYY-MM-DD` (impossible dates such as 2025-02-30 are rejected). */
 export const IsoDate = z.iso.date("Use a valid date (YYYY-MM-DD)");
 
+const MONEY_MESSAGE = "Use a positive amount with at most two decimals";
+
+/** Input money: a positive decimal string with at most two decimals and 16 integer digits (fits NUMERIC(18,2)). */
+export const Money = z
+  .string()
+  .regex(/^\d{1,16}(\.\d{1,2})?$/, MONEY_MESSAGE)
+  .refine((amount) => /[1-9]/.test(amount), MONEY_MESSAGE);
+
+/** Output money: an exact signed decimal string with two places, as PostgreSQL `NUMERIC(18,2)` returns it. */
+export const Decimal = z.string().regex(/^-?\d+\.\d{2}$/);
+
 // Output array caps (docs/trpc-contracts.md › Array limits).
 export const MAX_COUNTRIES = 250;
 export const MAX_CURRENCIES = 200;

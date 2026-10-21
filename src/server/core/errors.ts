@@ -40,3 +40,16 @@ export class InvalidCursorError extends Error {
     this.name = "InvalidCursorError";
   }
 }
+
+/** The PostgreSQL SQLSTATE behind a driver error, looking through wrappers' `cause` (e.g. "23505"). */
+export function sqlStateOf(error: unknown): string | undefined {
+  for (let current = error; current instanceof Error; current = current.cause) {
+    if ("code" in current && typeof current.code === "string") return current.code;
+  }
+  return undefined;
+}
+
+/** A unique or primary-key violation (SQLSTATE 23505); callers translate it into a field-keyed ConflictError. */
+export function isUniqueViolation(error: unknown): boolean {
+  return sqlStateOf(error) === "23505";
+}
