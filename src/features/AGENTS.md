@@ -16,11 +16,8 @@ src/app/
 ├── (workspace)/
 │   ├── layout.tsx                 # getSessionUser once → redirect('/login') if absent; <WorkspaceShell user>
 │   ├── loading.tsx / error.tsx    # <LoadingState> / <ErrorState retry> for every workspace page
-│   ├── employees/page.tsx                     # prefetch employees.list + lookups → <EmployeeDirectory>
-│   ├── employees/new/page.tsx                 # prefetch lookups → <CreateEmployeeForm>
-│   ├── employees/[id]/page.tsx                # employees.get (404 → notFound()) + salaries.history → <EmployeeProfile>
-│   ├── employees/[id]/edit/page.tsx           # employees.get + lookups → <EditEmployeeForm>
-│   ├── employees/[id]/salary/page.tsx         # employees.get + lookups → <ChangeSalaryForm>
+│   ├── employees/page.tsx                     # prefetch employees.list + lookups → <EmployeeDirectory> (create dialog)
+│   ├── employees/[id]/page.tsx                # employees.get (404 → notFound()) + salaries.history + lookups → <EmployeeProfile> (edit/salary dialogs)
 │   └── reports/<report>/page.tsx              # one per report folder name; prefetch report + lookups → <…Report>
 └── api/
     ├── trpc/[trpc]/route.ts       # fetchRequestHandler(appRouter, createContext); Cache-Control: no-store
@@ -45,21 +42,24 @@ src/features/
 │   ├── use-employee-mutations.ts  # employees.create/update + their invalidation
 │   ├── employee-fields.tsx        # field group shared by create and edit forms
 │   ├── employment-status-badge.tsx  # EmploymentStatus → <Badge> label/tone (only mapping)
-│   ├── create-employee-form.tsx   # employees.create form (ID, details, initial pay + currency)
+│   ├── create-employee-form.tsx   # employees.create form (ID, details, initial pay + currency); onSaved/onCancel, no dialog code
 │   ├── edit-employee-form.tsx     # employees.update form ({ id, ...changes }; submit disabled until a change); ID locked; set/clear last working day
 │   ├── directory/
 │   │   ├── employee-directory.tsx # title/action → filters → overview → table
+│   │   ├── create-employee-dialog.tsx # <Dialog name="create"> around <CreateEmployeeForm>
 │   │   ├── directory-filters.tsx  # search, country, department, status
 │   │   ├── directory-overview.tsx # 2–4 measures from API data, never from the current page
 │   │   ├── employee-table.tsx     # rows + <Pagination>
 │   │   └── search-params.ts       # directory input schema from EmployeeFilters + Paging, with .catch defaults
 │   └── profile/
 │       ├── employee-profile.tsx   # name/status/actions → details + current pay → history; saved notice
+│       ├── edit-employee-dialog.tsx   # <Dialog name="edit"> around <EditEmployeeForm>
+│       ├── change-salary-dialog.tsx   # <Dialog name="salary"> around salaries' <ChangeSalaryForm>
 │       ├── employee-details.tsx   # details list
 │       └── current-pay.tsx        # amount, currency, revision
 ├── salaries/
 │   ├── use-salary-mutations.ts    # salaries.update + its invalidation
-│   ├── change-salary-form.tsx     # current pay/revision, new amount/currency, reason, conflict reload
+│   ├── change-salary-form.tsx     # current pay/revision, new amount/currency, reason, conflict reload; onSaved/onCancel, no dialog code
 │   ├── salary-delta.ts            # pure: exact change and % vs current (via lib/money); null across currencies or for an invalid new amount
 │   └── salary-history-table.tsx   # read-only paginated history (rendered by employees/profile)
 └── reports/
@@ -87,6 +87,7 @@ src/components/
 │   ├── form-field.tsx             # label + control slot + hint + error, wires aria-describedby
 │   ├── input.tsx / select.tsx / textarea.tsx  # 38px controls; select takes `options`
 │   ├── date-picker.tsx            # the one DayPicker + Radix popover (dates and months, clearable)
+│   ├── dialog.tsx                 # the one modal: native <dialog> + showModal, focus trap/return, Esc and backdrop close; no close while `pending`
 │   ├── amount.tsx                 # tabular right-aligned money with visible currency
 │   ├── badge.tsx                  # neutral/semantic tones; no domain knowledge
 │   └── icon.tsx                   # 18px icon wrapper; the only icon-library import site
@@ -96,7 +97,8 @@ src/components/
     └── chart-legend.tsx           # legend keyed to token colors
 
 src/hooks/
-├── use-url-state.ts               # useUrlState(schema): read/patch search params; patching any key except `cursor` drops `cursor`
+├── use-url-state.ts               # useUrlState(schema): read/patch search params; patching any key except `cursor`, `dialog`, `saved` drops `cursor`
+├── use-dialog.ts                  # useDialog(): `?dialog=create|edit|salary` via useUrlState; open(name), close(saved?) sets `?saved=`
 ├── use-form.ts                    # values, `changes` vs initial, field errors, submit via onSubmit promise, toFieldErrors, focus first error, inputProps(name)
 └── use-lookups.ts                 # lookups.get + countryName/departmentName/currencyName + select options
 
@@ -119,7 +121,7 @@ src/trpc/
 ## Frontend rules
 
 **Boundaries** (import directions and library import sites are enforced by `eslint.config.mjs`)
-- Cross-feature imports are for rendering only: `employees` → `salaries` (`<SalaryHistoryTable>`) and `workspace` → `auth` (`<SignOutButton>`). Shared logic moves to `hooks`/`lib` instead.
+- Cross-feature imports are for rendering only: `employees` → `salaries` (`<SalaryHistoryTable>`, `<ChangeSalaryForm>`) and `workspace` → `auth` (`<SignOutButton>`). Shared logic moves to `hooks`/`lib` instead.
 
 **App Router and data**
 - **`src/app` is routing only:** page/layout/loading/error/not-found/route. A page parses params, prefetches and renders one feature component.
@@ -134,7 +136,7 @@ src/trpc/
 - Build screens from `src/components/ui`. Never paste Tailwind class strings for buttons, alerts, headers, cards, tables or fields; add a variant instead.
 - Colors, radii and shadows come only from `@theme` tokens in `src/app/globals.css`, ported once from `docs/screens/styles.input.css`. No hex/rgb/hsl values or arbitrary color classes (`bg-[#…]`) in components.
 - Every amount renders through `<Amount>` with its currency. Currencies are never summed or charted together.
-- No modals are planned. If one becomes necessary, build `components/ui/dialog.tsx` once (native `<dialog>`) with its open state in `useUrlState`; never per-screen `showModal`/backdrop/focus code.
+- Every form is a modal: `<Dialog>` (`components/ui/dialog.tsx`) opened and closed only through `useDialog()` (`?dialog=`). Dialog files wrap a dialog-agnostic form (`onSaved`/`onCancel` props) and pass `pending` from `useIsMutating({ mutationKey })`. Never copy dialog plumbing (`showModal`, backdrop, focus, `replaceState`) anywhere else.
 
 **URL state**
 - All search-param state goes through `useUrlState(schema)`. No direct `URLSearchParams`, `router.replace` with hand-built strings, `history.replaceState` or `as` casts.
@@ -145,7 +147,7 @@ src/trpc/
 - `useForm({ initial, onSubmit })` + `<FormField>` + `inputProps(name)`. `onSubmit` returns `mutation.mutateAsync(...)`; `useForm` maps errors through `toFieldErrors`, keeps values and focuses the first error. Forms never write their own try/catch, `onError` or pending flags; pending is `mutation.isPending`.
 - The edit form sends `{ id, ...changes }`: only fields that differ from `initial` (a cleared date is `null`). Its submit is disabled while `changes` is empty, so an empty patch is never sent.
 - Each feature's `use-<feature>-mutations.ts` owns its mutations and invalidation by path key: employee writes invalidate `trpc.employees.pathKey()` and `trpc.reports.pathKey()`; salary writes also invalidate `trpc.salaries.pathKey()`. Never `invalidateQueries()` without a key.
-- On success, navigate to the profile with `?saved=created|details|salary`; the profile shows one `<Alert tone="success">`.
+- On success the dialog calls `close("created" | "details" | "salary")`: it closes and the page behind (directory for create, profile otherwise) shows one `<Alert tone="success">` from `?saved=`.
 - Salary `CONFLICT`: keep form values, show the error with a reload action that refetches `employees.get` and adopts the new revision; the user resubmits.
 
 ```tsx
@@ -155,11 +157,17 @@ export function useForm<V extends Record<string, unknown>>(options: {
 }): { values: V; changes: Partial<V>; errors: Partial<Record<keyof V, string>>; message: string | null;
   inputProps: (name: keyof V & string) => InputProps; setValue: <K extends keyof V>(name: K, value: V[K]) => void;
   submit: (event: FormEvent) => void }; // preventDefault → onSubmit → on error: toFieldErrors, focus first error
-// features/employees/edit-employee-form.tsx
+// features/employees/edit-employee-form.tsx — knows nothing about dialogs
 const form = useForm({ initial, onSubmit: async (_values, changes) => {
-  await update.mutateAsync({ id, ...changes }); router.push(`/employees/${id}?saved=details`);
+  await update.mutateAsync({ id, ...changes }); onSaved();
 } });
 <Button type="submit" pending={update.isPending} disabled={Object.keys(form.changes).length === 0}>Save</Button>
+// features/employees/profile/edit-employee-dialog.tsx — the dialog wraps the form
+const dialog = useDialog();
+const pending = useIsMutating({ mutationKey: trpc.employees.update.mutationKey() }) > 0;
+<Dialog open={dialog.current === "edit"} title="Edit details" pending={pending} onClose={() => dialog.close()}>
+  <EditEmployeeForm employee={employee} onSaved={() => dialog.close("details")} onCancel={() => dialog.close()} />
+</Dialog>
 ```
 
 ```ts

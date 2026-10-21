@@ -19,7 +19,7 @@ This is Next.js 16: `proxy.ts` replaces `middleware.ts`; `params`, `searchParams
 10. Config comes only from `getEnv()`/`ownerEnv()` in `src/server/env.ts` (`src/server/AGENTS.md` › Environment).
 11. Frontend never imports `@/server`; features import each other only along the allow-list (Lint, `src/features/AGENTS.md` › Boundaries).
 12. Screens use `components/ui` and `@theme` tokens; no pasted class strings or color literals (`src/features/AGENTS.md` › UI).
-13. URL state via `useUrlState`, forms via `useForm`, writes via `use-<feature>-mutations.ts` with keyed invalidation (`src/features/AGENTS.md`).
+13. URL state via `useUrlState`, forms via `useForm` inside a `<Dialog>` opened by `useDialog`, writes via `use-<feature>-mutations.ts` with keyed invalidation (`src/features/AGENTS.md`).
 14. Totals and counts come from the API; never aggregate paginated rows on the client (`src/features/AGENTS.md` › Components).
 15. Core rules land red → green; only a red commit may fail `npm test` (Testing essentials).
 16. Done means typecheck, lint and tests pass and the docs match the code (Definition of done).
