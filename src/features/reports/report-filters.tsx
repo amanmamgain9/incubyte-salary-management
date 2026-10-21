@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/select";
 import {
   readFilterForm,
   type FilterValues,
+  type PeriodContract,
   type PeriodErrors,
   type ReportFilterField,
 } from "@/features/reports/search-params";
@@ -27,6 +28,7 @@ const columns: Record<number, string> = {
  */
 export function ReportFilters({
   fields,
+  period,
   values,
   today,
   options,
@@ -34,6 +36,8 @@ export function ReportFilters({
   onReset,
 }: {
   fields: readonly ReportFilterField[];
+  /** The report's contract checking a `dates` or `months` period. */
+  period?: PeriodContract;
   values: FilterValues;
   today: string;
   options: LookupOptions;
@@ -49,7 +53,7 @@ export function ReportFilters({
     new FormData(event.currentTarget).forEach((value, key) => {
       if (typeof value === "string") form[key] = value;
     });
-    const result = readFilterForm(fields, form, today);
+    const result = readFilterForm(fields, form, today, period);
     setErrors(result.errors);
     if (Object.keys(result.errors).length === 0) onApply(result.patch);
   };

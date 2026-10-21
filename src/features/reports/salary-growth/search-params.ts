@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { IsoDate } from "@/contracts/primitives";
+import { SalaryGrowthInput } from "@/contracts/reports/salary-growth";
 import { filterParams, trailingMonths, validPeriod } from "@/features/reports/search-params";
 
 /** Months the report shows by default: one year (the span of its net change trend), ending this month. */
@@ -16,5 +17,5 @@ export function salaryGrowthSearch(today: string) {
       department_id: filterParams.department_id,
       cursor: filterParams.cursor,
     })
-    .transform((search) => validPeriod("dates", search, fallback, today));
+    .transform((search) => validPeriod(SalaryGrowthInput, search, fallback, today));
 }

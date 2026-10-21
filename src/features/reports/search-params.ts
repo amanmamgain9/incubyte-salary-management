@@ -3,8 +3,6 @@
 import { z } from "zod";
 import { Paging } from "@/contracts/paging";
 import { periodEndError, ReportFilters } from "@/contracts/reports/filters";
-import { HistoricalSalaryBenchmarkInput } from "@/contracts/reports/historical-salary-benchmark";
-import { SalaryGrowthInput } from "@/contracts/reports/salary-growth";
 import { addMonths, monthStart } from "@/lib/dates";
 
 /**
@@ -18,6 +16,8 @@ export type FilterParam = "from" | "to" | "work_country_code" | "department_id" 
 export type FilterValues = Partial<Record<FilterParam, string>>;
 export type Period = { from: string; to: string };
 export type PeriodErrors = Partial<Record<keyof Period, string>>;
+/** A report's input contract, whose `from`/`to` rules check its period (each period report passes its own). */
+export type PeriodContract = z.ZodType<unknown, Period>;
 
 /** Every filter param unset: the report's defaults. */
 export const clearedFilters: Record<FilterParam, undefined> = {
@@ -39,18 +39,15 @@ export const filterParams = {
 /** Salary commitment and department breakdown URL → input: country, department, currency and page cursor. */
 export const reportFilterSearch = z.object(filterParams);
 
-const periodContracts = { dates: SalaryGrowthInput, months: HistoricalSalaryBenchmarkInput } as const;
-type PeriodField = keyof typeof periodContracts;
-
 /** `months` calendar months ending with today's: from the first day of the earliest month through today. */
 export function trailingMonths(today: string, months: number): Period {
   return { from: monthStart(addMonths(monthStart(today), 1 - months)), to: today };
 }
 
 /** A period's errors keyed by field: the report contract's range rules, plus `to` no later than today. */
-export function periodErrors(field: PeriodField, period: Period, today: string): PeriodErrors {
+export function periodErrors(contract: PeriodContract, period: Period, today: string): PeriodErrors {
   const errors: PeriodErrors = {};
-  const result = periodContracts[field].safeParse(period);
+  const result = contract.safeParse(period);
   for (const issue of result.error?.issues ?? []) {
     const key = issue.path[0];
     if ((key === "from" || key === "to") && !errors[key]) errors[key] = issue.message;
@@ -61,18 +58,24 @@ export function periodErrors(field: PeriodField, period: Period, today: string):
 }
 
 /** The period when it is valid, else the default one (a hand-edited URL never reaches the API invalid). */
-export function validPeriod<S extends Period>(field: PeriodField, search: S, fallback: Period, today: string): S {
-  return Object.keys(periodErrors(field, search, today)).length === 0 ? search : { ...search, ...fallback };
+export function validPeriod<S extends Period>(
+  contract: PeriodContract,
+  search: S,
+  fallback: Period,
+  today: string,
+): S {
+  return Object.keys(periodErrors(contract, search, today)).length === 0 ? search : { ...search, ...fallback };
 }
 
 /**
- * The filter form's submitted fields → a URL patch, or the period's errors. A blank select means "all"; a month
- * control's `YYYY-MM` becomes its first day.
+ * The filter form's submitted fields → a URL patch, or the period's errors (checked against `period`, the report's
+ * contract, when it shows a period). A blank select means "all"; a month control's `YYYY-MM` becomes its first day.
  */
 export function readFilterForm(
   fields: readonly ReportFilterField[],
   form: Readonly<Record<string, string>>,
   today: string,
+  period?: PeriodContract,
 ): { patch: FilterValues; errors: PeriodErrors } {
   const patch: FilterValues = {};
   if (fields.includes("country")) patch.work_country_code = form.work_country_code ?? "";
@@ -80,7 +83,8 @@ export function readFilterForm(
   if (fields.includes("currency")) patch.salary_currency_code = form.salary_currency_code ?? "";
   const field = fields.includes("dates") ? "dates" : fields.includes("months") ? "months" : null;
   if (!field) return { patch, errors: {} };
+  if (!period) throw new Error(`A report with a ${field} filter passes its period contract`);
   const from = form.from ?? "";
-  const period = { from: field === "months" ? `${from}-01` : from, to: form.to ?? "" };
-  return { patch: { ...patch, ...period }, errors: periodErrors(field, period, today) };
+  const values = { from: field === "months" ? `${from}-01` : from, to: form.to ?? "" };
+  return { patch: { ...patch, ...values }, errors: periodErrors(period, values, today) };
 }

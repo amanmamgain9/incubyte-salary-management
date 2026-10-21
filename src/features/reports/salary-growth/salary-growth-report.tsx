@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { SalaryGrowthInput } from "@/contracts/reports/salary-growth";
 import { ReportPage } from "@/features/reports/report-page";
 import { SalaryGrowthSummary } from "@/features/reports/salary-growth/salary-growth-summary";
 import { SalaryGrowthTable } from "@/features/reports/salary-growth/salary-growth-table";
@@ -17,6 +18,7 @@ export function SalaryGrowthReport({ today }: { today: string }) {
       today={today}
       search={search}
       filters={["dates", "country", "department"]}
+      period={SalaryGrowthInput}
       queryOptions={(input) => trpc.reports.salaryGrowth.queryOptions(input)}
       summary={(output, input, names) => <SalaryGrowthSummary summary={output.summary} input={input} names={names} />}
       table={(rows, input, names) => <SalaryGrowthTable rows={rows} input={input} names={names} />}

@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { HistoricalSalaryBenchmarkInput } from "@/contracts/reports/historical-salary-benchmark";
+import { SalaryGrowthInput } from "@/contracts/reports/salary-growth";
 import { periodErrors, readFilterForm, reportFilterSearch, trailingMonths } from "@/features/reports/search-params";
 import { parseSearchParams } from "@/lib/search-params";
 
@@ -28,21 +30,21 @@ describe("reportFilterSearch", () => {
 
 describe("periodErrors", () => {
   it("accepts a valid period", () => {
-    expect(periodErrors("dates", { from: "2026-01-01", to: today }, today)).toEqual({});
+    expect(periodErrors(SalaryGrowthInput, { from: "2026-01-01", to: today }, today)).toEqual({});
   });
 
   it("keys the contract's range errors by field", () => {
-    expect(periodErrors("dates", { from: "2026-05-01", to: "2026-04-30" }, today)).toEqual({
+    expect(periodErrors(SalaryGrowthInput, { from: "2026-05-01", to: "2026-04-30" }, today)).toEqual({
       to: "Must be on or after the start date",
     });
-    expect(periodErrors("months", { from: "2011-01-01", to: "2026-01-01" }, today)).toEqual({
+    expect(periodErrors(HistoricalSalaryBenchmarkInput, { from: "2011-01-01", to: "2026-01-01" }, today)).toEqual({
       to: "Choose at most 180 months",
     });
-    expect(periodErrors("dates", { from: "", to: today }, today)).toEqual({ from: "Use a valid date (YYYY-MM-DD)" });
+    expect(periodErrors(SalaryGrowthInput, { from: "", to: today }, today)).toEqual({ from: "Use a valid date (YYYY-MM-DD)" });
   });
 
   it("rejects an end date after today", () => {
-    expect(periodErrors("dates", { from: "2026-01-01", to: "2026-10-22" }, today)).toEqual({
+    expect(periodErrors(SalaryGrowthInput, { from: "2026-01-01", to: "2026-10-22" }, today)).toEqual({
       to: "Must be today or earlier",
     });
   });
@@ -56,13 +58,24 @@ describe("readFilterForm", () => {
   });
 
   it("turns a month control into its first day", () => {
-    expect(readFilterForm(["months", "country"], { from: "2025-02", to: "2026-01-31", work_country_code: "" }, today))
-      .toEqual({ patch: { work_country_code: "", from: "2025-02-01", to: "2026-01-31" }, errors: {} });
+    const form = { from: "2025-02", to: "2026-01-31", work_country_code: "" };
+    expect(readFilterForm(["months", "country"], form, today, HistoricalSalaryBenchmarkInput)).toEqual({
+      patch: { work_country_code: "", from: "2025-02-01", to: "2026-01-31" },
+      errors: {},
+    });
   });
 
   it("returns the period's errors", () => {
-    expect(readFilterForm(["dates"], { from: "2026-06-01", to: "2026-05-01" }, today).errors).toEqual({
+    const form = { from: "2026-06-01", to: "2026-05-01" };
+    expect(readFilterForm(["dates"], form, today, SalaryGrowthInput).errors).toEqual({
       to: "Must be on or after the start date",
+    });
+  });
+
+  it("checks the period with the contract it is given", () => {
+    const form = { from: "2011-01", to: "2026-01-31" };
+    expect(readFilterForm(["months"], form, today, HistoricalSalaryBenchmarkInput).errors).toEqual({
+      to: "Choose at most 180 months",
     });
   });
 });

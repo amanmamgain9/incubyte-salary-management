@@ -15,6 +15,7 @@ import {
   clearedFilters,
   type FilterParam,
   type FilterValues,
+  type PeriodContract,
   type ReportFilterField,
 } from "@/features/reports/search-params";
 import { type LookupNames, useLookups } from "@/hooks/use-lookups";
@@ -36,6 +37,7 @@ export function ReportPage<
   today,
   search,
   filters,
+  period,
   queryOptions,
   summary,
   table,
@@ -45,6 +47,8 @@ export function ReportPage<
   /** From the report's `search-params.ts` builder (memoized: `useUrlState` caches its parse per schema). */
   search: z.ZodType<I, ReportParams>;
   filters: readonly ReportFilterField[];
+  /** With a `dates` or `months` filter: the report's input contract, whose rules check the period on Apply. */
+  period?: PeriodContract;
   /** e.g. `(input) => trpc.reports.salaryGrowth.queryOptions(input)` */
   queryOptions: (input: I) => UseSuspenseQueryOptions<O, E, O, K>;
   /** `names` resolves lookup codes; fetched once here for every part of the report. */
@@ -71,6 +75,7 @@ export function ReportPage<
       <ReportFilters
         key={JSON.stringify(applied)}
         fields={filters}
+        period={period}
         values={applied}
         today={today}
         options={lookups}

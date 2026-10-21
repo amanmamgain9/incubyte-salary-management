@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { IsoDate } from "@/contracts/primitives";
+import { HistoricalSalaryBenchmarkInput } from "@/contracts/reports/historical-salary-benchmark";
 import { filterParams, trailingMonths, validPeriod } from "@/features/reports/search-params";
 import { monthStart } from "@/lib/dates";
 
@@ -18,5 +19,5 @@ export function historicalSalaryBenchmarkSearch(today: string) {
       to: IsoDate.catch(fallback.to),
       ...filterParams,
     })
-    .transform((search) => validPeriod("months", search, fallback, today));
+    .transform((search) => validPeriod(HistoricalSalaryBenchmarkInput, search, fallback, today));
 }

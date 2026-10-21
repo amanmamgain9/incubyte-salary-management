@@ -72,14 +72,14 @@ src/features/
     ├── report-filters.tsx         # country/department/currency/date/month controls, configured per report; Apply checks the period, Reset → defaults
     ├── country-totals.tsx         # by-country/currency summary group strip (department, growth, benchmark); commitment's rows are its groups
     ├── report-scope.ts            # pure: overview scope line from the filters ("All countries · …")
-    ├── search-params.ts           # mechanism: filter params, reportFilterSearch (commitment, department), trailingMonths, periodErrors (contract rules + `periodEndError`), validPeriod, filter form → patch
+    ├── search-params.ts           # mechanism: filter params, reportFilterSearch (commitment, department), trailingMonths, periodErrors/validPeriod (the caller's period contract + `periodEndError`), filter form → patch; never imports a specific report
     └── <report>/                  # salary-commitment | department-breakdown | salary-growth | historical-salary-benchmark
         ├── <report>-report.tsx    # composes <ReportPage> with this report's parts
         ├── <report>-summary.tsx   # overview measures for this report
         ├── <report>-table.tsx     # column definitions for <Table>
         ├── <report>-chart.tsx     # not for salary-commitment; renders a bounded contract field
         ├── <report>-data.ts       # pure reshaping for summary/chart (only if there is logic) + unit test
-        └── search-params.ts       # salary-growth and historical-salary-benchmark only: default period (from `today`) + URL schema
+        └── search-params.ts       # salary-growth and historical-salary-benchmark only: default period (from `today`) + URL schema, validated with its own contract
 
 src/components/
 ├── ui/                            # primitives, built before any feature screen
@@ -210,6 +210,7 @@ export function ReportPage<I extends Paging & FilterValues, O extends { rows: Pa
   today: string;                            // from the page, like every `today`
   search: z.ZodType<I, ReportParams>;       // from the report's search-params.ts, built with `today` (useMemo it)
   filters: readonly ReportFilterField[];    // controls <ReportFilters> shows, e.g. ["dates", "country"]
+  period?: PeriodContract;                  // with "dates"/"months": the report's input contract, e.g. SalaryGrowthInput
   queryOptions: (input: I) => UseSuspenseQueryOptions<O, E, O, K>; // (i) => trpc.reports.salaryGrowth.queryOptions(i)
   summary: (output: O, input: I, names: LookupNames) => ReactNode;            // overview + group totals + chart
   table: (items: O["rows"]["items"], input: I, names: LookupNames) => ReactNode; // columns only; <Pagination> and the empty state belong to the shell
