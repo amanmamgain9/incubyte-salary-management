@@ -34,7 +34,9 @@ export async function paginateKeyset<Row, Key extends readonly unknown[]>(args: 
   const limit = input.limit ?? DEFAULT_LIMIT;
   // The key was produced by keyOf and signed by us, so it has Key's shape.
   const from: KeysetFrom<Key> = c && { key: c.key as unknown as Key, before: c.before };
-  const [rows, total_count] = await Promise.all([args.fetch(from, limit + 1), args.count()]);
+  // Sequential: fetch and count may share one transaction connection, which runs one query at a time.
+  const rows = await args.fetch(from, limit + 1);
+  const total_count = await args.count();
 
   const more = rows.length > limit;
   const items = rows.slice(0, limit);

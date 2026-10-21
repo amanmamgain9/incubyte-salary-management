@@ -212,29 +212,28 @@ export async function selectBenchmarkSummary(
 ): Promise<HistoricalSalaryBenchmarkSummary> {
   const g = benchmarkGroups;
   const matching = matchesFilters(range, groupColumns);
-  const [byCountry, trend, groups] = await Promise.all([
-    tx
-      .select({
-        work_country_code: g.work_country_code,
-        salary_currency_code: g.salary_currency_code,
-        employee_count: sql<number>`sum(${g.employee_count})::int`,
-        total_annual_base_pay: sql<string>`sum(${g.total_annual_base_pay})::text`,
-      })
-      .from(g)
-      .where(and(matching, sql`${g.month} = to_char(${range.to}::date, 'YYYY-MM')`))
-      .groupBy(g.work_country_code, g.salary_currency_code)
-      .orderBy(g.work_country_code, g.salary_currency_code),
-    selectBenchmarkTrend(tx, range, matching),
-    tx
-      .selectDistinct({
-        work_country_code: g.work_country_code,
-        department_id: g.department_id,
-        salary_currency_code: g.salary_currency_code,
-      })
-      .from(g)
-      .where(matching)
-      .limit(2),
-  ]);
+  // One after another: a transaction is one connection, which runs one query at a time.
+  const byCountry = await tx
+    .select({
+      work_country_code: g.work_country_code,
+      salary_currency_code: g.salary_currency_code,
+      employee_count: sql<number>`sum(${g.employee_count})::int`,
+      total_annual_base_pay: sql<string>`sum(${g.total_annual_base_pay})::text`,
+    })
+    .from(g)
+    .where(and(matching, sql`${g.month} = to_char(${range.to}::date, 'YYYY-MM')`))
+    .groupBy(g.work_country_code, g.salary_currency_code)
+    .orderBy(g.work_country_code, g.salary_currency_code);
+  const trend = await selectBenchmarkTrend(tx, range, matching);
+  const groups = await tx
+    .selectDistinct({
+      work_country_code: g.work_country_code,
+      department_id: g.department_id,
+      salary_currency_code: g.salary_currency_code,
+    })
+    .from(g)
+    .where(matching)
+    .limit(2);
   const snapshot: SnapshotTotal[] = byCountry;
   const employee_count = snapshot.reduce((total, pair) => total + pair.employee_count, 0);
   const group = groups.length === 1 ? (groups[0] ?? null) : null;

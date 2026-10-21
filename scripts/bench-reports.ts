@@ -74,7 +74,8 @@ function benchmark(range: BenchmarkRange): Request {
     run: (db) =>
       db.transaction(async (tx) => {
         await createBenchmarkGroups(tx, range);
-        await Promise.all([selectBenchmarkRows(tx, range, null, take), countBenchmarkRows(tx, range)]);
+        await selectBenchmarkRows(tx, range, null, take);
+        await countBenchmarkRows(tx, range);
         return selectBenchmarkSummary(tx, range);
       }),
   };

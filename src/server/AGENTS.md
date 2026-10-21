@@ -96,7 +96,7 @@ src/contracts/
 - Routers are thin: `.input(contract).output(contract)` and one operation call. No SQL, rules or try/catch, no exceptions.
 - An operation owns its whole use case and returns the procedure's result, built inside its transaction (`changeSalary` returns the `EmployeeView` it committed).
 - Operations take `op: OperationContext` and parsed input, own transactions, throw `core/errors.ts` errors, and never import `@trpc/*` or `api/`.
-- A function that relies on running inside a transaction takes `tx: Tx`, never `Executor`: row locks (`lockCurrentPay`, `lockEmploymentDates`), lock-then-write sequences (`appendSalaryRevision`), `SET LOCAL` and `ON COMMIT DROP` tables (the benchmark's queries). The type checker then proves every caller opened one.
+- A function that relies on running inside a transaction takes `tx: Tx`, never `Executor`: row locks (`lockCurrentPay`, `lockEmploymentDates`), lock-then-write sequences (`appendSalaryRevision`), `SET LOCAL` and `ON COMMIT DROP` tables (the benchmark's queries). The type checker then proves every caller opened one. A transaction is one connection: never `Promise.all` queries on a `tx` (or in code that may receive one); run them one after another. Parallel queries are fine only on the pooled `db`.
 - Script-safe modules (no `server-only`; importable by scripts and unit tests): `src/contracts/*`, `env.ts`, `db/connect.ts`, `db/owner.ts`, `db/schema/*`, every `queries.ts`, `employees/status.ts`, `reports/filters.ts`, `reports/keyset.ts`, `core/errors.ts`. They and `scripts/` import only each other (`core/cursor.ts` and `core/pagination.ts` are server-only). Queries take the executor as an argument and never import `db/client` or `env`.
 - Every other server module starts with `import "server-only"`; no dynamic `await import()` to dodge it. No Server Actions: every read and write is a tRPC procedure.
 
@@ -126,7 +126,7 @@ export async function paginateKeyset<Row, Key extends readonly unknown[]>(args: 
   count: () => Promise<number>;
 }): Promise<Page<Row>>; // { items, next_cursor, prev_cursor, total_count, range_start }
 // c = input.cursor === undefined ? null : decode + validate; limit = input.limit ?? DEFAULT_LIMIT
-// [rows, total_count] = await Promise.all([fetch(c && { key: c.key, before: c.before }, limit + 1), count()])
+// rows = await fetch(c && { key: c.key, before: c.before }, limit + 1); total_count = await count()  — sequential: a Tx is one connection
 // more = rows.length > limit; items = rows.slice(0, limit); if (c?.before) items.reverse()
 // no items (even with a cursor) → { items: [], next_cursor: null, prev_cursor: null, total_count, range_start: 0 }
 // start = !c ? 1 : c.before ? (more ? max(1, c.range_start - items.length) : 1) : c.range_start
