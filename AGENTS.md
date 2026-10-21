@@ -8,8 +8,8 @@ This is Next.js 16: `proxy.ts` replaces `middleware.ts`; `params`, `searchParams
 ## Top rules
 
 1. Create files only at the planned paths and names; search before adding anything (Top-level structure, area guide trees, Placement & reuse).
-2. Shared code has one home; the second copy is extracted in the same change, never forked (Placement & reuse).
-3. Backend layers: router → `operations.ts` → `queries.ts` → schema; a router makes one operation call (`src/server/AGENTS.md` › Layering).
+2. Shared code has one home; a second copy of the same concept is extracted in the same change, never forked. Shared code holds mechanisms; features own their policy (Placement & reuse).
+3. Backend layers: router → `operations.ts` → `queries.ts` → schema; a router makes one operation call, which owns the whole use case and returns its result; code that relies on a transaction takes `Tx` (`src/server/AGENTS.md` › Layering).
 4. Every procedure uses `signedInProcedure` or `signedInMutationProcedure`; auth is checked nowhere else (`src/server/AGENTS.md` › Middleware).
 5. Static rules live in Zod contracts; DB/clock rules in operations, thrown as `core/errors.ts` errors keyed by field (`src/server/AGENTS.md` › Validation).
 6. Every list and report pages through `paginateKeyset`; no offsets or hand-made cursors (`src/server/AGENTS.md` › Pagination).
@@ -73,7 +73,8 @@ Every folder and file here and in the area guide trees is planned. Create files 
 
 - **Search first.** Before creating a component, hook, helper, schema, query or type: check the trees here and in the area guides, then `rg -n "<concept>" src scripts`. If it exists, use it.
 - **Shared things (used by 2+ features) have one home by kind:** UI primitive/chart → `src/components/{ui,charts}`; client hook → `src/hooks`; pure helper (format, money, dates, parsing) → `src/lib`; schema or type crossing the API → `src/contracts`; backend cross-cutting (errors, cursor, pagination) → `src/server/core`; shared by 2+ reports → `src/features/reports/` root (UI) or `src/server/reports/{filters,keyset}.ts` (SQL).
-- **Rule of two.** The second copy of logic, markup or a class string is extracted to its home in the same change, and both call sites use it. Never leave two versions.
+- **Rule of two.** Extract when the second copy is the same concept, not merely the same text: move it to its home in the same change and use it from both call sites. Never leave two versions of one concept.
+- **Mechanism vs policy.** `hooks`, `lib` and `components` hold mechanisms (how dialogs, URL state or forms work); the feature that uses them owns the policy (dialog names, notices, default periods).
 - **Extend, don't fork.** Add a variant, prop or option to the existing helper. If it then needs more than ~4 options or branches on the caller, split it by purpose and name both clearly.
 - **Defined once:**
   - Types come from Zod via `z.infer` in `src/contracts`; no parallel interfaces. Frontend imports named contract types; where one is missing, export a named type from the contract rather than deriving router types.

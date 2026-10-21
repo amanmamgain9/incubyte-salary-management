@@ -89,7 +89,7 @@ src/contracts/
 
 ## Backend rules
 
-- **Backend file kinds.** SQL → `queries.ts`; rules and transactions → `operations.ts`; wiring → `api/routers/`. Only `employees/status.ts`, `reports/filters.ts` and `reports/keyset.ts` are extra.
+- **Backend file kinds.** SQL → `queries.ts`; rules and transactions → `operations.ts`; wiring → `api/routers/`. Split a file by responsibility when it mixes concerns, and add the new file to the tree in the same change; today's extras are `employees/status.ts`, `reports/filters.ts` and `reports/keyset.ts`.
 
 **Layering** (each layer imports only those to its right): `api/routers` → `<module>/operations.ts` → `<module>/queries.ts` → `db/schema`; `contracts` and `core` usable by all.
 
@@ -135,7 +135,7 @@ export async function paginateKeyset<Row, Key extends readonly unknown[]>(args: 
 ```
 
 **Reports**
-- Each report folder has exactly `queries.ts` + `operations.ts`. Operation body: input checks (`assertKnownCodes`; `to ≤ today` for growth/benchmark), then `return { rows: await paginateKeyset({...}), summary: await <summary query> }`; nothing else.
+- Each report folder has at least `queries.ts` + `operations.ts`; split by responsibility when a file mixes concerns. Operation body: input checks (`assertKnownCodes`; `to ≤ today` for growth/benchmark), then `return { rows: await paginateKeyset({...}), summary: await <summary query> }`; nothing else.
 - Benchmark exception: its month-end snapshot is built once per request (`createBenchmarkGroups`) into a transaction-scoped temporary table (`ON COMMIT DROP`, declared with `pgTable` in its `queries.ts`, outside `db/schema`) that page, count and summary read; the operation wraps those calls in `op.db.transaction`. Session settings only via `SET LOCAL` inside that transaction.
 - Output contracts have no unbounded arrays except `Page.items`; every other array uses the `.max(n)` from the array-limits table in `docs/trpc-contracts.md` (constants in `contracts/primitives.ts`). Chart series are bounded `summary` fields defined in that doc and the contract first; never return all rows beside the page.
 - SQL does all salary math (`NUMERIC`, exact percentiles, rounding); TypeScript only formats.

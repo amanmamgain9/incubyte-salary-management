@@ -133,7 +133,7 @@ src/trpc/
 ## Frontend rules
 
 **Boundaries** (import directions and library import sites are enforced by `eslint.config.mjs`)
-- Cross-feature imports are for rendering only: `employees` → `salaries` (`<SalaryHistoryTable>`, `<ChangeSalaryForm>`) and `workspace` → `auth` (`<SignOutButton>`). Shared logic moves to `hooks`/`lib` instead.
+- Cross-feature imports are for rendering only: `employees` → `salaries` (`<SalaryHistoryTable>`, `<ChangeSalaryForm>`) and `workspace` → `auth` (`<SignOutButton>`). Shared logic moves to `hooks`/`lib` instead, as a mechanism the feature configures: names and defaults stay in the feature (`useEmployeeDialog` over `useDialog`, a report's period in its `search-params.ts`).
 
 **App Router and data**
 - **`src/app` is routing only:** page/layout/loading/error/not-found/route. A page parses params, prefetches and renders one feature component.
@@ -198,6 +198,7 @@ export function useSalaryMutations() {
 ```
 
 **Components render; data files shape**
+- Screens fetch; display components receive data as props. A screen (page-level feature component, `<ReportPage>`, or a self-paging panel such as `<SalaryHistoryTable>`) reads its queries and `useLookups()` once and passes `names`/`options` down; tables, summaries, charts, details and form fields never call a data hook.
 - Components contain JSX and event wiring only. Grouping, sorting, chart points and deltas live in tested `*-data.ts` (or `salary-delta.ts`) files beside them.
 - Totals and counts come from the API. Never sum or count paginated rows on the client.
 - Report screens differ only in summary, chart and table columns; URL parsing, query/cursor wiring and pagination live in `report-page.tsx` and are never rewritten per report.
