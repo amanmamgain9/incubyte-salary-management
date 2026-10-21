@@ -1,6 +1,7 @@
 // The only QueryClient factory: the browser provider, SSR and server prefetches all build theirs here.
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
+import { INVALID_CURSOR_MESSAGE } from "@/contracts/errors";
 
 const MAX_RETRIES = 2;
 
@@ -12,6 +13,13 @@ function httpStatus(error: unknown): number | undefined {
 /** True when a procedure rejected the request for a missing, expired or revoked session. */
 export function isUnauthorized(error: unknown): boolean {
   return error instanceof TRPCClientError && error.data?.code === "UNAUTHORIZED";
+}
+
+/** True when a list or report rejected its page cursor (altered, signed with an old secret, or from other filters). */
+export function isInvalidCursor(error: unknown): boolean {
+  return (
+    error instanceof TRPCClientError && error.data?.code === "BAD_REQUEST" && error.message === INVALID_CURSOR_MESSAGE
+  );
 }
 
 /**
@@ -29,7 +37,7 @@ export function shouldRetry(failureCount: number, error: unknown): boolean {
  * the route, so the server sees the missing session and redirects to `/login`. Server clients omit it (in-process
  * calls never raise client errors). Pages and components never check for UNAUTHORIZED themselves.
  */
-export function makeQueryClient(options: { onUnauthorized?: () => void } = {}): QueryClient {
+export function makeQueryClient(options: { onUnauthorized?: () => void; retry?: boolean } = {}): QueryClient {
   const onUnauthorized = options.onUnauthorized ?? (() => {});
   const onError = (error: unknown) => {
     if (!isUnauthorized(error)) return;
@@ -41,7 +49,7 @@ export function makeQueryClient(options: { onUnauthorized?: () => void } = {}): 
     mutationCache: new MutationCache({ onError }),
     defaultOptions: {
       // Server-prefetched data stays fresh through hydration instead of refetching on mount.
-      queries: { staleTime: 30_000, retry: shouldRetry },
+      queries: { staleTime: 30_000, retry: options.retry === false ? false : shouldRetry },
       mutations: { retry: false },
     },
   });

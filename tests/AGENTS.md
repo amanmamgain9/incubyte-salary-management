@@ -13,7 +13,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── server/employees/status.test.ts  # employmentDateErrors: last working day vs joining date and latest revision
 │   ├── server/api/{error-formatter,map-domain-errors}.test.ts
 │   ├── server/db/connect.test.ts  # siblingDatabaseUrl / databaseName
-│   ├── trpc/query-client.test.ts  # retry predicate, global UNAUTHORIZED handling
+│   ├── trpc/query-client.test.ts  # retry predicate, invalid-cursor predicate, global UNAUTHORIZED handling
 │   ├── contracts/*.test.ts        # money/decimal, dates, first-of-month, 180 months, non-empty DetailsPatch
 │   ├── lib/*.test.ts              # format, money, dates, search-params, mutation-errors, product-defaults
 │   ├── features/**/*.test.ts      # every *-data.ts, salary-delta, search-params builders

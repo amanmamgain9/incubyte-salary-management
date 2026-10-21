@@ -110,3 +110,11 @@ test("an unknown employee ID shows the not-found page", async ({ page }) => {
   await page.goto("/employees/E2E-9999");
   await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
 });
+
+test("a stale directory cursor falls back to the first page", async ({ page, api }) => {
+  await api.mutate("employees.create", { ...grace, id: "E2E-0105" });
+  await page.goto("/employees?cursor=not-a-real-cursor&employment_status=active");
+  await expect(page).toHaveURL(/\/employees\?employment_status=active$/);
+  await expect(page.getByRole("row", { name: /E2E-0105/ })).toBeVisible();
+  await expect(page.getByText("We couldn’t load these records")).toBeHidden();
+});

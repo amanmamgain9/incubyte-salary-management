@@ -74,7 +74,7 @@ src/server/
 src/contracts/
 ├── primitives.ts                  # IsoDate, Month (YYYY-MM), Timestamp, Money (input: positive, ≤2 dp), Decimal (output: signed, 2 dp), codes, EmployeeId, array caps (MAX_COUNTRIES …)
 ├── paging.ts                      # Paging input, page(item) → Page<T> (next/prev cursor, total_count, range_start), KeysetFrom<Key> (a fetch's `from`), DEFAULT_LIMIT 50, MAX_LIMIT 100
-├── errors.ts                      # FieldErrors shape of error.data.field_errors
+├── errors.ts                      # FieldErrors shape of error.data.field_errors; INVALID_CURSOR_MESSAGE (InvalidCursorError's message)
 ├── lookups.ts                     # Country, Department, Currency, lookups.get output
 ├── employees.ts                   # EmploymentStatus (only definition), EmployeeInput, DetailsPatch, EmployeeFilters, EmployeeView, DirectorySummary, get/list/update inputs and outputs
 ├── salaries.ts                    # HistoryView, history input, salary update input

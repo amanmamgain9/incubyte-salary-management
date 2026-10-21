@@ -1,9 +1,9 @@
 import { TRPCClientError } from "@trpc/client";
 import { describe, expect, it, vi } from "vitest";
-import { isUnauthorized, makeQueryClient, shouldRetry } from "@/trpc/query-client";
+import { isInvalidCursor, isUnauthorized, makeQueryClient, shouldRetry } from "@/trpc/query-client";
 
-function procedureError(code: string, httpStatus: number) {
-  return TRPCClientError.from({ error: { code: -32000, message: code, data: { code, httpStatus } } });
+function procedureError(code: string, httpStatus: number, message = code) {
+  return TRPCClientError.from({ error: { code: -32000, message, data: { code, httpStatus } } });
 }
 
 const networkError = TRPCClientError.from(new TypeError("Failed to fetch"));
@@ -19,6 +19,21 @@ describe("isUnauthorized", () => {
       expect(isUnauthorized(error)).toBe(false);
     },
   );
+});
+
+describe("isInvalidCursor", () => {
+  it("recognises the BAD_REQUEST for a rejected page cursor", () => {
+    expect(isInvalidCursor(procedureError("BAD_REQUEST", 400, "Invalid cursor"))).toBe(true);
+  });
+
+  it.each([
+    procedureError("BAD_REQUEST", 400, "Invalid input"),
+    procedureError("NOT_FOUND", 404, "Invalid cursor"),
+    networkError,
+    new Error("Invalid cursor"),
+  ])("ignores other errors (%#)", (error) => {
+    expect(isInvalidCursor(error)).toBe(false);
+  });
 });
 
 describe("shouldRetry", () => {
@@ -44,6 +59,11 @@ describe("shouldRetry", () => {
 });
 
 describe("makeQueryClient", () => {
+  it("retries queries with shouldRetry unless retries are off", () => {
+    expect(makeQueryClient().getDefaultOptions().queries?.retry).toBe(shouldRetry);
+    expect(makeQueryClient({ retry: false }).getDefaultOptions().queries?.retry).toBe(false);
+  });
+
   it("clears the cache and calls onUnauthorized for an UNAUTHORIZED query", async () => {
     const onUnauthorized = vi.fn();
     const queryClient = makeQueryClient({ onUnauthorized });

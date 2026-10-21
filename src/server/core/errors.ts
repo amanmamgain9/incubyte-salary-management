@@ -1,7 +1,7 @@
 // Domain errors thrown by operations and core helpers; api/middleware/map-domain-errors.ts maps them to tRPC codes.
 // Their messages and field errors reach the client, so they never carry SQL, constraint names or other internals.
 // Script-safe: no `server-only`.
-import type { FieldErrors } from "@/contracts/errors";
+import { INVALID_CURSOR_MESSAGE, type FieldErrors } from "@/contracts/errors";
 
 /** A record the input names does not exist → NOT_FOUND. */
 export class NotFoundError extends Error {
@@ -36,7 +36,7 @@ export class ValidationError extends Error {
 /** A pagination cursor that was altered, signed with another secret, malformed, or reused with other filters. */
 export class InvalidCursorError extends Error {
   constructor() {
-    super("Invalid cursor");
+    super(INVALID_CURSOR_MESSAGE);
     this.name = "InvalidCursorError";
   }
 }

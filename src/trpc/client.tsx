@@ -14,9 +14,11 @@ export { useTRPC };
 
 let browserQueryClient: QueryClient | undefined;
 
-// SSR renders get a fresh client per request; the browser keeps one for the whole session.
+// SSR renders get a fresh client per request; the browser keeps one for the whole session. A query that was not
+// prefetched (its prefetch failed) cannot reach the relative `/api/trpc` during SSR, so it fails at once without
+// retries and the browser fetches it.
 function getQueryClient(onUnauthorized: () => void): QueryClient {
-  if (typeof window === "undefined") return makeQueryClient();
+  if (typeof window === "undefined") return makeQueryClient({ retry: false });
   browserQueryClient ??= makeQueryClient({ onUnauthorized });
   return browserQueryClient;
 }

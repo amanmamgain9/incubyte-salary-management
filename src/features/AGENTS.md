@@ -15,7 +15,7 @@ src/app/
 ├── login/page.tsx                 # signed in → redirect('/employees'); else <LoginScreen demo={env demo credentials}>
 ├── (workspace)/
 │   ├── layout.tsx                 # getSessionUser once → redirect('/login') if absent; <WorkspaceShell user>
-│   ├── loading.tsx / error.tsx    # <LoadingState> / <ErrorState retry> for every workspace page
+│   ├── loading.tsx / error.tsx    # <LoadingState> / <ErrorState retry> for every workspace page; a rejected page cursor (isInvalidCursor) drops `?cursor=` via useUrlState and reloads the first page
 │   ├── employees/page.tsx                     # prefetch employees.list + lookups → <EmployeeDirectory> (create dialog)
 │   ├── employees/[id]/page.tsx                # prefetchOrNotFound(employees.get) (malformed or unknown ID → 404) + salaries.history + lookups → <EmployeeProfile> (edit/salary dialogs)
 │   └── reports/<report>/page.tsx              # one per report folder name; prefetch report + lookups → <…Report>
@@ -118,7 +118,7 @@ src/lib/
 └── cn.ts                          # className merge
 
 src/trpc/
-├── query-client.ts                # makeQueryClient: the only QueryClient factory; defaults, dehydrate, global UNAUTHORIZED handler
+├── query-client.ts                # makeQueryClient: the only QueryClient factory; defaults (no retries for SSR clients), global UNAUTHORIZED handler; isInvalidCursor
 ├── client.tsx                     # client: TRPCReactProvider, useTRPC
 ├── server.tsx                     # server-only: options proxy, cached getQueryClient, prefetch, prefetchOrNotFound, HydrateClient
 └── router-types.ts                # RouterInputs / RouterOutputs (the only place they are derived)
