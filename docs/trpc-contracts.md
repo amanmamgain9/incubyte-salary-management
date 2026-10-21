@@ -38,7 +38,7 @@ HistoryView = SalaryHistoryEntry + { changed_by_name: String }
 
 ## Employee operations
 
-`EmployeeInput`: `id`, `name`, `department_id`, `work_country_code`, `joining_date`, `annual_base_pay`, `salary_currency_code`.
+`EmployeeInput`: `id` (1–32 letters, digits or hyphens), `name`, `department_id`, `work_country_code`, `joining_date`, `annual_base_pay`, `salary_currency_code`.
 
 `DetailsPatch`: optional `name`, `department_id`, `work_country_code`, `joining_date`, `last_working_day`; require at least one field. Salary and ID are excluded. Fields sit beside `id` in the input; no nesting.
 

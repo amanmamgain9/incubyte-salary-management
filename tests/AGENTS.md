@@ -10,6 +10,7 @@ Read before changing `tests/` or `scripts/`. TDD and the red → green rule are 
 tests/                             # tests only: no benchmarks, seeders or one-off scripts
 ├── unit/                          # mirrors src/ and scripts/ paths; pure code; no DB, network or real clock
 │   ├── server/core/{cursor,pagination,errors}.test.ts
+│   ├── server/employees/status.test.ts  # employmentDateErrors: last working day vs joining date and latest revision
 │   ├── server/api/{error-formatter,map-domain-errors}.test.ts
 │   ├── contracts/*.test.ts        # money/decimal, dates, first-of-month, 180 months, non-empty DetailsPatch
 │   ├── lib/*.test.ts              # format, money, dates, search-params, mutation-errors, product-defaults

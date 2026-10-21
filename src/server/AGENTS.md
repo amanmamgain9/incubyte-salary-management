@@ -46,7 +46,7 @@ src/server/
 │   ├── queries.ts                 # select countries/departments/currencies
 │   └── operations.ts              # getLookups, assertKnownCodes (field-keyed ValidationError)
 ├── employees/
-│   ├── status.ts                  # isActiveOn(date), employmentStatusOn(date) SQL expressions
+│   ├── status.ts                  # isActiveOn(date), employmentStatusOn(date) SQL expressions; employmentDateErrors (pure details-edit date rule)
 │   ├── queries.ts                 # directory page/count/summary, EmployeeView select (incl. salary_revision), insert, details update
 │   └── operations.ts              # listEmployees, getEmployee, createEmployee, updateEmployeeDetails
 ├── salaries/
