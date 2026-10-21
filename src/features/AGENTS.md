@@ -50,6 +50,7 @@ src/features/
 │   │   ├── directory-filters.tsx  # search, country, department, status
 │   │   ├── directory-overview.tsx # 2–4 measures from API data, never from the current page
 │   │   ├── employee-table.tsx     # rows + <Pagination>
+│   │   ├── directory-data.ts      # pure: employment mix shares, scope line, has-filters
 │   │   └── search-params.ts       # directory input schema from EmployeeFilters + Paging, with .catch defaults
 │   └── profile/
 │       ├── employee-profile.tsx   # name/status/actions → details + current pay → history; saved notice
@@ -99,7 +100,7 @@ src/components/
     └── chart-legend.tsx           # legend keyed to token colors
 
 src/hooks/
-├── use-url-state.ts               # useUrlState(schema): read/patch search params; patching any key except `cursor`, `dialog`, `saved` drops `cursor`
+├── use-url-state.ts               # useUrlState(schema): read/patch search params (the only history.replaceState); patching any key except `cursor`, `dialog`, `saved` drops `cursor`
 ├── use-dialog.ts                  # useDialog(): `?dialog=create|edit|salary` via useUrlState; open(name), close(saved?) sets `?saved=`
 ├── use-form.ts                    # values, `changes` vs initial, field errors, submit via onSubmit promise, toFieldErrors, focus first error, inputProps(name)
 └── use-lookups.ts                 # lookups.get + countryName/departmentName/currencyName + select options
@@ -108,7 +109,7 @@ src/lib/
 ├── format.ts                      # formatMoney, formatCount, formatDate, formatMonth, formatPercent, formatInitials (the only Intl use)
 ├── money.ts                       # decimal string ↔ bigint minor units; compare/diff exactly on the units
 ├── dates.ts                       # todayUtc, month start/end, addMonths, monthsBetween (UTC)
-├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState
+├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState; patchSearchParams (cursor rule)
 ├── mutation-errors.ts             # toFieldErrors(error) → { fields, message }
 ├── product-defaults.ts            # default report ranges (benchmark: 24 months ending this month) and form selections, from `today`
 └── cn.ts                          # className merge
@@ -130,7 +131,7 @@ src/trpc/
 - `(workspace)/layout.tsx` and `login/page.tsx` are the only callers of `getSessionUser`. The layout redirect is UX only; procedures are the security boundary.
 - Server pages: `await props.searchParams` (`PageProps<'/route'>`), build the input with the feature's `search-params.ts`, `prefetch(trpc.x.queryOptions(input))`, render `<HydrateClient><Feature /></HydrateClient>`. Prefetch every query the client tree suspends on: SSR never calls `/api/trpc`.
 - The client component builds its query input with the same `search-params.ts` function and the same `today` (passed from the page as a prop), so it hits the prefetched cache.
-- Data-reading components use `useSuspenseQuery(trpc.x.queryOptions(input))`. `"use client"` goes on the component that needs hooks; keep its children presentational.
+- Data-reading components use `useSuspenseQuery(trpc.x.queryOptions(input))`, with the URL input passed through `useDeferredValue` so a filter or page change keeps the current results (dimmed) instead of the route's loading state. `"use client"` goes on the component that needs hooks; keep its children presentational.
 - Every route renders real content; no redirect-only or placeholder pages (redirects go in `next.config.ts`).
 - UNAUTHORIZED is handled once in `trpc/query-client.ts` (clear cache, refresh the route so the workspace layout redirects to `/login`); pages and components never check for it.
 
