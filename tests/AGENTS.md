@@ -12,6 +12,8 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── server/core/{cursor,pagination,errors}.test.ts
 │   ├── server/employees/status.test.ts  # employmentDateErrors: last working day vs joining date and latest revision
 │   ├── server/api/{error-formatter,map-domain-errors}.test.ts
+│   ├── server/db/connect.test.ts  # siblingDatabaseUrl / databaseName
+│   ├── trpc/query-client.test.ts  # retry predicate, global UNAUTHORIZED handling
 │   ├── contracts/*.test.ts        # money/decimal, dates, first-of-month, 180 months, non-empty DetailsPatch
 │   ├── lib/*.test.ts              # format, money, dates, search-params, mutation-errors, product-defaults
 │   ├── features/**/*.test.ts      # every *-data.ts, salary-delta, search-params builders
@@ -32,7 +34,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── procedures.test.ts         # createCaller: auth, same-origin, error codes, field_errors, invalid cursor
 │   └── reports/<report>.test.ts   # report numbers on small fixtures (known cases in docs/data-generation.md)
 └── e2e/
-    ├── global-setup.ts            # drop/create, migrate and seed `<db>_e2e`
+    ├── global-setup.ts            # `setup` project (runs before the specs): drop/create, migrate and seed `<db>_e2e`
     ├── auth.spec.ts               # login error, login, sign out
     ├── employees.spec.ts          # directory search/filter/paging, create, edit, departure
     ├── salaries.spec.ts           # salary change incl. conflict reload
@@ -65,5 +67,5 @@ scripts/
 - `npm run test:db` loads `.env` (`node --env-file-if-exists`) and runs the vitest `db` project, which points both URLs at `<db>_test` (dev database name + `_test`): `tests/db/global-setup.ts` drops and recreates it as owner, migrates once per run and provides the `_test` URLs; `tests/db/setup.ts` stubs them into each worker before any test file reads env.
 - `tests/db/harness.ts`: `resetTables()` truncates every `public` table, app and auth (`TRUNCATE … RESTART IDENTITY CASCADE`) in each file's `beforeEach` and refuses any database not named `*_test`; `callerFor(user | null, { now?, origin? })` signs the fixture user in through Better Auth and returns `createCallerFactory(appRouter)({ ...(await createContext({ headers })), now })` with cookie and Origin (default: the app origin; `null` omits it) headers. `contextFor` builds the same context for test-local routers, e.g. `procedures.test.ts`'s probes of the middleware chain.
 - If `test:db` prints only `TypeError: code.charCodeAt is not a function` / `No test files found`, global setup threw (vitest 5.0.5 hides the error): check `.env` exists and Postgres is up (`docker compose up -d`).
-- `npm run test:e2e`: `tests/e2e/global-setup.ts` drops/recreates, migrates and seeds `<db>_e2e`; the web server's `DATABASE_URL` points at it. Neither suite ever touches the dev database.
+- `npm run test:e2e` loads `.env` and runs Playwright: the web server (`next build` + `next start` on port 3100, `APP_URL` set to it) gets `DATABASE_URL` pointed at `<db>_e2e`; the `setup` project (`tests/e2e/global-setup.ts`, a setup test so it needs no default export) drops/recreates, migrates and seeds it (demo HR + lookups, as `db:seed`) before the specs. Specs arrange data through the API with the signed-in page's cookies and an `Origin` header. Both suites recreate their database with `recreateMigratedDatabase` (`server/db/owner.ts`); neither ever touches the dev database. Browsers are not installed by the scripts: run `npx playwright install chromium` once.
 - Benchmarks, verifiers and seed tools live in `scripts/`, never in `tests/`.

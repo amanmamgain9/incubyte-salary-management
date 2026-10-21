@@ -10,9 +10,9 @@ Read before changing `src/server/`, `src/contracts/`, a migration in `drizzle/` 
 src/server/
 ├── env.ts                         # THE env module: lazy `getEnv()` (app, incl. `appOrigin`) + `ownerEnv()` (owner URL only); script-safe
 ├── db/
-│   ├── connect.ts                 # `createDb(url)`: the only file that imports `pg` / creates a Pool; `Database`, `Executor` (db or tx, what queries take) types; script-safe
+│   ├── connect.ts                 # `createDb(url)`: the only file that imports `pg` / creates a Pool; `Database`, `Executor` (db or tx, what queries take) types; `siblingDatabaseUrl` (`_test`/`_e2e`); script-safe
 │   ├── client.ts                  # server-only: app-role `db` = createDb(getEnv().DATABASE_URL)
-│   ├── owner.ts                   # owner-role `ownerDb` = createDb(ownerEnv().DATABASE_OWNER_URL) for migrate, reset, seed, verify, db tests; `truncatePublicTables()` (db:reset, resetTables); script-safe
+│   ├── owner.ts                   # owner-role `ownerDb` = createDb(ownerEnv().DATABASE_OWNER_URL) for migrate, reset, seed, verify, db tests; `truncatePublicTables()` (db:reset, resetTables); `recreateMigratedDatabase("_test" | "_e2e")` (test:db, test:e2e setup); script-safe
 │   └── schema/
 │       ├── index.ts               # re-exports all tables (the only barrel file in src/)
 │       ├── auth.ts                # Better Auth generated tables (user, account, session, verification)

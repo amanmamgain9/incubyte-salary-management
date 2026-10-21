@@ -10,5 +10,17 @@ export function createDb(url: string) {
 
 export type Database = ReturnType<typeof createDb>;
 
+/** The same server and credentials as `url`, on the disposable sibling database `<name><suffix>` (`acme` → `acme_e2e`). */
+export function siblingDatabaseUrl(url: string, suffix: "_test" | "_e2e"): string {
+  const sibling = new URL(url);
+  sibling.pathname = `/${encodeURIComponent(databaseName(url) + suffix)}`;
+  return sibling.href;
+}
+
+/** The database a connection URL names. */
+export function databaseName(url: string): string {
+  return decodeURIComponent(new URL(url).pathname.slice(1));
+}
+
 /** What a `queries.ts` function runs on: the database or a transaction inside it. */
 export type Executor = PgDatabase<NodePgQueryResultHKT>;

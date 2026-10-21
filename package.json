@@ -14,7 +14,7 @@
     "lint": "eslint .",
     "test": "vitest run --project unit",
     "test:db": "node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run --project db",
-    "test:e2e": "playwright test",
+    "test:e2e": "node --env-file-if-exists=.env node_modules/@playwright/test/cli.js test",
     "db:generate": "tsx --env-file-if-exists=.env node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "tsx --env-file-if-exists=.env scripts/db/migrate.ts",
     "db:reset": "tsx --env-file-if-exists=.env scripts/db/reset.ts",

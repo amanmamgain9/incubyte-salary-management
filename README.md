@@ -29,6 +29,7 @@ The Compose database listens on `127.0.0.1:55432` (not 5432) to avoid clashing w
 ```bash
 npm test                  # unit tests (tests/unit)
 npm run test:db           # database tests (tests/db) against a fresh `acme_test` on the Compose database
+npm run test:e2e          # Playwright: builds, serves on :3100 and signs in against a fresh `acme_e2e` (first: npx playwright install chromium)
 npm run lint              # ESLint, including the architecture boundary rules
 npm run typecheck         # route types + tsc
 npm run build             # production build (needs the app variables from .env)
