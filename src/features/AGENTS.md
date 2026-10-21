@@ -110,17 +110,17 @@ src/components/
     └── chart-legend.tsx           # legend keyed to token colors
 
 src/hooks/
-├── use-url-state.ts               # useUrlState(schema): read/patch search params (the only history.replaceState); patching any key except `cursor`, `dialog`, `saved` drops `cursor`
-├── use-dialog.ts                  # dialogParams(dialogs, notices) → URL schema; useDialog(schema): `?dialog=` via useUrlState, open(name), close(saved?) sets `?saved=`; names belong to the feature
+├── use-url-state.ts               # useUrlState(schema, keepsCursor?): read/patch search params (the only history.replaceState); patching any key except `cursor` and the caller's `keepsCursor` drops `cursor`
+├── use-dialog.ts                  # dialogParams(dialogs, notices) → URL schema; useDialog(schema): `?dialog=` via useUrlState (`dialog`/`saved` keep the cursor), open(name), close(saved?) sets `?saved=`; names belong to the feature
 ├── use-form.ts                    # values, `changes` vs the baseline (`initial` at mount; `outdated` when `initial` moves, `reset()` adopts it), field errors, submit via onSubmit promise, toFieldErrors, focus first error, inputProps(name)
+├── form-diff.ts                   # pure, used only by use-form: a form's changes vs its baseline, and `outdated` when the latest record differs
 └── use-lookups.ts                 # lookups.get → LookupNames (countryName/departmentName) + LookupOptions (select options); called once per screen, passed down as `names`/`options`
 
 src/lib/
 ├── format.ts                      # formatMoney, formatCompact (exact, overview figures), formatCount, formatDate, formatTimestamp, formatMonth, formatPercent, formatInitials (the only Intl use)
 ├── money.ts                       # decimal string ↔ bigint minor units; divideRounded (half away from zero); compare/diff exactly on the units; toChartNumber (chart positions only)
 ├── dates.ts                       # todayUtc, addDays, daysBetween, addMonths, month start/end, monthsBetween (UTC)
-├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState; patchSearchParams (cursor rule)
-├── form-diff.ts                   # formDiff: a form's changes vs its baseline, and `outdated` when the latest record differs
+├── search-params.ts               # parseSearchParams(schema, raw) used by pages and useUrlState; patchSearchParams (cursor rule; the caller names the params that keep it)
 ├── mutation-errors.ts             # toFieldErrors(error) → { fields, message }; isConflict(error)
 └── cn.ts                          # className merge
 

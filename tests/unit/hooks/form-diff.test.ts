@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formDiff } from "@/lib/form-diff";
+import { formDiff } from "@/hooks/form-diff";
 
 const opened = { name: "Ada Lovelace", department_id: "engineering", last_working_day: "" };
 

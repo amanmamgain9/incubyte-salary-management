@@ -25,9 +25,12 @@ export function dialogParams<const D extends Names, const N extends Names>(
   });
 }
 
+/** Opening or closing a dialog and its notice leave the page behind, and so its cursor, as they are. */
+const LAYERED_OVER_PAGE = ["dialog", "saved"] as const;
+
 /** The `?dialog=` modal layered over the current page, and the `?saved=` notice left after a successful save. */
 export function useDialog<D extends string, N extends string>(params: DialogSchema<D, N>) {
-  const [{ dialog, saved }, patch] = useUrlState(params);
+  const [{ dialog, saved }, patch] = useUrlState(params, LAYERED_OVER_PAGE);
   return {
     current: dialog ?? null,
     saved: saved ?? null,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { formDiff } from "@/lib/form-diff";
+import { formDiff } from "@/hooks/form-diff";
 import { toFieldErrors } from "@/lib/mutation-errors";
 
 type FormValues = Record<string, string>;

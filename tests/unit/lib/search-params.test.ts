@@ -39,11 +39,19 @@ describe("patchSearchParams", () => {
     expect(patchSearchParams(current, { search: undefined })).toBe("dialog=create");
   });
 
-  it("keeps the cursor when only the page or the dialog changes", () => {
+  it("keeps the cursor when the page itself changes", () => {
     expect(patchSearchParams(current, { cursor: "def" })).toBe("search=ana&cursor=def&dialog=create");
-    expect(patchSearchParams(current, { dialog: undefined, saved: "created" })).toBe(
+  });
+
+  it("keeps the cursor for the params the caller names", () => {
+    expect(patchSearchParams(current, { dialog: undefined, saved: "created" }, ["dialog", "saved"])).toBe(
       "search=ana&cursor=abc&saved=created",
     );
+  });
+
+  it("drops the cursor for any param the caller does not name", () => {
+    expect(patchSearchParams(current, { dialog: undefined })).toBe("search=ana");
+    expect(patchSearchParams(current, { dialog: "edit", search: "bo" }, ["dialog"])).toBe("search=bo&dialog=edit");
   });
 
   it("does not change the params it was given", () => {
