@@ -10,7 +10,7 @@ import { isActiveOn } from "@/server/employees/status";
 export type FilterColumns = { [Field in keyof ReportFilters]-?: AnyColumn };
 
 /** The employee's current assignment and pay currency (commitment and department reports). */
-export const currentAssignment: FilterColumns = {
+const currentAssignment: FilterColumns = {
   work_country_code: employees.work_country_code,
   department_id: employees.department_id,
   salary_currency_code: employees.salary_currency_code,

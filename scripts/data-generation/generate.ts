@@ -21,7 +21,7 @@ import { createRandom, type Random } from "./random";
 export type GeneratedEmployee = typeof employees.$inferSelect;
 export type GeneratedHistoryEntry = typeof salaryHistory.$inferSelect;
 
-export const KNOWN_CASES = [
+const KNOWN_CASES = [
   "currency-switch",
   "relocation",
   "transfer",
@@ -60,7 +60,7 @@ type Person = {
 };
 
 /** Splits `total` by `weights` exactly (largest remainder; ties to the earlier weight). */
-export function apportion(weights: readonly number[], total: number): number[] {
+function apportion(weights: readonly number[], total: number): number[] {
   const sum = weights.reduce((a, b) => a + b, 0);
   const counts = weights.map((weight) => Math.floor((weight * total) / sum));
   const order = weights

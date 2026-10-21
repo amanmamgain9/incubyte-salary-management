@@ -64,7 +64,7 @@ Every folder and file here and in the area guide trees is planned. Create files 
     ├── components/           # UI primitives and charts; no feature or API knowledge
     ├── hooks/                # client hooks shared by 2+ features
     ├── lib/                  # pure helpers usable on server, client and scripts
-    ├── trpc/                 # tRPC client/server wiring, the one QueryClient factory, router types
+    ├── trpc/                 # tRPC client/server wiring, the one QueryClient factory
     ├── contracts/            # Zod schemas for every procedure input/output
     └── server/               # backend: env, db, auth, api, core and feature modules
 ```
@@ -76,7 +76,7 @@ Every folder and file here and in the area guide trees is planned. Create files 
 - **Rule of two.** The second copy of logic, markup or a class string is extracted to its home in the same change, and both call sites use it. Never leave two versions.
 - **Extend, don't fork.** Add a variant, prop or option to the existing helper. If it then needs more than ~4 options or branches on the caller, split it by purpose and name both clearly.
 - **Defined once:**
-  - Types come from Zod via `z.infer` in `src/contracts`; no parallel interfaces. Frontend imports named contract types; `RouterOutputs[...]` only where no contract type exists, and never re-aliased in more than one file (export a named type from the contract instead).
+  - Types come from Zod via `z.infer` in `src/contracts`; no parallel interfaces. Frontend imports named contract types; where one is missing, export a named type from the contract rather than deriving router types.
   - `EmploymentStatus`: `contracts/employees.ts`. Its label/tone: `features/employees/employment-status-badge.tsx`.
   - "Active on date X": `isActiveOn` in `server/employees/status.ts`, used by the directory status filter and the commitment, department and benchmark reports. The data generator's manifest is deliberately independent.
   - Money arithmetic: `lib/money.ts` (client, scripts) and SQL `NUMERIC` (server). Never `Number` math on amounts.

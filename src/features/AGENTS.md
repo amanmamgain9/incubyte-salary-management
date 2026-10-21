@@ -125,8 +125,7 @@ src/lib/
 src/trpc/
 ├── query-client.ts                # makeQueryClient: the only QueryClient factory; defaults (no retries for SSR clients), global UNAUTHORIZED handler; isInvalidCursor
 ├── client.tsx                     # client: TRPCReactProvider, useTRPC
-├── server.tsx                     # server-only: options proxy, cached getQueryClient, prefetch, prefetchOrNotFound, HydrateClient
-└── router-types.ts                # RouterInputs / RouterOutputs (the only place they are derived)
+└── server.tsx                     # server-only: options proxy, cached getQueryClient, prefetch, prefetchOrNotFound, HydrateClient
 ```
 
 ## Frontend rules

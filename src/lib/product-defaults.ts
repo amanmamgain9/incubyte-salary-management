@@ -4,9 +4,9 @@ import { addMonths, monthStart } from "@/lib/dates";
 export type Period = { from: string; to: string };
 
 /** Months the salary growth report shows by default: one year, the span of its net change trend. */
-export const GROWTH_DEFAULT_MONTHS = 12;
+const GROWTH_DEFAULT_MONTHS = 12;
 /** Months the historical salary benchmark shows by default. */
-export const BENCHMARK_DEFAULT_MONTHS = 24;
+const BENCHMARK_DEFAULT_MONTHS = 24;
 
 /** `months` calendar months ending with today's: from the first day of the earliest month through today. */
 function monthsEndingToday(today: string, months: number): Period {

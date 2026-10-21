@@ -18,7 +18,7 @@ export type HrAccount = { id: string; name: string; email: string; password: str
 export const DEMO_HR_ID = "demo-hr";
 
 /** The generator seed used when `--seed` is not given. */
-export const DEFAULT_SEED = "acme";
+const DEFAULT_SEED = "acme";
 
 /** `--seed` and `--as-of` from the command line; `as_of` stays undefined when not given. */
 export function parseDatasetOptions(args: string[]): { seed: string; as_of: string | undefined } {
