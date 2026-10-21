@@ -1,7 +1,6 @@
-import { z } from "zod";
 import { IsoDate } from "@/contracts/primitives";
 import { HistoricalSalaryBenchmarkInput } from "@/contracts/reports/historical-salary-benchmark";
-import { filterParams, trailingMonths, validPeriod } from "@/features/reports/search-params";
+import { cursorParam, filterParams, trailingMonths, validPeriod } from "@/features/reports/search-params";
 import { monthStart } from "@/lib/dates";
 
 /** Months the report shows by default, ending this month with today's final snapshot. */
@@ -13,11 +12,11 @@ const DEFAULT_MONTHS = 24;
  */
 export function historicalSalaryBenchmarkSearch(today: string) {
   const fallback = trailingMonths(today, DEFAULT_MONTHS);
-  return z
-    .object({
+  return filterParams
+    .extend({
       from: IsoDate.transform(monthStart).catch(fallback.from),
       to: IsoDate.catch(fallback.to),
-      ...filterParams,
+      cursor: cursorParam,
     })
     .transform((search) => validPeriod(HistoricalSalaryBenchmarkInput, search, fallback, today));
 }

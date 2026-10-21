@@ -11,8 +11,22 @@ import { addMonths, monthStart } from "@/lib/dates";
  */
 export type ReportFilterField = "dates" | "months" | "country" | "department" | "currency";
 
-/** Search params a report filter writes; patching any of them drops the page cursor. */
-export type FilterParam = "from" | "to" | "work_country_code" | "department_id" | "salary_currency_code";
+/**
+ * The country, department and currency filter params, each falling back to none when malformed. The one list of code
+ * filters: commitment and the benchmark use all of them, growth picks its contract's (country, department).
+ */
+export const filterParams = z.object({
+  work_country_code: ReportFilters.shape.work_country_code.catch(undefined),
+  department_id: ReportFilters.shape.department_id.catch(undefined),
+  salary_currency_code: ReportFilters.shape.salary_currency_code.catch(undefined),
+});
+
+/** The page cursor param, dropped when malformed. */
+export const cursorParam = Paging.shape.cursor.catch(undefined);
+
+/** Search params a report filter writes: the period and the code filters. Patching any of them drops the cursor. */
+const filterKeys = ["from", "to", ...filterParams.keyof().options] as const;
+export type FilterParam = (typeof filterKeys)[number];
 export type FilterValues = Partial<Record<FilterParam, string>>;
 export type Period = { from: string; to: string };
 export type PeriodErrors = Partial<Record<keyof Period, string>>;
@@ -20,24 +34,18 @@ export type PeriodErrors = Partial<Record<keyof Period, string>>;
 export type PeriodContract = z.ZodType<unknown, Period>;
 
 /** Every filter param unset: the report's defaults. */
-export const clearedFilters: Record<FilterParam, undefined> = {
-  from: undefined,
-  to: undefined,
-  work_country_code: undefined,
-  department_id: undefined,
-  salary_currency_code: undefined,
-};
+export const clearedFilters: Partial<Record<FilterParam, undefined>> = {};
+for (const key of filterKeys) clearedFilters[key] = undefined;
 
-/** The country, department and currency filters and the page cursor, each falling back to none when malformed. */
-export const filterParams = {
-  work_country_code: ReportFilters.shape.work_country_code.catch(undefined),
-  department_id: ReportFilters.shape.department_id.catch(undefined),
-  salary_currency_code: ReportFilters.shape.salary_currency_code.catch(undefined),
-  cursor: Paging.shape.cursor.catch(undefined),
-};
+/** The filter params among a report's URL state (what its filter form shows). */
+export function appliedFilters(params: FilterValues): FilterValues {
+  const applied: FilterValues = {};
+  for (const key of filterKeys) applied[key] = params[key];
+  return applied;
+}
 
 /** Salary commitment and department breakdown URL → input: country, department, currency and page cursor. */
-export const reportFilterSearch = z.object(filterParams);
+export const reportFilterSearch = filterParams.extend({ cursor: cursorParam });
 
 /** `months` calendar months ending with today's: from the first day of the earliest month through today. */
 export function trailingMonths(today: string, months: number): Period {

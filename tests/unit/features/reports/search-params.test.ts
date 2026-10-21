@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { HistoricalSalaryBenchmarkInput } from "@/contracts/reports/historical-salary-benchmark";
 import { SalaryGrowthInput } from "@/contracts/reports/salary-growth";
-import { periodErrors, readFilterForm, reportFilterSearch, trailingMonths } from "@/features/reports/search-params";
+import {
+  appliedFilters,
+  clearedFilters,
+  periodErrors,
+  readFilterForm,
+  reportFilterSearch,
+  trailingMonths,
+} from "@/features/reports/search-params";
 import { parseSearchParams } from "@/lib/search-params";
 
 const today = "2026-10-21";
@@ -24,6 +31,38 @@ describe("reportFilterSearch", () => {
       department_id: undefined,
       salary_currency_code: undefined,
       cursor: undefined,
+    });
+  });
+});
+
+describe("clearedFilters", () => {
+  it("unsets the period and every code filter", () => {
+    expect(clearedFilters).toEqual({
+      from: undefined,
+      to: undefined,
+      work_country_code: undefined,
+      department_id: undefined,
+      salary_currency_code: undefined,
+    });
+    expect(Object.keys(clearedFilters)).toEqual([
+      "from",
+      "to",
+      "work_country_code",
+      "department_id",
+      "salary_currency_code",
+    ]);
+  });
+});
+
+describe("appliedFilters", () => {
+  it("keeps the filter params and drops the rest of the URL state", () => {
+    const params = { from: "2026-01-01", to: today, work_country_code: "IN", cursor: "opaque" };
+    expect(appliedFilters(params)).toEqual({
+      from: "2026-01-01",
+      to: today,
+      work_country_code: "IN",
+      department_id: undefined,
+      salary_currency_code: undefined,
     });
   });
 });

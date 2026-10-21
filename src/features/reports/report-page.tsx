@@ -12,6 +12,7 @@ import { Pagination } from "@/components/ui/pagination";
 import type { Page, Paging } from "@/contracts/paging";
 import { ReportFilters } from "@/features/reports/report-filters";
 import {
+  appliedFilters,
   clearedFilters,
   type FilterParam,
   type FilterValues,
@@ -61,13 +62,7 @@ export function ReportPage<
   const input = useDeferredValue(params);
   const { data } = useSuspenseQuery(queryOptions(input));
   const reset = () => patch(clearedFilters);
-  const applied: FilterValues = {
-    from: params.from,
-    to: params.to,
-    work_country_code: params.work_country_code,
-    department_id: params.department_id,
-    salary_currency_code: params.salary_currency_code,
-  };
+  const applied = appliedFilters(params);
 
   return (
     <>
