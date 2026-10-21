@@ -92,7 +92,7 @@ src/components/
 │   ├── amount.tsx                 # tabular right-aligned money with visible currency
 │   ├── badge.tsx                  # neutral/semantic tones; no domain knowledge
 │   ├── avatar.tsx                 # initials tile (account footer, directory rows); one tint, no decorative colors
-│   ├── brand.tsx                  # ACME mark + wordmark linking to /employees (login, nav rail)
+│   ├── brand.tsx                  # ACME mark + wordmark; a link only on signed-in pages (a prefetched link on /login caches its redirect)
 │   └── icon.tsx                   # 18px icon wrapper; the only icon-library import site
 └── charts/                        # the only chart-library import site
     ├── bar-chart.tsx              # horizontal/vertical bars, negative values
