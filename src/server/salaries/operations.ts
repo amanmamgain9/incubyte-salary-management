@@ -1,4 +1,5 @@
 import "server-only";
+import { employmentStatusFor, type EmployeeView } from "@/contracts/employees";
 import type { HistoryView, SalaryHistoryInput, SalaryHistoryOutput, UpdateSalaryInput } from "@/contracts/salaries";
 import { toMinorUnits } from "@/lib/money";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/core/errors";
@@ -42,16 +43,16 @@ export async function appendSalaryRevision(tx: Tx, op: OperationContext, revisio
 /**
  * The only way current pay changes: locks the employee, rejects a departed employee, a stale `expected_revision` or a
  * change to the same amount and currency, then updates current pay to the next revision and appends its history entry,
- * in one transaction.
+ * in one transaction. Returns the employee exactly as that transaction committed it (`salaries.update`'s response).
  */
-export async function changeSalary(op: OperationContext, input: UpdateSalaryInput): Promise<void> {
+export async function changeSalary(op: OperationContext, input: UpdateSalaryInput): Promise<EmployeeView> {
   await assertKnownCodes(op, input);
   const { employee_id, expected_revision, annual_base_pay, salary_currency_code, reason } = input;
-  await op.db.transaction(async (tx) => {
+  return op.db.transaction(async (tx) => {
     const stored = await lockCurrentPay(tx, employee_id);
     if (!stored) throw new NotFoundError("Employee not found");
-    // Departed = last working day before today (UTC); upcoming and active employees may change pay.
-    if (stored.last_working_day !== null && stored.last_working_day < op.today) {
+    // Upcoming and active employees may change pay; departed (after the last working day, UTC) may not.
+    if (employmentStatusFor(stored, op.today) === "departed") {
       throw new ValidationError({ employee_id: "Salary cannot change after the last working day" });
     }
     if (stored.salary_revision !== expected_revision) {
@@ -62,7 +63,9 @@ export async function changeSalary(op: OperationContext, input: UpdateSalaryInpu
       throw new ValidationError({ annual_base_pay: "No change from the current salary" });
     }
     const revision = expected_revision + 1;
-    await updateCurrentPay(tx, employee_id, { annual_base_pay, salary_currency_code, salary_revision: revision });
+    const pay = { annual_base_pay, salary_currency_code, salary_revision: revision };
+    const employee = await updateCurrentPay(tx, employee_id, pay);
+    if (!employee) throw new NotFoundError("Employee not found");
     await appendSalaryRevision(tx, op, {
       employee_id,
       revision,
@@ -70,6 +73,7 @@ export async function changeSalary(op: OperationContext, input: UpdateSalaryInpu
       currency_code: salary_currency_code,
       reason,
     });
+    return { ...employee, employment_status: employmentStatusFor(employee, op.today) };
   });
 }
 

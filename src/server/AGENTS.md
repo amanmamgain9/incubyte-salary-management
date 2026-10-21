@@ -50,7 +50,7 @@ src/server/
 │   ├── queries.ts                 # directory page/count/summary, EmployeeView select (incl. salary_revision), insert, lock + employment dates, details update
 │   └── operations.ts              # listEmployees, getEmployee, createEmployee, updateEmployeeDetails
 ├── salaries/
-│   ├── queries.ts                 # employee assignment snapshot, lock employee row, insert history, update current pay + salary_revision, history page/count
+│   ├── queries.ts                 # employee assignment snapshot, lock employee row, insert history, update current pay + salary_revision (returning the row), history page/count
 │   └── operations.ts              # appendSalaryRevision, changeSalary, listSalaryHistory
 └── reports/
     ├── filters.ts                 # SQL shared by reports: matchesFilters (country/department/currency, current or at-change columns), pastKey/keyOrder keyset paging
@@ -76,7 +76,7 @@ src/contracts/
 ├── paging.ts                      # Paging input, page(item) → Page<T> (next/prev cursor, total_count, range_start), KeysetFrom<Key> (a fetch's `from`), DEFAULT_LIMIT 50, MAX_LIMIT 100
 ├── errors.ts                      # FieldErrors shape of error.data.field_errors; INVALID_CURSOR_MESSAGE (InvalidCursorError's message)
 ├── lookups.ts                     # Country, Department, Currency, lookups.get output
-├── employees.ts                   # EmploymentStatus (only definition), EmployeeInput, DetailsPatch, EmployeeFilters, EmployeeView, DirectorySummary, get/list/update inputs and outputs
+├── employees.ts                   # EmploymentStatus (only definition) + employmentStatusFor(dates, date) for a loaded row, EmployeeInput, DetailsPatch, EmployeeFilters, EmployeeView, DirectorySummary, get/list/update inputs and outputs
 ├── salaries.ts                    # HistoryView, history input, salary update input
 └── reports/
     ├── filters.ts                 # shared country/department/currency filter fields; periodEndError (`to` ≤ today, growth and benchmark)
@@ -92,7 +92,8 @@ src/contracts/
 
 **Layering** (each layer imports only those to its right): `api/routers` → `<module>/operations.ts` → `<module>/queries.ts` → `db/schema`; `contracts` and `core` usable by all.
 
-- Routers are thin: `.input(contract).output(contract)` and one operation call. No SQL, rules or try/catch. Sole exception: `salaries.update` calls `changeSalary` then `getEmployee` to return `EmployeeView`, so `salaries` never imports `employees`.
+- Routers are thin: `.input(contract).output(contract)` and one operation call. No SQL, rules or try/catch, no exceptions.
+- An operation owns its whole use case and returns the procedure's result, built inside its transaction (`changeSalary` returns the `EmployeeView` it committed).
 - Operations take `op: OperationContext` and parsed input, own transactions, throw `core/errors.ts` errors, and never import `@trpc/*` or `api/`.
 - A function that relies on running inside a transaction takes `tx: Tx`, never `Executor`: row locks (`lockCurrentPay`, `lockEmploymentDates`), lock-then-write sequences (`appendSalaryRevision`), `SET LOCAL` and `ON COMMIT DROP` tables (the benchmark's queries). The type checker then proves every caller opened one.
 - Script-safe modules (no `server-only`; importable by scripts and unit tests): `src/contracts/*`, `env.ts`, `db/connect.ts`, `db/owner.ts`, `db/schema/*`, every `queries.ts`, `employees/status.ts`, `reports/filters.ts`, `core/errors.ts`. They and `scripts/` import only each other (`core/cursor.ts` and `core/pagination.ts` are server-only). Queries take the executor as an argument and never import `db/client` or `env`.
@@ -162,7 +163,7 @@ export async function salaryGrowth(op: OperationContext, input: SalaryGrowthInpu
 **Module ownership** (imports: `employees` → `salaries` → `lookups`; `reports` read all; never the reverse)
 - `lookups` owns countries/departments/currencies.
 - `employees` owns the employee row and its details columns. `createEmployee` inserts the row with initial pay and `salary_revision = 1`, then calls `appendSalaryRevision` (revision 1, `Initial salary`) in the same transaction.
-- `salaries` owns `salary_history` and, after insert, the current-pay columns (`annual_base_pay`, `salary_currency_code`, `salary_revision`). Only `changeSalary` updates them: it locks the row, rejects a departed employee (`last_working_day` before `op.today`; upcoming is allowed — `salaries` cannot import `employees/status.ts`), then a stale `expected_revision` (`ConflictError`), then the same amount and currency as now (`ValidationError` on `annual_base_pay`), updates current pay and appends history in one transaction.
+- `salaries` owns `salary_history` and, after insert, the current-pay columns (`annual_base_pay`, `salary_currency_code`, `salary_revision`). Only `changeSalary` updates them: it locks the row, rejects a departed employee (`employmentStatusFor` from `contracts/employees.ts`; upcoming is allowed), then a stale `expected_revision` (`ConflictError`), then the same amount and currency as now (`ValidationError` on `annual_base_pay`), updates current pay, appends history and returns the committed `EmployeeView`, in one transaction.
 - `appendSalaryRevision(tx, op, …)` is the only app code that inserts history; it snapshots the employee's current country/department and stamps `op.actor.id` and `op.now`. The seed bulk-inserts history as owner and is the only other writer.
 - Modules may read any table in their own queries; writes follow this ownership.
 

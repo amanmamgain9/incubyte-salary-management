@@ -13,7 +13,10 @@ export function isActiveOn(date: string | SQL): SQL {
     and (${employees.last_working_day} is null or ${employees.last_working_day} >= ${date}::date))`;
 }
 
-/** SQL: the employee's status on `date`: active (isActiveOn), upcoming before joining, departed after leaving. */
+/**
+ * SQL: the employee's status on `date`: active (isActiveOn), upcoming before joining, departed after leaving. The same
+ * rule as `employmentStatusFor` in `contracts/employees.ts`, which serves one loaded row.
+ */
 export function employmentStatusOn(date: string): SQL<EmploymentStatus> {
   return sql<EmploymentStatus>`(case when ${isActiveOn(date)} then 'active'
     when ${employees.joining_date} > ${date}::date then 'upcoming' else 'departed' end)`;

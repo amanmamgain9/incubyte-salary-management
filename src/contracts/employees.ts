@@ -6,6 +6,20 @@ import { CountryCode, CurrencyCode, Decimal, DepartmentId, EmployeeId, IsoDate, 
 export const EmploymentStatus = z.enum(["upcoming", "active", "departed"]);
 export type EmploymentStatus = z.infer<typeof EmploymentStatus>;
 
+/**
+ * One loaded employee's status on `date` (`YYYY-MM-DD`): upcoming before joining, departed after the last working day,
+ * otherwise active. The same rule as the SQL `employmentStatusOn` (`server/employees/status.ts`), which filters and
+ * aggregates many rows; this one serves code that already holds the dates (the salary change and its response).
+ */
+export function employmentStatusFor(
+  dates: { joining_date: string; last_working_day: string | null },
+  date: string,
+): EmploymentStatus {
+  if (dates.joining_date > date) return "upcoming";
+  if (dates.last_working_day !== null && dates.last_working_day < date) return "departed";
+  return "active";
+}
+
 export const EmployeeName = z.string().trim().min(1, "Enter a name").max(200);
 
 /** `employees.create` input: a new joiner with their initial salary (saved as history revision 1). */

@@ -14,7 +14,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── server/api/{error-formatter,map-domain-errors}.test.ts
 │   ├── server/db/connect.test.ts  # siblingDatabaseUrl / databaseName
 │   ├── trpc/query-client.test.ts  # retry predicate, invalid-cursor predicate, global UNAUTHORIZED handling
-│   ├── contracts/**/*.test.ts       # money/decimal, dates, first-of-month, 180 months, non-empty DetailsPatch, period end ≤ today
+│   ├── contracts/**/*.test.ts       # money/decimal, dates, first-of-month, 180 months, non-empty DetailsPatch, employment status, period end ≤ today
 │   ├── lib/*.test.ts              # format, money, dates, search-params, mutation-errors, form-diff, product-defaults
 │   ├── features/**/*.test.ts      # every *-data.ts, salary-delta, search-params builders
 │   └── scripts/data-generation/*.test.ts  # determinism, quotas, tenure, history rules, manifest arithmetic
@@ -28,7 +28,7 @@ tests/                             # tests only: no benchmarks, seeders or one-o
 │   ├── constraints.test.ts / grants.test.ts  # FKs, checks, unique revision; app role cannot UPDATE/DELETE history
 │   ├── employees.test.ts          # list filters/search/status boundaries/paging/summary, get
 │   ├── employee-writes.test.ts    # create (+ revision 1 history), duplicate ID, unknown codes, details edit and date rules
-│   ├── salaries.test.ts           # change, no-change rejection, stale revision, concurrent changes, upcoming allowed, departed rejected, rollback
+│   ├── salaries.test.ts           # change (returns the committed employee), no-change rejection, stale revision, concurrent changes, upcoming allowed, departed rejected, rollback
 │   ├── salary-history.test.ts     # history order, actor name, snapshots, paging, cursor scope, departed still readable
 │   ├── lookups.test.ts            # lookups.get: name order, seeded lookups, empty lists, session required; assertKnownCodes
 │   ├── seed.test.ts               # seedEmployees: the full generated dataset passes every constraint; refuses a non-empty table

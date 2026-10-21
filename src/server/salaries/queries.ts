@@ -31,6 +31,7 @@ export async function lockCurrentPay(
 ): Promise<
   | {
       salary_revision: number;
+      joining_date: string;
       last_working_day: string | null;
       annual_base_pay: string;
       salary_currency_code: string;
@@ -40,6 +41,7 @@ export async function lockCurrentPay(
   const [row] = await tx
     .select({
       salary_revision: employees.salary_revision,
+      joining_date: employees.joining_date,
       last_working_day: employees.last_working_day,
       annual_base_pay: employees.annual_base_pay,
       salary_currency_code: employees.salary_currency_code,
@@ -50,13 +52,14 @@ export async function lockCurrentPay(
   return row;
 }
 
-/** Moves the employee's current pay to a new revision. */
+/** Moves the employee's current pay to a new revision and returns the employee row as stored afterwards. */
 export async function updateCurrentPay(
   db: Executor,
   employee_id: string,
   pay: { annual_base_pay: string; salary_currency_code: string; salary_revision: number },
-): Promise<void> {
-  await db.update(employees).set(pay).where(eq(employees.id, employee_id));
+): Promise<typeof employees.$inferSelect | undefined> {
+  const [row] = await db.update(employees).set(pay).where(eq(employees.id, employee_id)).returning();
+  return row;
 }
 
 /**

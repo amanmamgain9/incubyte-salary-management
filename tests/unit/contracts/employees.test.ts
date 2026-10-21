@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { UpdateEmployeeInput } from "@/contracts/employees";
+import { employmentStatusFor, UpdateEmployeeInput } from "@/contracts/employees";
 
 const issuesOf = (input: unknown) =>
   UpdateEmployeeInput.safeParse(input).error?.issues.map(({ path, message }) => ({ path, message }));
@@ -40,5 +40,19 @@ describe("UpdateEmployeeInput", () => {
     expect(issuesOf({ id: "E-0001", annual_base_pay: "1.00" })).toEqual([
       { path: [], message: "Change at least one field" },
     ]);
+  });
+});
+
+describe("employmentStatusFor", () => {
+  const today = "2026-10-21";
+
+  it.each([
+    ["joins tomorrow", { joining_date: "2026-10-22", last_working_day: null }, "upcoming"],
+    ["joins today", { joining_date: "2026-10-21", last_working_day: null }, "active"],
+    ["leaves today", { joining_date: "2024-01-15", last_working_day: "2026-10-21" }, "active"],
+    ["left yesterday", { joining_date: "2024-01-15", last_working_day: "2026-10-20" }, "departed"],
+    ["joins and leaves in the future", { joining_date: "2026-11-01", last_working_day: "2026-12-31" }, "upcoming"],
+  ] as const)("is %s → %s", (_case, dates, status) => {
+    expect(employmentStatusFor(dates, today)).toBe(status);
   });
 });

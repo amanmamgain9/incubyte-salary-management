@@ -77,7 +77,7 @@ Every folder and file here and in the area guide trees is planned. Create files 
 - **Extend, don't fork.** Add a variant, prop or option to the existing helper. If it then needs more than ~4 options or branches on the caller, split it by purpose and name both clearly.
 - **Defined once:**
   - Types come from Zod via `z.infer` in `src/contracts`; no parallel interfaces. Frontend imports named contract types; where one is missing, export a named type from the contract rather than deriving router types.
-  - `EmploymentStatus`: `contracts/employees.ts`. Its label/tone: `features/employees/employment-status-badge.tsx`.
+  - `EmploymentStatus` and `employmentStatusFor` (one loaded row): `contracts/employees.ts`. Its label/tone: `features/employees/employment-status-badge.tsx`.
   - "Active on date X": `isActiveOn` in `server/employees/status.ts`, used by the directory status filter and the commitment, department and benchmark reports. The data generator's manifest is deliberately independent.
   - Money arithmetic: `lib/money.ts` (client, scripts) and SQL `NUMERIC` (server). Never `Number` math on amounts.
   - Formatting: `lib/format.ts`. Lookup names and options: `hooks/use-lookups.ts`.

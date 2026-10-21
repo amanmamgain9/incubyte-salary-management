@@ -62,6 +62,21 @@ describe("salaries.update", () => {
     ]);
   });
 
+  it("returns exactly the employee the change committed", async () => {
+    await insertEmployee({ id: "E-1" });
+    const caller = await signedIn();
+
+    const returned = await caller.salaries.update(change);
+
+    expect(returned).toEqual(await caller.employees.get({ id: "E-1" }));
+    const latest = (await storedHistory()).at(-1);
+    expect(returned).toMatchObject({
+      salary_revision: latest?.revision,
+      annual_base_pay: latest?.annual_base_pay,
+      salary_currency_code: latest?.currency_code,
+    });
+  });
+
   it("appends one history entry with the assignment at change, the signed-in user, request time and reason", async () => {
     await insertEmployee({ id: "E-1", department_id: "engineering", work_country_code: "IN" });
     const caller = await signedIn();
