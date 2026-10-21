@@ -4,7 +4,6 @@ import {
   Bar,
   BarChart as RechartsBarChart,
   Cell,
-  LabelList,
   ReferenceLine,
   Tooltip,
   XAxis,
@@ -42,17 +41,43 @@ export function BarChart({
         data={[...data]}
         layout={horizontal ? "vertical" : "horizontal"}
         style={{ width: "100%", height: horizontal ? data.length * ROW_HEIGHT + 8 : height }}
-        margin={horizontal ? { top: 4, right: 100, bottom: 4, left: 0 } : { top: 8, right: 8, bottom: 0, left: 8 }}
+        margin={horizontal ? { top: 4, right: 0, bottom: 4, left: 0 } : { top: 8, right: 8, bottom: 0, left: 8 }}
         barCategoryGap={horizontal ? 10 : "22%"}
       >
         {horizontal ? (
           <>
             <XAxis type="number" hide domain={[0, "dataMax"]} />
-            <YAxis type="category" dataKey="label" width={110} tick={{ ...tick, fontSize: 13 }} axisLine={false} tickLine={false} />
+            <YAxis
+              yAxisId="label"
+              type="category"
+              dataKey="label"
+              width={100}
+              tick={{ ...tick, fontSize: 13 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            {/* Values in their own right-hand column, clear of the bar tracks. */}
+            <YAxis
+              yAxisId="display"
+              orientation="right"
+              type="category"
+              dataKey="display"
+              width={92}
+              tick={{ ...tick, fontSize: 12 }}
+              axisLine={false}
+              tickLine={false}
+            />
           </>
         ) : (
           <>
-            <XAxis dataKey="label" tick={tick} axisLine={false} tickLine={false} interval={0} />
+            <XAxis
+              dataKey="label"
+              tick={tick}
+              axisLine={false}
+              tickLine={false}
+              interval="preserveStartEnd"
+              minTickGap={6}
+            />
             <YAxis hide domain={["auto", "auto"]} />
             <ReferenceLine y={0} stroke={chartFrame.baseline} />
           </>
@@ -63,6 +88,7 @@ export function BarChart({
           separator=""
         />
         <Bar
+          yAxisId={horizontal ? "label" : undefined}
           dataKey="value"
           radius={3}
           isAnimationActive={false}
@@ -72,7 +98,6 @@ export function BarChart({
           {data.map((datum) => (
             <Cell key={datum.label} fill={chartTones[datum.tone]} />
           ))}
-          {horizontal ? <LabelList dataKey="display" position="right" fill={chartFrame.axis} fontSize={12} /> : null}
         </Bar>
       </RechartsBarChart>
     </figure>

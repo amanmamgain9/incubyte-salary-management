@@ -19,7 +19,7 @@ export function Overview({
     >
       <div className="min-w-0 flex-1 basis-full sm:basis-auto">
         <span className="mb-2.25 block text-label text-muted">{scope}</span>
-        <div className="grid min-w-0 auto-cols-fr grid-flow-col gap-3.5 sm:gap-4">{children}</div>
+        <div className="grid min-w-0 grid-cols-2 gap-3.5 sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none sm:gap-4">{children}</div>
       </div>
       {visual ? (
         <div className="w-full min-w-0 border-t border-line pt-3.5 sm:w-50 sm:flex-none sm:border-t-0 sm:border-l sm:pt-0 sm:pl-4">
