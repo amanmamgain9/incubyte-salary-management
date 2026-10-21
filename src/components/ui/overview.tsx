@@ -1,14 +1,16 @@
 import type { ReactNode } from "react";
 
-/** The compact overview band: scope line, 2–4 `<Stat>`s and an optional visual on the right. */
+/** The compact overview band: scope line, 2–4 `<Stat>`s and an optional captioned visual on the right. */
 export function Overview({
   scope,
   children,
   visual,
+  visualCaption,
 }: {
   scope: string;
   children: ReactNode;
   visual?: ReactNode;
+  visualCaption?: string;
 }) {
   return (
     <section
@@ -21,6 +23,9 @@ export function Overview({
       </div>
       {visual ? (
         <div className="w-full min-w-0 border-t border-line pt-3.5 sm:w-50 sm:flex-none sm:border-t-0 sm:border-l sm:pt-0 sm:pl-4">
+          {visualCaption ? (
+            <span className="mb-2 block text-label font-medium text-muted">{visualCaption}</span>
+          ) : null}
           {visual}
         </div>
       ) : null}

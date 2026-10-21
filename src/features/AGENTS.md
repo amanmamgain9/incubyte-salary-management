@@ -85,8 +85,8 @@ src/components/
 │   ├── alert.tsx                  # info | success | error notices (role="alert" for errors, "status" otherwise)
 │   ├── page-header.tsx            # title + optional back link, leading avatar and meta line + actions (one primary)
 │   ├── card.tsx                   # white data surface (no nesting) + CardHeader title row + padded CardBody (charts)
-│   ├── overview.tsx / stat.tsx    # overview block: scope line + 2–4 measures + optional visual slot
-│   ├── table.tsx                  # Table/Head/Row/Cell, local horizontal scroller, numeric alignment, sticky first column
+│   ├── overview.tsx / stat.tsx    # overview block: scope line + 2–4 measures + optional visual slot with its caption
+│   ├── table.tsx                  # Table/Head/Row/Cell, local horizontal scroller, numeric alignment; `wide`: min width + sticky first column
 │   ├── pagination.tsx             # Previous/Next over opaque cursors + "x–y of total"
 │   ├── deferred-content.tsx       # dims (aria-busy) results kept on screen while the deferred next result loads
 │   ├── empty-state.tsx / loading-state.tsx / error-state.tsx  # standard states (error has retry)
@@ -104,7 +104,7 @@ src/components/
     ├── chart-tones.ts             # token color references (`var(--color-…)`) and axis/grid strokes for every chart
     ├── mini-bars.tsx              # the overview's small bar visual (plain elements, no library)
     ├── bar-chart.tsx              # horizontal/vertical bars, negative values
-    ├── line-chart.tsx             # lines with optional range band (P10–P90) and reference line
+    ├── line-chart.tsx             # lines with optional range band (P10–P90) and dashed reference line; `compact` for the overview
     └── chart-legend.tsx           # legend keyed to token colors
 
 src/hooks/

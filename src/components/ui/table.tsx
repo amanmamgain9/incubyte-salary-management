@@ -1,11 +1,21 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-/** A table in its own horizontal scroller, so wide data never overflows the page. */
-export function Table({ label, children }: { label: string; children: ReactNode }) {
+/**
+ * A table in its own horizontal scroller, so wide data never overflows the page. `wide` tables keep their first
+ * column (e.g. the month) in view while the rest scrolls.
+ */
+export function Table({ label, wide = false, children }: { label: string; wide?: boolean; children: ReactNode }) {
   return (
     <div className="w-full overflow-x-auto">
-      <table aria-label={label} className="w-full border-collapse text-left text-body whitespace-nowrap">
+      <table
+        aria-label={label}
+        className={cn(
+          "w-full border-collapse text-left text-body whitespace-nowrap",
+          wide &&
+            "min-w-240 [&_td:first-child]:bg-surface [&_tr>*:first-child]:sticky [&_tr>*:first-child]:left-0 [&_tr>*:first-child]:z-1 [&_tr>*:first-child]:shadow-[1px_0_var(--color-line)]",
+        )}
+      >
         {children}
       </table>
     </div>

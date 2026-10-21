@@ -26,10 +26,9 @@ export function SalaryCommitmentSummary({
   return (
     <Overview
       scope={`${reportScope(input, lookups)} · ${formatDate(today)}`}
+      visualCaption="Employees by country"
       visual={
-        summary.by_country.length > 0 ? (
-          <MiniBars caption="Employees by country" bars={countryBars(summary.by_country, lookups.countryName)} />
-        ) : undefined
+        summary.by_country.length > 0 ? <MiniBars bars={countryBars(summary.by_country, lookups.countryName)} /> : undefined
       }
     >
       <Stat label="Active employees" value={formatCount(summary.employee_count)} />

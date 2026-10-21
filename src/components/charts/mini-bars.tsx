@@ -3,11 +3,10 @@ import { cn } from "@/lib/cn";
 export type MiniBar = { label: string; value: number; description: string };
 
 /** The overview's small bar visual (up to ~7 bars, largest first, short labels below); no axes. */
-export function MiniBars({ caption, bars }: { caption: string; bars: readonly MiniBar[] }) {
+export function MiniBars({ bars }: { bars: readonly MiniBar[] }) {
   const max = Math.max(1, ...bars.map((bar) => bar.value));
   return (
-    <figure>
-      <figcaption className="mb-2 text-label font-medium text-muted">{caption}</figcaption>
+    <div>
       <div
         role="img"
         aria-label={bars.map((bar) => bar.description).join(", ")}
@@ -29,6 +28,6 @@ export function MiniBars({ caption, bars }: { caption: string; bars: readonly Mi
           </span>
         ))}
       </div>
-    </figure>
+    </div>
   );
 }

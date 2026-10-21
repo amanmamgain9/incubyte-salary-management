@@ -23,9 +23,10 @@ export function DepartmentBreakdownSummary({ summary, input }: { summary: Summar
     <>
       <Overview
         scope={reportScope(input, lookups)}
+        visualCaption={single ? undefined : "Employees by department"}
         visual={
           !single && summary.by_department.length > 0 ? (
-            <MiniBars caption="Employees by department" bars={departmentBars(summary.by_department, lookups.departmentName)} />
+            <MiniBars bars={departmentBars(summary.by_department, lookups.departmentName)} />
           ) : undefined
         }
       >

@@ -17,9 +17,9 @@ export function DirectoryOverview({ summary, scope }: { summary: DirectorySummar
   return (
     <Overview
       scope={scope}
+      visualCaption="Employment mix"
       visual={
         <>
-          <span className="mb-2 block text-label font-medium text-muted">Employment mix</span>
           <div role="img" aria-label={description} className="flex h-3 gap-0.5 overflow-hidden rounded-[3px] bg-chart-track">
             {mix.map(({ status, percent }) =>
               percent > 0 ? (
